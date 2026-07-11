@@ -1,11 +1,4 @@
-import {
-  Box,
-  HStack,
-  useColorMode,
-  Text,
-  Checkbox,
-  Flex,
-} from "@chakra-ui/react";
+import { Box, HStack, Text, Checkbox, Flex } from "@chakra-ui/react";
 import { IconLock } from "@tabler/icons-react";
 import { formatTimestamp } from "../utils";
 import { memo, ChangeEvent, useContext, useState } from "react";
@@ -19,7 +12,6 @@ type Props = {
   workflow: Workflow;
 };
 export default memo(function WorkflowListItem({ workflow }: Props) {
-  const { colorMode } = useColorMode();
   const {
     setDraggingFile,
     isMultiSelecting,
@@ -32,7 +24,6 @@ export default memo(function WorkflowListItem({ workflow }: Props) {
     multiSelectedFlowsID.includes(workflow.id);
   const { curFlowID, loadWorkflowID } = useContext(WorkspaceContext);
   const isSelected = curFlowID === workflow.id;
-  const hoverBgColor = colorMode === "light" ? "gray.200" : "#4A5568";
   const [isHovering, setIsHovering] = useState(false);
   const basicInfoComp = (
     <Box
@@ -42,14 +33,14 @@ export default memo(function WorkflowListItem({ workflow }: Props) {
       color={isSelected && !isMultiSelecting ? "#333" : undefined}
       draggable={!isMultiSelecting}
       onDragStart={() => setDraggingFile?.(workflow)}
-      borderRadius={6}
+      borderRadius="md"
       px={1}
       py={"5px"}
       onClick={() => {
         !isMultiSelecting && loadWorkflowID(workflow.id);
       }}
       _hover={{
-        bg: hoverBgColor,
+        bg: "rowHoverBg",
       }}
     >
       <HStack flexGrow={1}>
@@ -89,7 +80,7 @@ export default memo(function WorkflowListItem({ workflow }: Props) {
       w={"100%"}
       justify={"space-between"}
       borderBottom={"1px solid"}
-      borderColor={colorMode == "dark" ? "gray.700" : "gray.200"}
+      borderColor="rowBorderColor"
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
     >

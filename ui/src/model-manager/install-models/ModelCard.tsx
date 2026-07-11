@@ -70,7 +70,7 @@ export default function ModelCard({
   return (
     <Card width={IMAGE_SIZE} justifyContent={"space-between"} mb={2} gap={1}>
       <Image
-        borderRadius={3}
+        borderRadius="md"
         boxSize={IMAGE_SIZE + "px"}
         objectFit="cover"
         src={modelPhoto}

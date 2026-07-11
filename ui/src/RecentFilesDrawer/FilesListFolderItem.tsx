@@ -1,4 +1,4 @@
-import { HStack, useColorMode, Text, Stack } from "@chakra-ui/react";
+import { HStack, Text, Stack } from "@chakra-ui/react";
 import {
   foldersTable,
   isFolder,
@@ -29,17 +29,13 @@ export default memo(function FilesListFolderItem({ folder }: Props) {
   const [children, setChildren] = useState<Array<Folder | Workflow>>([]);
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 });
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { colorMode } = useColorMode();
   const {
     draggingFile,
     setDraggingFile,
     refreshFolderStamp,
     onRefreshFilesList,
   } = useContext(RecentFilesContext);
-  const activeStyle =
-    colorMode === "light"
-      ? { backgroundColor: "#E2E8F0" }
-      : { backgroundColor: "#4A5568" };
+  const activeStyle = { backgroundColor: "var(--chakra-colors-rowHoverBg)" };
 
   useEffect(() => {
     if (isCollapsed) return;
@@ -96,6 +92,7 @@ export default memo(function FilesListFolderItem({ folder }: Props) {
         w={"100%"}
         as={"button"}
         py={1}
+        borderRadius="md"
         onClick={() => {
           setIsCollapsed(!isCollapsed);
         }}

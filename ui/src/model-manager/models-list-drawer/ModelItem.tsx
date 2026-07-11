@@ -81,7 +81,7 @@ export function ModelItem({ data }: Props) {
     <Box>
       <Box
         position="relative"
-        borderRadius={4}
+        borderRadius="md"
         draggable
         onDragStart={handleDragStart}
       >
@@ -101,7 +101,7 @@ export function ModelItem({ data }: Props) {
             boxSize="100%"
             height={150}
             objectFit="cover"
-            borderRadius={4}
+            borderRadius="md"
             cursor={model?.civitModelID != null ? "pointer" : "auto"}
             onClick={async () => {
               if (

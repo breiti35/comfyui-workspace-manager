@@ -45,6 +45,15 @@ const theme = extendTheme({
       topbarButtonBg: "#434554",
     },
   },
+  semanticTokens: {
+    colors: {
+      // Shared hover/active row highlight for file & folder list rows
+      // (RecentFilesDrawer). Resolves to the same colorMode-dependent
+      // literals ("#E2E8F0"/"#4A5568") that were previously duplicated.
+      rowHoverBg: { default: "gray.200", _dark: "gray.600" },
+      rowBorderColor: { default: "gray.200", _dark: "gray.700" },
+    },
+  },
   components: {
     Card: {
       baseStyle: (props: StyleFunctionProps) => ({
