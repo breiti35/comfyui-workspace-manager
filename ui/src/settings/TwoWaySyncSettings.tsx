@@ -48,9 +48,14 @@ export default function TwoWaySyncSettings() {
 
   return (
     <Stack>
-      <Text>
-        Only for legacy two way sync users to get back their data. [DO NOT
-        DISABLE]
+      <Text fontSize="sm" color="gray.400">
+        Keeps your workflows saved as real files in the folder above (see
+        "Storage Location"), so they also show up in File Explorer / Finder.
+        New installs enable this automatically; this toggle is only here for
+        older installs that haven't switched over yet.
+        <br />
+        ⛔️ Once this is on, leave it on - turning it back off can make
+        workflows that only exist on disk disappear from your list.
       </Text>
       <Checkbox isChecked={checked} onChange={onTwoWaySyncChange}>
         Enable two way sync
