@@ -19,6 +19,7 @@ import {
 } from "./util/modelTypes";
 import { KBtoGB } from "../utils";
 import { findSfwImageFromModel } from "../../utils/findSfwImage";
+import { getCivitModelPageUrl } from "../../utils/civitUtils";
 import { userSettingsTable } from "../../db-tables/WorkspaceDB";
 const IMAGE_SIZE = 280;
 
@@ -51,8 +52,12 @@ export default function ModelCard({
   const curFile = versions?.find(
     (versionFile) => versionFile?.name === selectedFile,
   );
-  const onClickMedia = () => {
-    window.open(`https://civitai.com/models/${model.id}`);
+  const onClickMedia = async () => {
+    // Open the tab synchronously (on the click gesture) and navigate it once
+    // the URL is resolved, so browser popup blockers don't kick in on the
+    // await below.
+    const win = window.open();
+    if (win) win.location.href = await getCivitModelPageUrl(String(model.id));
   };
   const installHandler = useCallback(() => {
     if (curFile == null) {

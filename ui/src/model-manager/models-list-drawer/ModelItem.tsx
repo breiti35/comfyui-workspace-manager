@@ -4,7 +4,10 @@ import { useEffect, useState } from "react";
 import { indexdb } from "../../db-tables/indexdb";
 import { Model } from "../../types/dbTypes";
 import type { DragEvent } from "react";
-import { fetchCivitModelFromHashKey } from "../../utils/civitUtils";
+import {
+  fetchCivitModelFromHashKey,
+  getCivitModelPageUrl,
+} from "../../utils/civitUtils";
 
 interface Props {
   data: ModelsListRespItem;
@@ -100,16 +103,20 @@ export function ModelItem({ data }: Props) {
             objectFit="cover"
             borderRadius={4}
             cursor={model?.civitModelID != null ? "pointer" : "auto"}
-            onClick={() => {
+            onClick={async () => {
               if (
                 model?.civitModelID == null ||
                 model?.civitModelVersionID == null
               ) {
                 return;
               }
-              window.open(
-                `https://civitai.com/models/${model?.civitModelID}?modelVersionId=${model?.civitModelVersionID}`,
-              );
+              const win = window.open();
+              if (win) {
+                win.location.href = await getCivitModelPageUrl(
+                  model.civitModelID,
+                  model.civitModelVersionID,
+                );
+              }
             }}
           />
         )}

@@ -21,7 +21,7 @@ import InstallModelSearchBar from "./InstallModelSearchBar";
 import ChooseFolder from "./ChooseFolder";
 import InstallProgress from "./InstallProgress";
 import AddApiKeyPopover from "./AddApiKeyPopover";
-import { getCivitApiKey } from "../../utils/civitUtils";
+import { getCivitApiKey, getCivitModelDownloadUrl } from "../../utils/civitUtils";
 import { useStateRef } from "../../customHooks/useStateRef";
 import {
   ALL_MODEL_TYPES,
@@ -71,14 +71,14 @@ export default function InatallModelsModal({
     setLoading(false);
   }, [searchQuery, modelType]);
 
-  const downloadModels = (folderPath: string, downloadUrl?: string) => {
+  const downloadModels = async (folderPath: string, downloadUrl?: string) => {
     if (!file.current?.id && !downloadUrl) {
       console.error("no url to download");
       return;
     }
     let url =
       downloadUrl ??
-      `https://civitai.com/api/download/models/${file.current?.id}`;
+      (await getCivitModelDownloadUrl(String(file.current?.id)));
     let version = file.current?.name;
     if (!version) {
       version = url.split("/").pop();

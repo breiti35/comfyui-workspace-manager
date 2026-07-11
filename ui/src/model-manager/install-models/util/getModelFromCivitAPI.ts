@@ -1,4 +1,6 @@
 import { indexdb } from "../../../db-tables/indexdb";
+import { userSettingsTable } from "../../../db-tables/WorkspaceDB";
+import { getCivitBaseUrl } from "../../../utils/civitUtils";
 import { CivitiModel } from "../../types";
 import { CACHE_EXPIRY_DAYS, MODEL_TYPE } from "./modelTypes";
 
@@ -6,6 +8,7 @@ type CivitModelQueryParams = {
   types?: MODEL_TYPE;
   query?: string;
   limit?: string;
+  nsfw?: string;
 };
 
 export async function getModelFromCivitAPi(
@@ -19,9 +22,19 @@ export async function getModelFromCivitAPi(
   if (query) {
     params.query = query;
   }
+  const includeAdultContent = await userSettingsTable?.getSetting(
+    "civitaiIncludeAdultContent",
+  );
+  if (includeAdultContent) {
+    // Belt-and-suspenders: civitai.red already includes adult content by
+    // default, but explicitly requesting it too guards against the API
+    // defaulting to SFW-only regardless of host.
+    params.nsfw = "true";
+  }
 
   const queryString = new URLSearchParams(params).toString();
-  const fullURL = `https://civitai.com/api/v1/models?${queryString}`;
+  const baseUrl = await getCivitBaseUrl();
+  const fullURL = `${baseUrl}/api/v1/models?${queryString}`;
 
   const cacheEntry = await indexdb.cache?.get(fullURL);
   if (cacheEntry?.value != null) {

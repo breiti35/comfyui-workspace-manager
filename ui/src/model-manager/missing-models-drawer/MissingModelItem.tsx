@@ -18,6 +18,7 @@ import type {
 } from "../../spacejson/handleDownloadSpaceJson";
 import { indexdb } from "../../db-tables/indexdb";
 import { app } from "../../utils/comfyapp";
+import { getCivitBaseUrl } from "../../utils/civitUtils";
 
 const HF_LOGO =
   "https://huggingface.co/datasets/huggingface/brand-assets/resolve/main/hf-logo.png";
@@ -180,11 +181,12 @@ export default function MissingModelItem({
             iconSpacing={1}
             leftIcon={<IconExternalLink size={20} />}
             size={"sm"}
-            onClick={() => {
-              window.open(
-                `https://civitai.com/search/models?sortBy=models_v7&query=${model.received_value}`,
-                "_blank",
-              );
+            onClick={async () => {
+              const win = window.open();
+              if (win) {
+                const baseUrl = await getCivitBaseUrl();
+                win.location.href = `${baseUrl}/search/models?sortBy=models_v7&query=${model.received_value}`;
+              }
             }}
           >
             Search in CivitAI

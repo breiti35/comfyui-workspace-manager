@@ -40,8 +40,8 @@ export default function AddApiKeyPopover() {
         <PopoverCloseButton />
         <Stack spacing={4}>
           <Text fontSize={14}>
-            Some Civitai.com models require user login to download, you will
-            nedd a Civitai API key to download in that case
+            Some Civitai models require user login to download, you will
+            need a Civitai API key to download in that case
           </Text>
           <Input
             value={apiKeyInput}

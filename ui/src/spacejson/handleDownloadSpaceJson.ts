@@ -69,7 +69,7 @@ async function fetchModelData(
     hash: first?.fileHash ?? null,
     folder: first?.fileFolder ?? null,
     url: first?.civitModelVersionID
-      ? getCivitModelDownloadUrl(first.civitModelVersionID)
+      ? await getCivitModelDownloadUrl(first.civitModelVersionID)
       : first?.downloadUrl ?? null,
     inputName: inputName,
     length: res.length,

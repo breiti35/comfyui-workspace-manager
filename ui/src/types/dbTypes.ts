@@ -95,6 +95,12 @@ export type UserSettings = {
   twoWaySync?: boolean;
   foldersOnTop?: boolean;
   showNsfwModelThumbnail?: boolean;
+  /**
+   * When true, model search/hash-lookup/page-links use civitai.red (which
+   * shows SFW + adult content) instead of civitai.com (SFW-only since
+   * Civitai's April 2026 domain split). Defaults to SFW-only.
+   */
+  civitaiIncludeAdultContent?: boolean;
   defaultFolders: Record<MODEL_TYPE, string>;
   maximumChangelogNumber: number;
   hideCoverImage: boolean;

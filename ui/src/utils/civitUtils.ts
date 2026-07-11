@@ -9,15 +9,34 @@ export function setCivitApiKey(apiKey: string) {
   localStorage.setItem(CIVIT_API_KEY_STORAGE_KEY, apiKey);
 }
 
-export function getCivitModelDownloadUrl(modelVersionID: string) {
-  return `https://civitai.com/api/download/models/${modelVersionID}`;
+/**
+ * Since Civitai's April 2026 "Two Front Doors" split, civitai.com only
+ * shows SFW content while civitai.red shows everything (SFW + adult).
+ * Both domains share the same account/database and the same REST API
+ * paths, so switching host is enough - no endpoint or param changes.
+ * Defaults to civitai.com (SFW-only) unless the user opts in.
+ */
+export async function getCivitBaseUrl(): Promise<string> {
+  const includeAdultContent = await userSettingsTable?.getSetting(
+    "civitaiIncludeAdultContent",
+  );
+  return includeAdultContent ? "https://civitai.red" : "https://civitai.com";
 }
 
-export function getCivitModelPageUrl(modelID: string, modelVersionID?: string) {
+export async function getCivitModelDownloadUrl(modelVersionID: string) {
+  const baseUrl = await getCivitBaseUrl();
+  return `${baseUrl}/api/download/models/${modelVersionID}`;
+}
+
+export async function getCivitModelPageUrl(
+  modelID: string,
+  modelVersionID?: string,
+) {
+  const baseUrl = await getCivitBaseUrl();
   if (!modelVersionID) {
-    return `https://civitai.com/models/${modelID}`;
+    return `${baseUrl}/models/${modelID}`;
   }
-  return `https://civitai.com/models/${modelID}?modelVersionId=${modelVersionID}`;
+  return `${baseUrl}/models/${modelID}?modelVersionId=${modelVersionID}`;
 }
 
 export function getHgModelInfoUrlFromDownloadUrl(downloadUrl: string) {
@@ -51,7 +70,8 @@ export async function fetchCivitModelFromHashKey(filehash: string): Promise<{
   imageUrl?: string;
 }> {
   try {
-    const url = `https://civitai.com/api/v1/model-versions/by-hash/${filehash}`;
+    const baseUrl = await getCivitBaseUrl();
+    const url = `${baseUrl}/api/v1/model-versions/by-hash/${filehash}`;
     const resp = await fetch(url);
     const json: ResponsePartial = await resp.json();
     let image_url: string | undefined;

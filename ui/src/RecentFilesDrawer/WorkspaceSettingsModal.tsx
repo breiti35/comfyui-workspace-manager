@@ -55,6 +55,10 @@ export default function WorkspaceSettingsModal({
                   settingKey="hideCoverImage"
                   text="Hide thumbnail image in workflow list"
                 />
+                <CommonCheckboxSettings
+                  settingKey="civitaiIncludeAdultContent"
+                  text="Include adult (18+) content from Civitai. Uses civitai.red instead of civitai.com for model search, hash lookup, downloads, and links, so NSFW-only models can be found and installed. Leave unchecked to keep everything limited to SFW content."
+                />
               </VStack>
             </HStack>
           </ModalBody>

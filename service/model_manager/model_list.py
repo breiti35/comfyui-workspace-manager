@@ -144,6 +144,10 @@ def populate_file_hash_dict():
 
 
 def civit_get_model_by_hash(file_hash: str):
+    # Currently unreferenced (no route/caller) - the live hash-lookup path is
+    # the frontend's fetchCivitModelFromHashKey in ui/src/utils/civitUtils.ts.
+    # If this is ever wired up, apply the same civitai.com/civitai.red
+    # content-mode handling as that function (see getCivitBaseUrl there).
     if file_hash is None:
         return None
     try:
