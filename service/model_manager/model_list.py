@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import os
 import folder_paths
 import server
@@ -14,12 +15,51 @@ from .model_preview import preview_file
 # The path to the file where file_hash_dict will be saved
 FILE_HASH_DICT_FOLDER_PATH = os.path.join(os.path.dirname(__file__), "../../hash")
 FILE_HASH_DICT_PATH = os.path.join(FILE_HASH_DICT_FOLDER_PATH, "file_hash_dict")
-if not os.path.exists(FILE_HASH_DICT_FOLDER_PATH):
-    os.makedirs(FILE_HASH_DICT_FOLDER_PATH)
 
-# Early open shelve for better performance
-with shelve.open(FILE_HASH_DICT_PATH) as file_hash_dict_early_open:
-    print(f"Workspace manager - Openning file hash dict")
+# Whether the on-disk hash cache is usable. Flipped to False the first time
+# it fails to open (permission error, corrupt/locked dbm file, missing
+# network drive, ...) so we only warn once instead of once per file.
+_hash_cache_available = True
+
+
+def _open_hash_dict():
+    """Open the file-hash cache, or None if it's unavailable.
+
+    Every caller must handle None by treating the cache as empty/disabled
+    for that operation rather than letting the exception propagate - a
+    broken hash cache should never crash the plugin or the whole ComfyUI
+    server, it should just mean hashes aren't cached for this session.
+    """
+    global _hash_cache_available
+    try:
+        return shelve.open(FILE_HASH_DICT_PATH)
+    except Exception as e:
+        if _hash_cache_available:
+            logging.warning(
+                f"[Workspace Manager] File hash cache at '{FILE_HASH_DICT_PATH}' "
+                f"could not be opened ({e}). Model hash caching is disabled "
+                f"for this session; model management still works, just "
+                f"without cached hashes."
+            )
+            _hash_cache_available = False
+        return None
+
+
+try:
+    os.makedirs(FILE_HASH_DICT_FOLDER_PATH, exist_ok=True)
+except OSError as e:
+    logging.warning(
+        f"[Workspace Manager] Could not create hash cache folder "
+        f"'{FILE_HASH_DICT_FOLDER_PATH}' ({e}). Model hash caching is "
+        f"disabled for this session."
+    )
+    _hash_cache_available = False
+else:
+    # Early open shelve for better performance
+    _early_open = _open_hash_dict()
+    if _early_open is not None:
+        _early_open.close()
+        print(f"Workspace manager - Openning file hash dict")
 
 file_list = []
 file_list_lock = threading.Lock()
@@ -29,7 +69,10 @@ is_populating = False
 
 
 def save_file_hash(file_path, file_hash):
-    with shelve.open(FILE_HASH_DICT_PATH) as file_hash_dict:
+    file_hash_dict = _open_hash_dict()
+    if file_hash_dict is None:
+        return
+    with file_hash_dict:
         file_hash_dict[file_path] = file_hash
 
 
@@ -47,9 +90,11 @@ def process_file(folder, file):
     file_path = folder_paths.get_full_path(folder, file)
     # check if the file hash is already calculated
     file_hash = None
-    with shelve.open(FILE_HASH_DICT_PATH) as file_hash_dict:
-        if file_path in file_hash_dict:
-            file_hash = file_hash_dict[file_path]
+    file_hash_dict = _open_hash_dict()
+    if file_hash_dict is not None:
+        with file_hash_dict:
+            if file_path in file_hash_dict:
+                file_hash = file_hash_dict[file_path]
     [model_name, model_extension] = os.path.splitext(file)
     return {
         "model_name": model_name,
@@ -85,8 +130,10 @@ def populate_file_hash_dict():
                     file["model_type"], file["model_name"] + file["model_extension"]
                 )
                 file_hash = compute_hash(file_path)
-                with shelve.open(FILE_HASH_DICT_PATH) as file_hash_dict:
-                    file_hash_dict[file_path] = file_hash
+                file_hash_dict = _open_hash_dict()
+                if file_hash_dict is not None:
+                    with file_hash_dict:
+                        file_hash_dict[file_path] = file_hash
                 with file_list_lock:
                     file["file_hash"] = file_hash
                     send_ws("model_list", file_list)  # update the list with the new hash
