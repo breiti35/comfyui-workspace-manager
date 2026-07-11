@@ -1,4 +1,5 @@
 import { ExportTarget } from "./ExportTarget";
+import { LocalFileExport } from "./LocalFileExport";
 
 /**
  * All export targets offered in the "Share" dialog, in display order.
@@ -6,6 +7,6 @@ import { ExportTarget } from "./ExportTarget";
  * ExportTarget and pushing it in here - ShareDialog.tsx renders this
  * list generically and needs no changes.
  */
-export const EXPORT_TARGETS: ExportTarget[] = [];
+export const EXPORT_TARGETS: ExportTarget[] = [LocalFileExport];
 
 export * from "./ExportTarget";
