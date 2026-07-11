@@ -5,10 +5,32 @@ import folder_paths
 import shutil
 import os
 import sys
-import subprocess 
+import subprocess
 import subprocess
 import os
 import json
+
+# Windows consoles commonly default to a legacy codepage (e.g. cp1252) that
+# cannot encode the emoji used in this plugin's log messages. An unhandled
+# UnicodeEncodeError here previously crashed the entire ComfyUI startup, not
+# just this plugin's import. Reconfigure stdout/stderr to UTF-8 up front so
+# print() calls anywhere in this plugin can no longer trigger that.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass  # stream has no reconfigure() (older Python) or rejected the encoding
+
+
+def _safe_print(*args, **kwargs):
+    """print() that can never raise UnicodeEncodeError and take the whole
+    server down with it, even if the reconfigure() above didn't take effect."""
+    try:
+        print(*args, **kwargs)
+    except UnicodeEncodeError:
+        print(*(str(a).encode("ascii", "replace").decode("ascii") for a in args), **kwargs)
+
+
 from .service.media_service import *
 from .service.file_sync_service import *
 from .service.node_service import *
@@ -24,7 +46,7 @@ NODE_CLASS_MAPPINGS = {}
 __all__ = ['NODE_CLASS_MAPPINGS']
 version = "V2.1.0"
 
-print(f"🦄🦄Loading: Workspace Manager ({version})")
+_safe_print(f"🦄🦄Loading: Workspace Manager ({version})")
 workspace_path = os.path.join(os.path.dirname(__file__))
 comfy_path = os.path.dirname(folder_paths.__file__)
 db_dir_path = os.path.join(workspace_path, "db")
@@ -35,7 +57,7 @@ if os.path.exists(dist_path):
         web.static('/workspace_web/', dist_path),
     ])
 else:
-    print(f"🦄🦄🔴🔴Error: Web directory not found: {dist_path}")
+    _safe_print(f"🦄🦄🔴🔴Error: Web directory not found: {dist_path}")
 
 @server.PromptServer.instance.routes.post("/workspace/get_system_dir")
 async def get_system_dir(request):
