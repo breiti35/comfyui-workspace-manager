@@ -95,7 +95,6 @@ export type UserSettings = {
   twoWaySync?: boolean;
   foldersOnTop?: boolean;
   showNsfwModelThumbnail?: boolean;
-  cloudHost: string;
   defaultFolders: Record<MODEL_TYPE, string>;
   maximumChangelogNumber: number;
   hideCoverImage: boolean;

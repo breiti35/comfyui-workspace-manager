@@ -2,11 +2,10 @@
 import asyncio
 import json
 import server
-from aiohttp import FormData, web, ClientSession
+from aiohttp import web
 import folder_paths
 import os
 from .model_manager.model_preview import get_thumbnail_for_image_file
-from .setting_service import get_settings
 
 image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
 video_extensions = ['.mp4', '.mov', '.avi', '.webm', '.mkv']
@@ -61,45 +60,3 @@ async def view_file(request):
     isInput = request.query.get("isInput", False)
     return await asyncio.to_thread(view_media, filename, isPreview, isInput)
 
-@server.PromptServer.instance.routes.post("/workspace/upload_image")  # Handle POST requests
-async def upload_image_handler(request):
-    settings = get_settings()
-    cloudHost = settings.get("cloudHost", 'https://www.nodecafe.co')
-    API_URL = cloudHost + '/api/image/upload'
-    data = await request.json()
-    image_paths = data.get("images")
-    if not image_paths:
-        return web.Response(status=400, text="Images parameter is required and should be a list of image paths.")
-
-    # Initialize FormData for multipart upload
-    multipart_data = FormData()
-    files_not_found = []
-
-    # Iterate over image paths to add them to FormData
-    for image_path in image_paths:
-        abs_path = os.path.join(folder_paths.get_input_directory(), image_path)
-        
-        if not os.path.exists(abs_path):
-            files_not_found.append(image_path)
-            continue  # Skip this file and proceed with the next
-
-        with open(abs_path, 'rb') as img:
-            multipart_data.add_field('file', img.read(), 
-                                     filename=os.path.basename(image_path),
-                                     content_type='application/octet-stream')  # Adjust MIME type as necessary
-
-    # Handle case where one or more files were not found
-    if files_not_found:
-        return web.Response(status=404, text=f"Image file(s) not found: {', '.join(files_not_found)}")
-    
-    try:
-        async with ClientSession() as session:
-            async with session.post(API_URL, data=multipart_data) as response:
-                if response.status != 200:
-                    text = await response.text()
-                    return web.Response(status=response.status, text=text)
-                
-                result = await response.json()
-                return web.Response(text=json.dumps(result), content_type='application/json')
-    except Exception as e:
-        return web.Response(status=500, text=f"Error forwarding the images to the Next.js API: {e}")

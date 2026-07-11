@@ -1,6 +1,5 @@
 import {
   ChangeEvent,
-  lazy,
   useCallback,
   useContext,
   useEffect,
@@ -24,8 +23,6 @@ import {
   Input,
   Tooltip,
   DarkMode,
-  Tag,
-  HStack,
   useToast,
 } from "@chakra-ui/react";
 import {
@@ -34,21 +31,15 @@ import {
   IconDeviceFloppy,
   IconDownload,
   IconHistory,
-  IconShare2,
-  IconVersions,
 } from "@tabler/icons-react";
 import { workflowsTable, userSettingsTable } from "../db-tables/WorkspaceDB";
 import { WorkspaceContext } from "../WorkspaceContext";
 import { VersionHistoryDrawer } from "./VersionHistoryDrawer";
 import { Workflow } from "../types/dbTypes";
-import CreateVersionDialog from "./CreateVersionDialog";
 import HoverMenu from "./HoverMenu";
-const ShareDialog = lazy(() => import("../share/ShareDialog"));
 import { TOPBAR_BUTTON_HEIGHT } from "../const";
 import { downloadJsonFile } from "../utils/downloadJsonFile";
-import { SharedTopbarButton } from "../share/SharedTopbarButton";
 import { app } from "../utils/comfyapp";
-import CopyShareLinkMenuItem from "./CopyShareLinkMenuItem";
 
 export default function DropdownTitle() {
   const {
@@ -58,10 +49,8 @@ export default function DropdownTitle() {
     saveCurWorkflow,
     setRoute,
     route,
-    session,
   } = useContext(WorkspaceContext);
 
-  const [isOpenNewVersion, setIsOpenNewVersion] = useState(false);
   const [newFlowName, setNewFlowName] = useState("");
   const [submitError, setSubmitError] = useState("");
   const [workflow, setWorkflow] = useState<Workflow>();
@@ -173,38 +162,16 @@ export default function DropdownTitle() {
                 Save As
               </MenuItem>
               <MenuItem
-                onClick={() => setIsOpenNewVersion(true)}
-                icon={<IconVersions size={20} />}
-                iconSpacing={1}
-              >
-                Create Version
-              </MenuItem>
-              <MenuItem
                 onClick={() => setRoute("versionHistory")}
                 icon={<IconHistory size={20} />}
                 iconSpacing={1}
               >
                 Versions History
               </MenuItem>
-              <MenuItem
-                onClick={() => setRoute("share")}
-                icon={<IconShare2 size={20} />}
-                iconSpacing={1}
-                alignItems={"center"}
-              >
-                <HStack>
-                  <p>Share</p> <Tag size={"sm"}>🧪beta</Tag>
-                  <SharedTopbarButton />
-                </HStack>
-              </MenuItem>
-              {workflowsTable?.curWorkflow && (
-                <CopyShareLinkMenuItem curFlow={workflowsTable?.curWorkflow} />
-              )}
             </MenuList>
           </Menu>
         }
       />
-      {route === "share" && <ShareDialog onClose={() => setRoute("root")} />}
       {route == "versionHistory" && (
         <VersionHistoryDrawer onClose={() => setRoute("root")} />
       )}
@@ -246,12 +213,6 @@ export default function DropdownTitle() {
             </ModalFooter>
           </ModalContent>
         </Modal>
-      )}
-      {isOpenNewVersion && (
-        <CreateVersionDialog
-          workflowId={curFlowID!}
-          onClose={() => setIsOpenNewVersion(false)}
-        />
       )}
     </>
   );

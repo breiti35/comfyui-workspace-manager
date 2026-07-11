@@ -33,7 +33,6 @@ export class UserSettingsTable extends TableBase<UserSettings> {
       autoSaveDuration: 3,
       twoWaySync: false,
       foldersOnTop: false,
-      cloudHost: "https://www.nodecafe.co",
       maximumChangelogNumber: 80,
       hideCoverImage: false,
       disableUnsavedWarning: false,
@@ -95,15 +94,6 @@ export class UserSettingsTable extends TableBase<UserSettings> {
         ...res,
       };
     });
-    if (
-      instance._settings?.cloudHost?.includes("nodecafe.org") ||
-      instance._settings?.cloudHost?.includes("comfyspace.art")
-    ) {
-      // overwrite legacy comfyspace.art
-      await instance.upsert({
-        cloudHost: instance.defaultSettings.cloudHost,
-      });
-    }
     return instance;
   }
 }

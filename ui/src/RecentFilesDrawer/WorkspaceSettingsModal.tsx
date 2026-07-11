@@ -14,8 +14,6 @@ import TwoWaySyncSettings from "../settings/TwoWaySyncSettings";
 import CommonCheckboxSettings from "../settings/CommonCheckboxSettings";
 import SelectMyWorkflowsDir from "../settings/SelectMyWorkflowsDir";
 import { CommonNumberSetting } from "../settings/CommonNumberSetting";
-import CloudHostSetting from "../settings/CloudHostSetting";
-import SharekeySetting from "../settings/SharekeySetting";
 
 export default function WorkspaceSettingsModal({
   onClose,
@@ -40,15 +38,12 @@ export default function WorkspaceSettingsModal({
                 <SelectMyWorkflowsDir />
                 <ShortcutSettings />
                 <TwoWaySyncSettings />
-                <SharekeySetting />
                 <CommonCheckboxSettings
                   settingKey="foldersOnTop"
                   text={`Folders always on top`}
                 />
                 <CommonNumberSetting
-                  label={`Maximum number of save change history to store. This does not include
-        versions that you created by "Create Version", which are always stored
-        and has no limit.`}
+                  label={`Maximum number of save change history to store.`}
                   settingKey="maximumChangelogNumber"
                 />
                 <CommonCheckboxSettings
@@ -60,7 +55,6 @@ export default function WorkspaceSettingsModal({
                   settingKey="hideCoverImage"
                   text="Hide thumbnail image in workflow list"
                 />
-                <CloudHostSetting />
               </VStack>
             </HStack>
           </ModalBody>
