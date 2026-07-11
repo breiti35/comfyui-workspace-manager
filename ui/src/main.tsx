@@ -39,6 +39,12 @@ const theme = extendTheme({
     useSystemColorMode: false,
   },
   zIndices,
+  colors: {
+    comfy: {
+      // Shared background for the dark topbar dropdown buttons (File, Models)
+      topbarButtonBg: "#434554",
+    },
+  },
   components: {
     Card: {
       baseStyle: (props: StyleFunctionProps) => ({

@@ -32,7 +32,7 @@ export default function TopbarNewWorkflowButton() {
     return null;
   }
   return (
-    <Tooltip label={"Save workflow"}>
+    <Tooltip label={"Save as new workflow"}>
       <Button
         size={"sm"}
         variant={"outline"}

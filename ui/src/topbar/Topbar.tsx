@@ -93,19 +93,20 @@ export function Topbar({ curFlowName, setCurFlowName }: Props) {
         id="workspaceManagerPanel"
         className="workspaceManagerPanel"
       >
-        <Button
-          size={"sm"}
-          aria-label="workspace folder"
-          height={TOPBAR_BUTTON_HEIGHT + "px"}
-          // backgroundColor={colorMode === "dark" ? "#333547" : undefined}
-          onClick={() => setRoute("recentFlows")}
-          px={2}
-        >
-          <HStack gap={1}>
-            <IconFolder size={21} />
-            <IconTriangleInvertedFilled size={8} />
-          </HStack>
-        </Button>
+        <Tooltip label="Recent files & folders">
+          <Button
+            size={"sm"}
+            aria-label="workspace folder"
+            height={TOPBAR_BUTTON_HEIGHT + "px"}
+            onClick={() => setRoute("recentFlows")}
+            px={2}
+          >
+            <HStack gap={1}>
+              <IconFolder size={21} />
+              <IconTriangleInvertedFilled size={8} />
+            </HStack>
+          </Button>
+        </Tooltip>
         <Suspense fallback={<div style={{ width: "60px" }} />}>
           <ModelManagerTopbar />
         </Suspense>
@@ -121,7 +122,9 @@ export function Topbar({ curFlowName, setCurFlowName }: Props) {
           }}
         />
         {workflowsTable?.curWorkflow?.saveLock && (
-          <IconLock color="#FFF" size={20} />
+          <Tooltip label="This workflow is locked - autosave and sync won't overwrite it">
+            <IconLock color="white" size={20} />
+          </Tooltip>
         )}
         {curFlowID && (
           <HStack gap={"4px"}>
@@ -153,13 +156,15 @@ export function Topbar({ curFlowName, setCurFlowName }: Props) {
         )}
         <VersionNameTopbar />
         <AppIsDirtyEventListener />
-        <IconGripVertical
-          id="dragPanelIcon"
-          className="dragPanelIcon"
-          cursor="move"
-          size={15}
-          color="#FFF"
-        />
+        <Tooltip label="Drag to move toolbar">
+          <IconGripVertical
+            id="dragPanelIcon"
+            className="dragPanelIcon"
+            cursor="move"
+            size={15}
+            color="white"
+          />
+        </Tooltip>
         {route === "spotlightSearch" && <SpotlightSearch />}
       </HStack>
     </Draggable>
