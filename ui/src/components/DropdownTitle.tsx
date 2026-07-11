@@ -1,5 +1,7 @@
 import {
   ChangeEvent,
+  lazy,
+  Suspense,
   useCallback,
   useContext,
   useEffect,
@@ -31,12 +33,14 @@ import {
   IconDeviceFloppy,
   IconDownload,
   IconHistory,
+  IconShare2,
 } from "@tabler/icons-react";
 import { workflowsTable, userSettingsTable } from "../db-tables/WorkspaceDB";
 import { WorkspaceContext } from "../WorkspaceContext";
 import { VersionHistoryDrawer } from "./VersionHistoryDrawer";
 import { Workflow } from "../types/dbTypes";
 import HoverMenu from "./HoverMenu";
+const ShareDialog = lazy(() => import("../share/ShareDialog"));
 import { TOPBAR_BUTTON_HEIGHT } from "../const";
 import { downloadJsonFile } from "../utils/downloadJsonFile";
 import { app } from "../utils/comfyapp";
@@ -168,10 +172,22 @@ export default function DropdownTitle() {
               >
                 Versions History
               </MenuItem>
+              <MenuItem
+                onClick={() => setRoute("share")}
+                icon={<IconShare2 size={20} />}
+                iconSpacing={1}
+              >
+                Share / Export
+              </MenuItem>
             </MenuList>
           </Menu>
         }
       />
+      {route === "share" && (
+        <Suspense fallback={null}>
+          <ShareDialog onClose={() => setRoute("root")} />
+        </Suspense>
+      )}
       {route == "versionHistory" && (
         <VersionHistoryDrawer onClose={() => setRoute("root")} />
       )}
