@@ -17,32 +17,6 @@ import urllib.request
 workspace_path = os.path.join(os.path.dirname(__file__))
 comfy_path = os.path.dirname(folder_paths.__file__)
 
-@server.PromptServer.instance.routes.post("/workspace/find_nodes")
-async def install_nodes(request):
-    post_params = await request.json()
-    # [{'authorName': 'Fannovel16', 'gitHtmlUrl': 'https://github.com/Fannovel16/comfyui_controlnet_aux', 'totalInstalls': 1, 'description': None, 'id': 'TilePreprocessor'}]
-    resp = fetch_server(post_params['nodes'])
-    return web.json_response(resp, content_type='application/json')
-
-
-async def install_node(gitUrl):
-    print(f"Installing custom node from git '{gitUrl}'")
-    try:
-        if gitUrl.endswith("/"):
-            gitUrl = gitUrl[:-1]
-        repo_name = os.path.splitext(os.path.basename(gitUrl))[0]
-        repo_path = os.path.join(comfy_path, 'custom_nodes', repo_name)
-        print('repo_path', repo_path)
-        try:
-            Repo.clone_from(gitUrl+'.git', repo_path)
-        except Exception as e:
-            print(f"Error cloning repo: {e}")
-            return f"Error cloning repo: {e}\n"
-        return f"Installed custom node from git '{gitUrl}'\n"
-    except Exception as e:
-        return f"Error installing custom node from git '{gitUrl}': {e}\n"
-
-
 @server.PromptServer.instance.routes.post("/workspace/install_nodes")
 async def install_nodes(request):
     response = web.StreamResponse()
