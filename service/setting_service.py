@@ -47,12 +47,11 @@ async def save_settings(request):
 def get_my_workflows_dir():
     data = get_settings()
     if (data):
-        if 'myWorkflowsDir' in data:  
-            curDir = data['myWorkflowsDir']  
-        
+        curDir = data.get('myWorkflowsDir')
+
         # this is to be compatible of a bug that a dict is stored in userSettings.myWorkflowsDir
         # should not be needed once all users refresh their settings
-        if not isinstance(curDir, str):
+        if curDir is not None and not isinstance(curDir, str):
             curDir = curDir.get('path', None)
 
         if curDir and os.path.exists(curDir):
