@@ -24,9 +24,7 @@ const rewriteImportPlugin = ({ isDev }) => {
 export default defineConfig(({ mode }) => ({
   envDir: ".",
   build: {
-    watch: {
-      include: ["src/**"],
-    },
+    watch: mode === "development" ? { include: ["src/**"] } : null,
     // minify: false, // ___DEBUG__MODE only
     // sourcemap: true, // ___DEBUG___MODE only
     emptyOutDir: true,
