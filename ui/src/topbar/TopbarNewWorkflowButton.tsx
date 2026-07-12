@@ -1,6 +1,20 @@
-import { Tooltip, Button } from "@chakra-ui/react";
+import {
+  Tooltip,
+  Button,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  ModalFooter,
+  FormControl,
+  FormLabel,
+  FormErrorMessage,
+  Input,
+} from "@chakra-ui/react";
 import { IconDeviceFloppy } from "@tabler/icons-react";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { WorkspaceContext } from "../WorkspaceContext";
 import { COMFYSPACE_TRACKING_FIELD_NAME, TOPBAR_BUTTON_HEIGHT } from "../const";
 import { app } from "../utils/comfyapp";
@@ -9,9 +23,20 @@ import { nanoid } from "nanoid";
 
 export default function TopbarNewWorkflowButton() {
   const { setCurFlowIDAndName, curFlowID } = useContext(WorkspaceContext);
+  const [isOpen, setIsOpen] = useState(false);
+  const [workflowName, setWorkflowName] = useState("Untitled");
+  const [submitError, setSubmitError] = useState("");
+
+  const onClose = () => {
+    setIsOpen(false);
+    setSubmitError("");
+  };
+
   const saveNewWorkflow = async () => {
-    const workflowName = prompt("Enter workflow name", "Untitled");
-    if (!workflowName) return;
+    if (!workflowName.trim()) {
+      setSubmitError("Workflow name is required");
+      return;
+    }
     const id = nanoid();
     const graph = app.graph.serialize();
     if (!graph.extra) {
@@ -27,23 +52,66 @@ export default function TopbarNewWorkflowButton() {
       name: workflowName,
     });
     flow && setCurFlowIDAndName(flow);
+    onClose();
   };
   if (curFlowID) {
     return null;
   }
   return (
-    <Tooltip label={"Save as new workflow"}>
-      <Button
-        size={"sm"}
-        variant={"outline"}
-        colorScheme="teal"
-        aria-label="new workflow"
-        height={TOPBAR_BUTTON_HEIGHT + "px"}
-        onClick={() => saveNewWorkflow()}
-        px={1}
-      >
-        <IconDeviceFloppy size={16} color={"white"} />
-      </Button>
-    </Tooltip>
+    <>
+      <Tooltip label={"Save as new workflow"}>
+        <Button
+          size={"sm"}
+          variant={"outline"}
+          colorScheme="teal"
+          aria-label="new workflow"
+          height={TOPBAR_BUTTON_HEIGHT + "px"}
+          onClick={() => {
+            setWorkflowName("Untitled");
+            setIsOpen(true);
+          }}
+          px={1}
+        >
+          <IconDeviceFloppy size={16} color={"white"} />
+        </Button>
+      </Tooltip>
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Save as new workflow</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <FormControl isInvalid={!!submitError}>
+              <FormLabel>Workflow name</FormLabel>
+              <Input
+                value={workflowName}
+                onChange={(e) => {
+                  setWorkflowName(e.target.value);
+                  submitError && setSubmitError("");
+                }}
+                autoFocus
+                onKeyUp={(e) => {
+                  e.code === "Enter" && saveNewWorkflow();
+                }}
+              />
+              {submitError && (
+                <FormErrorMessage>{submitError}</FormErrorMessage>
+              )}
+            </FormControl>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              colorScheme="teal"
+              mr={3}
+              onClick={saveNewWorkflow}
+              isDisabled={!workflowName.trim()}
+            >
+              Save
+            </Button>
+            <Button onClick={onClose}>Cancel</Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    </>
   );
 }
