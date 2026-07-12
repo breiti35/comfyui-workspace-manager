@@ -1,27 +1,34 @@
 import {
   Box,
-  Card,
   Flex,
   Heading,
   Spinner,
-  Portal,
   Input,
   Select,
   HStack,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  Tabs,
+  TabList,
+  TabPanels,
+  Tab,
+  TabPanel,
 } from "@chakra-ui/react";
 import Fuse from "fuse.js/min-basic";
 import { useEffect, useState } from "react";
-import { ModelsTags } from "./ModelsTags";
 import { ModelsList } from "./ModelsList";
 import InstallModelsButton from "../install-models/InstallModelsButton";
 import { type ModelsListRespItem } from "../types";
 import { useUpdateModels } from "../hooks/useUpdateModels";
-import { DRAWER_Z_INDEX } from "../../const";
 import ShowNsfwModelThumbnailSettings from "../../settings/ShowNsfwModelThumbnailSettings";
 import { indexdb } from "../../db-tables/indexdb";
 import { type Model } from "../../types/dbTypes";
 import ModelDropEventListener from "../topbar/ModelDropEventListener";
-import { app } from "../../utils/comfyapp";
+
 interface Props {
   onClose: () => void;
 }
@@ -76,88 +83,98 @@ export default function ModelsListDrawer({ onClose }: Props) {
     setCurModelList(res);
   }, [selectedModel, modelsList, searchQuery, sortBy, modelsListWithDBData]);
 
-  useEffect(() => {
-    app.canvasEl.addEventListener("click", onClose);
-    return () => {
-      app.canvasEl.removeEventListener("click", onClose);
-    };
-  }, [onClose]);
-
-  const DRAWER_WIDTH = 440;
+  const tabIndex = Math.max(0, modelTypeList.indexOf(selectedModel));
 
   return (
-    <Portal>
-      <Box style={{ width: DRAWER_WIDTH }}>
-        <Card
-          width={DRAWER_WIDTH}
-          height={"100vh"}
-          p={4}
-          gap={2}
-          position={"fixed"}
-          top={0}
-          left={0}
-          shadow={"xl"}
-          zIndex={DRAWER_Z_INDEX}
-          overflowY={"auto"}
+    <>
+      <Modal isOpen={true} onClose={onClose} blockScrollOnMount={true}>
+        <ModalOverlay />
+        <ModalContent
+          width={"90%"}
+          maxWidth={"90vw"}
+          height={"90vh"}
+          display={"flex"}
+          flexDirection={"column"}
         >
-          <Flex justifyContent={"space-between"} alignContent={"center"} py={3}>
-            <Heading size={"md"} mr={2}>
-              Models
-            </Heading>
-
-            <InstallModelsButton />
-          </Flex>
-
-          <Flex gap={4} justifyContent={"center"} alignItems={"center"} mb={1}>
-            <Input
-              size={"sm"}
-              placeholder="Search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </Flex>
-          <Flex
-            gap={4}
-            justifyContent={"space-between"}
-            alignItems={"center"}
-            mb={1}
-          >
-            {!searchQuery.length && (
-              <HStack>
-                <span>Sort By</span>
-                <Select
-                  value={sortBy}
-                  size={"sm"}
-                  width={"120px"}
-                  onChange={(e) => setSortBy(e.target.value)}
-                >
-                  <option value="name">Name</option>
-                  <option value="date">Date</option>
-                </Select>
-              </HStack>
-            )}
-            <ShowNsfwModelThumbnailSettings />
-          </Flex>
-          {!searchQuery.length && (
-            <ModelsTags
-              modelTypeList={modelTypeList}
-              setSelectedModel={setSelectedModel}
-              selectedModel={selectedModel}
-            />
-          )}
-          <ModelsList list={curModelList} />
-          {loading && (
-            <Flex
-              justifyContent={"center"}
-              alignItems={"center"}
-              height={"100%"}
-            >
-              <Spinner />
+          <ModalHeader>
+            <Flex justifyContent={"space-between"} alignContent={"center"}>
+              <Heading size={"md"} mr={2}>
+                Models
+              </Heading>
+              <InstallModelsButton />
             </Flex>
-          )}
-        </Card>
-        <ModelDropEventListener />
-      </Box>
-    </Portal>
+            <HStack gap={4} mt={3} wrap={"wrap"}>
+              <Input
+                size={"sm"}
+                placeholder="Search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                maxWidth={"300px"}
+              />
+              {!searchQuery.length && (
+                <HStack>
+                  <span>Sort By</span>
+                  <Select
+                    value={sortBy}
+                    size={"sm"}
+                    width={"120px"}
+                    onChange={(e) => setSortBy(e.target.value)}
+                  >
+                    <option value="name">Name</option>
+                    <option value="date">Date</option>
+                  </Select>
+                </HStack>
+              )}
+              <ShowNsfwModelThumbnailSettings />
+            </HStack>
+          </ModalHeader>
+          <ModalCloseButton />
+          <ModalBody
+            overflowY={"hidden"}
+            display={"flex"}
+            flexDirection={"column"}
+            flex={1}
+            minHeight={0}
+          >
+            {loading && (
+              <Flex justifyContent={"center"} alignItems={"center"} py={8}>
+                <Spinner />
+              </Flex>
+            )}
+            {!searchQuery.length ? (
+              <Tabs
+                index={tabIndex}
+                onChange={(index) => setSelectedModel(modelTypeList[index])}
+                display={"flex"}
+                flexDirection={"column"}
+                flex={1}
+                minHeight={0}
+                isLazy
+              >
+                <TabList overflowX={"auto"} flexShrink={0}>
+                  {modelTypeList.map((v) => (
+                    <Tab key={v} whiteSpace={"nowrap"}>
+                      {v}
+                    </Tab>
+                  ))}
+                </TabList>
+                <TabPanels flex={1} minHeight={0} overflowY={"auto"}>
+                  {modelTypeList.map((v) => (
+                    <TabPanel key={v} px={0}>
+                      <ModelsList list={curModelList} />
+                    </TabPanel>
+                  ))}
+                </TabPanels>
+              </Tabs>
+            ) : (
+              <Box flex={1} minHeight={0} overflowY={"auto"}>
+                <ModelsList list={curModelList} />
+              </Box>
+            )}
+          </ModalBody>
+        </ModalContent>
+      </Modal>
+      <ModelDropEventListener />
+    </>
   );
 }

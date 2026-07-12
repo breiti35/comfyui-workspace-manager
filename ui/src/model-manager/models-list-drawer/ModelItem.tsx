@@ -88,7 +88,7 @@ export function ModelItem({ data }: Props) {
         {hashing ? (
           <Flex
             bg="rgba(0, 0, 0, 0.5)"
-            height={178}
+            height={180}
             justifyContent="center"
             alignItems="center"
           >
@@ -99,7 +99,7 @@ export function ModelItem({ data }: Props) {
             src={url}
             draggable={false}
             boxSize="100%"
-            height={150}
+            height={180}
             objectFit="cover"
             borderRadius="md"
             cursor={model?.civitModelID != null ? "pointer" : "auto"}
