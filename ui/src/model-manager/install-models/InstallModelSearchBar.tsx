@@ -10,8 +10,10 @@ export default function InstallModelSearchBar({
   onSearch: () => void;
 }) {
   return (
-    <Flex gap={1} alignItems={"center"} grow={1}>
+    <Flex gap={2} alignItems={"center"} grow={1}>
       <Input
+        size={"sm"}
+        borderRadius={"md"}
         placeholder="Search models in CivitAI"
         width={"60%"}
         value={searchQuery}
@@ -20,7 +22,7 @@ export default function InstallModelSearchBar({
           e.code === "Enter" && onSearch();
         }}
       />
-      <Button size={"sm"} onClick={() => onSearch()} colorScheme="teal">
+      <Button size={"sm"} onClick={() => onSearch()} colorScheme="blue">
         Search
       </Button>
     </Flex>

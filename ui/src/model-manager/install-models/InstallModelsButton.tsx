@@ -8,7 +8,7 @@ export default function InstallModelsButton() {
     <>
       <Button
         size={"sm"}
-        colorScheme="teal"
+        colorScheme="blue"
         onClick={() => setRoute("installModels")}
       >
         Install Models

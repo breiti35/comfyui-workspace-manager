@@ -12,11 +12,6 @@ import {
   ModalHeader,
   ModalCloseButton,
   ModalBody,
-  Tabs,
-  TabList,
-  TabPanels,
-  Tab,
-  TabPanel,
 } from "@chakra-ui/react";
 import Fuse from "fuse.js/min-basic";
 import { useEffect, useState } from "react";
@@ -25,6 +20,7 @@ import InstallModelsButton from "../install-models/InstallModelsButton";
 import { type ModelsListRespItem } from "../types";
 import { useUpdateModels } from "../hooks/useUpdateModels";
 import ShowNsfwModelThumbnailSettings from "../../settings/ShowNsfwModelThumbnailSettings";
+import CategoryTabs from "../components/CategoryTabs";
 import { indexdb } from "../../db-tables/indexdb";
 import { type Model } from "../../types/dbTypes";
 import ModelDropEventListener from "../topbar/ModelDropEventListener";
@@ -83,8 +79,6 @@ export default function ModelsListDrawer({ onClose }: Props) {
     setCurModelList(res);
   }, [selectedModel, modelsList, searchQuery, sortBy, modelsListWithDBData]);
 
-  const tabIndex = Math.max(0, modelTypeList.indexOf(selectedModel));
-
   return (
     <>
       <Modal isOpen={true} onClose={onClose} blockScrollOnMount={true}>
@@ -142,30 +136,16 @@ export default function ModelsListDrawer({ onClose }: Props) {
               </Flex>
             )}
             {!searchQuery.length ? (
-              <Tabs
-                index={tabIndex}
-                onChange={(index) => setSelectedModel(modelTypeList[index])}
-                display={"flex"}
-                flexDirection={"column"}
-                flex={1}
-                minHeight={0}
-                isLazy
-              >
-                <TabList overflowX={"auto"} flexShrink={0}>
-                  {modelTypeList.map((v) => (
-                    <Tab key={v} whiteSpace={"nowrap"}>
-                      {v}
-                    </Tab>
-                  ))}
-                </TabList>
-                <TabPanels flex={1} minHeight={0} overflowY={"auto"}>
-                  {modelTypeList.map((v) => (
-                    <TabPanel key={v} px={0}>
-                      <ModelsList list={curModelList} />
-                    </TabPanel>
-                  ))}
-                </TabPanels>
-              </Tabs>
+              <Flex direction={"column"} flex={1} minHeight={0}>
+                <CategoryTabs
+                  items={modelTypeList.map((v) => ({ key: v, label: v }))}
+                  value={selectedModel}
+                  onChange={setSelectedModel}
+                />
+                <Box flex={1} minHeight={0} overflowY={"auto"} pt={2}>
+                  <ModelsList list={curModelList} />
+                </Box>
+              </Flex>
             ) : (
               <Box flex={1} minHeight={0} overflowY={"auto"}>
                 <ModelsList list={curModelList} />

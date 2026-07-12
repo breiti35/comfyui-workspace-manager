@@ -1,5 +1,6 @@
 import {
   Button,
+  Flex,
   HStack,
   Modal,
   ModalOverlay,
@@ -31,9 +32,9 @@ import {
   apiResponse,
 } from "./util/modelTypes";
 import { getModelFromCivitAPi } from "./util/getModelFromCivitAPI";
-import { getModelFromSearch } from "./util/getModelFromSearch";
 import { userSettingsTable } from "../../db-tables/WorkspaceDB";
 import { getAllFoldersList } from "../../Api";
+import CategoryTabs from "../components/CategoryTabs";
 
 interface Props {
   onclose: () => void;
@@ -156,8 +157,8 @@ export default function InatallModelsModal({
       >
         <ModalOverlay />
         <ModalContent width={"90%"} maxWidth={"90vw"} height={"90vh"}>
-          <ModalHeader pb={1}>
-            <HStack gap={2} mb={2} alignItems={"center"}>
+          <ModalHeader pb={2}>
+            <HStack gap={2} mb={3} alignItems={"center"}>
               <Heading size={"md"} mr={2}>
                 Models
               </Heading>
@@ -166,72 +167,50 @@ export default function InatallModelsModal({
                 setSearchQuery={setSearchQuery}
                 onSearch={loadData}
               />
-              <Button size={"sm"} py={1} mr={8} onClick={onOpen}>
+              <Button size={"sm"} variant={"outline"} onClick={onOpen}>
                 Custom URL Install
               </Button>
               <AddApiKeyPopover />
+              {loading && <Spinner size={"sm"} color={"blue.400"} />}
             </HStack>
-            <HStack gap={2} wrap={"wrap"}>
-              <Button
-                size={"sm"}
-                py={1}
-                onClick={() => {
-                  setModelType(undefined);
-                }}
-                isActive={modelType == null}
-              >
-                All
-              </Button>
-              {ALL_MODEL_TYPES.map((type) => {
-                return (
-                  <Button
-                    key={type}
+            <CategoryTabs
+              items={[
+                { key: "", label: "All" },
+                ...ALL_MODEL_TYPES.map((t) => ({ key: t, label: t })),
+              ]}
+              value={modelType ?? ""}
+              onChange={(key) =>
+                setModelType(key === "" ? undefined : (key as MODEL_TYPE))
+              }
+            />
+            {modelType &&
+              foldersList[MODEL_TYPE_TO_FOLDER_MAPPING[modelType]] && (
+                <HStack mt={2} justifyContent={"flex-end"} gap={2}>
+                  <Text fontSize={"sm"} color={"gray.500"} whiteSpace="nowrap">
+                    Default Download Folder:
+                  </Text>
+                  <Select
                     size={"sm"}
-                    py={1}
-                    isActive={modelType === type}
-                    onClick={() => {
-                      setModelType(type);
-                    }}
+                    maxWidth={"280px"}
+                    value={defaultFolders[modelType]}
+                    onChange={(e) =>
+                      updateDefaultFolders(modelType, e.target.value)
+                    }
                   >
-                    {type}
-                  </Button>
-                );
-              })}
-              {modelType &&
-                foldersList[MODEL_TYPE_TO_FOLDER_MAPPING[modelType]] && (
-                  <HStack ml="auto">
-                    <Text fontSize={17} whiteSpace="nowrap">
-                      Default Download Folder:
-                    </Text>
-                    <Select
-                      value={defaultFolders[modelType]}
-                      onChange={(e) =>
-                        updateDefaultFolders(modelType, e.target.value)
-                      }
-                    >
-                      {foldersList[MODEL_TYPE_TO_FOLDER_MAPPING[modelType]].map(
-                        (path) => (
-                          <option key={path} value={path}>
-                            {path}
-                          </option>
-                        ),
-                      )}
-                    </Select>
-                  </HStack>
-                )}
-            </HStack>
-            {loading && (
-              <Spinner
-                thickness="4px"
-                emptyColor="gray.200"
-                color="pink.500"
-                size="lg"
-              />
-            )}
+                    {foldersList[MODEL_TYPE_TO_FOLDER_MAPPING[modelType]].map(
+                      (path) => (
+                        <option key={path} value={path}>
+                          {path}
+                        </option>
+                      ),
+                    )}
+                  </Select>
+                </HStack>
+              )}
           </ModalHeader>
           <ModalCloseButton />
           <ModalBody overflowY={"auto"}>
-            <HStack wrap={"wrap"}>
+            <Flex wrap={"wrap"} gap={4} align={"flex-start"} pt={1}>
               {models?.map((model) => {
                 return (
                   <ModelCard
@@ -242,7 +221,7 @@ export default function InatallModelsModal({
                   />
                 );
               })}
-            </HStack>
+            </Flex>
             <InstallProgress />
           </ModalBody>
         </ModalContent>

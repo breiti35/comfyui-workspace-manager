@@ -1,4 +1,5 @@
 import {
+  Badge,
   Box,
   Button,
   HStack,
@@ -114,29 +115,26 @@ export default function ModelCard({
             {model.name}
           </Text>
         </Tooltip>
-        <Flex justifyContent={"space-between"} alignItems={"center"}>
-          <Button
-            borderRadius={14}
-            noOfLines={1}
-            size={"xs"}
-            colorScheme="teal"
-            maxWidth={"40%"}
-            flexShrink={1}
-            variant={"outline"}
-            px={1}
-            cursor={"text"}
+        <Flex justifyContent={"space-between"} alignItems={"center"} gap={2}>
+          <Badge
+            colorScheme={"gray"}
+            borderRadius={"full"}
+            px={2}
+            maxWidth={"50%"}
+            textTransform={"none"}
+            overflow={"hidden"}
+            textOverflow={"ellipsis"}
+            whiteSpace={"nowrap"}
           >
-            <Text whiteSpace="nowrap" overflow="hidden" textOverflow="ellipsis">
-              {model.type}
-            </Text>
-          </Button>
+            {model.type}
+          </Badge>
           <Button
             leftIcon={<IconDownload size={18} />}
             iconSpacing={1}
-            borderRadius={10}
+            borderRadius={"md"}
             size={"sm"}
             py={1}
-            colorScheme="teal"
+            colorScheme="blue"
             type="submit"
             onClick={() => installHandler()}
             isDisabled={Boolean(
