@@ -91,7 +91,11 @@ export default function ChooseFolder({
             <Button
               onClick={() => selectFolder(folderPath, url)}
               ml={3}
-              isDisabled={url.length === 0}
+              // A target folder is always required. The URL field is only
+              // part of the Custom URL Install flow (no file preselected);
+              // for a normal install from a search result it stays hidden and
+              // must not block Confirm.
+              isDisabled={folderPath.length === 0 || (!fileSelected && url.length === 0)}
             >
               Confirm
             </Button>

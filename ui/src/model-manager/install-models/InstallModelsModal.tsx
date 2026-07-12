@@ -97,7 +97,21 @@ export default function InatallModelsModal({
     version != null && setInstalling((cur) => [...cur, version ?? ""]);
     const apiKey = getCivitApiKey();
     if (apiKey) {
-      url += `?token=${apiKey}`;
+      // Append the token without clobbering an existing query string (a
+      // Custom URL Install may already carry `?...`) and without adding a
+      // duplicate token.
+      try {
+        const u = new URL(url);
+        if (!u.searchParams.has("token")) {
+          u.searchParams.set("token", apiKey);
+        }
+        url = u.toString();
+      } catch {
+        // Not an absolute URL - fall back to a delimiter-aware append.
+        if (!/[?&]token=/.test(url)) {
+          url += `${url.includes("?") ? "&" : "?"}token=${apiKey}`;
+        }
+      }
     }
     installModelsApi({
       file_hash: file.current?.SHA256,
