@@ -1,5 +1,5 @@
 import { Badge, Box, Flex, Text, VStack, keyframes } from "@chakra-ui/react";
-import { IconLivePhoto, IconLayoutGrid, IconPhoto } from "@tabler/icons-react";
+import { IconPhotoScan, IconLayoutGrid, IconPhoto } from "@tabler/icons-react";
 import type { GallerySection } from "../GalleryContext.ts";
 
 const pulse = keyframes`
@@ -13,7 +13,7 @@ interface Props {
   onSelect: (section: GallerySection) => void;
   workflowCount: number;
   allCount: number;
-  liveCount: number;
+  previewCount: number;
   isGenerating: boolean;
 }
 
@@ -24,7 +24,7 @@ const ITEMS: {
 }[] = [
   { key: "workflow", label: "Dieser Workflow", icon: IconPhoto },
   { key: "all", label: "Alle Bilder", icon: IconLayoutGrid },
-  { key: "live", label: "Live-Vorschau", icon: IconLivePhoto },
+  { key: "preview", label: "Preview Image", icon: IconPhotoScan },
 ];
 
 export function GallerySidebar({
@@ -32,7 +32,7 @@ export function GallerySidebar({
   onSelect,
   workflowCount,
   allCount,
-  liveCount,
+  previewCount,
   isGenerating,
 }: Props) {
   return (
@@ -67,7 +67,7 @@ export function GallerySidebar({
             ? workflowCount
             : item.key === "all"
               ? allCount
-              : liveCount;
+              : previewCount;
         return (
           <Flex
             as={"button"}
@@ -89,7 +89,7 @@ export function GallerySidebar({
             <Text flex={1} fontSize={"sm"} fontWeight={active ? 600 : 400}>
               {item.label}
             </Text>
-            {item.key === "live" && isGenerating ? (
+            {item.key === "preview" && isGenerating ? (
               <Box
                 w={"8px"}
                 h={"8px"}

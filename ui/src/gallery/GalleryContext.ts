@@ -1,16 +1,16 @@
 import { createContext } from "react";
 import type { Media } from "../types/dbTypes.ts";
 
-export type GallerySection = "workflow" | "all" | "live";
+export type GallerySection = "workflow" | "all" | "preview";
 
 /**
- * A transient, in-memory live preview frame streamed from ComfyUI's
- * WebSocket while a generation is running. These are NOT persisted - no file,
- * no db entry - they only live in UI state until the run finishes (see
- * useLivePreview / GalleryLivePreview). `url` is an object URL of the binary
- * preview blob.
+ * A transient preview frame produced by a ComfyUI "Preview Image" node. The
+ * node writes to the temp dir (type "temp") and emits it on the "executed"
+ * event; we show it here WITHOUT creating a file or db entry - exactly like
+ * the node itself. `url` points at ComfyUI's native `/view?...&type=temp`
+ * route (see usePreviewImage / GalleryPreviewImage).
  */
-export interface LivePreviewFrame {
+export interface PreviewImageFrame {
   id: string;
   url: string;
   nodeId?: string;

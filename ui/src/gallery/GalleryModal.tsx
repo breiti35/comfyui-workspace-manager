@@ -23,8 +23,8 @@ import { useDebounce } from "../customHooks/useDebounce.ts";
 import SearchInput from "../components/SearchInput.tsx";
 import { GalleryContext, GallerySection } from "./GalleryContext.ts";
 import { GallerySidebar } from "./components/GallerySidebar.tsx";
-import { GalleryLivePreview } from "./components/GalleryLivePreview.tsx";
-import { useLivePreview } from "./useLivePreview.ts";
+import { GalleryPreviewImage } from "./components/GalleryPreviewImage.tsx";
+import { usePreviewImage } from "./usePreviewImage.ts";
 
 export default function GalleryModal({ onclose }: { onclose: () => void }) {
   const { curFlowID } = useContext(WorkspaceContext);
@@ -65,10 +65,11 @@ export default function GalleryModal({ onclose }: { onclose: () => void }) {
       });
   }, []);
 
-  // Attach to ComfyUI's existing WebSocket for live intermediate previews.
-  // When a run finishes, its finished image is written by the plugin and we
-  // refresh the saved lists so it appears under "Dieser Workflow".
-  const { frames: liveFrames, isGenerating } = useLivePreview({
+  // Attach to ComfyUI's existing WebSocket to surface "Preview Image" node
+  // outputs (temp images) transiently. When a run also saves an output image,
+  // the plugin writes the media record and we refresh the saved lists so it
+  // appears under "Dieser Workflow".
+  const { frames: previewFrames, isGenerating } = usePreviewImage({
     onSavedMediaChanged: refreshLists,
   });
 
@@ -108,7 +109,7 @@ export default function GalleryModal({ onclose }: { onclose: () => void }) {
       ? workflowName || "Dieser Workflow"
       : section === "all"
         ? "Alle Bilder"
-        : "Live-Vorschau";
+        : "Preview Image";
 
   return (
     <GalleryContext.Provider
@@ -130,7 +131,7 @@ export default function GalleryModal({ onclose }: { onclose: () => void }) {
               onSelect={selectSection}
               workflowCount={workflowMedia.length}
               allCount={allMedia.length}
-              liveCount={liveFrames.length}
+              previewCount={previewFrames.length}
               isGenerating={isGenerating}
             />
             <Flex direction={"column"} flex={1} minW={0} p={4} gap={3}>
@@ -150,7 +151,7 @@ export default function GalleryModal({ onclose }: { onclose: () => void }) {
                   <Heading size={"md"} noOfLines={1}>
                     {sectionTitle}
                   </Heading>
-                  {section !== "live" && (
+                  {section !== "preview" && (
                     <Badge
                       colorScheme={"gray"}
                       borderRadius={"full"}
@@ -161,7 +162,7 @@ export default function GalleryModal({ onclose }: { onclose: () => void }) {
                     </Badge>
                   )}
                 </HStack>
-                {section !== "live" && !detailOpen && (
+                {section !== "preview" && !detailOpen && (
                   <SearchInput
                     searchValue={searchValue}
                     onUpdateSearchValue={setSearchValue}
@@ -172,9 +173,9 @@ export default function GalleryModal({ onclose }: { onclose: () => void }) {
               </HStack>
 
               <Box flex={1} minH={0} overflowY={"auto"}>
-                {section === "live" ? (
-                  <GalleryLivePreview
-                    frames={liveFrames}
+                {section === "preview" ? (
+                  <GalleryPreviewImage
+                    frames={previewFrames}
                     isGenerating={isGenerating}
                   />
                 ) : detailOpen && curMedia ? (
