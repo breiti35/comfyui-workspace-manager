@@ -1,5 +1,7 @@
 import {
-  Checkbox,
+  Badge,
+  Box,
+  Flex,
   Heading,
   HStack,
   IconButton,
@@ -7,39 +9,44 @@ import {
   ModalBody,
   ModalCloseButton,
   ModalContent,
-  ModalHeader,
   ModalOverlay,
-  Text,
+  Tooltip,
 } from "@chakra-ui/react";
 import { useContext, useEffect, useState } from "react";
 import { mediaTable, workflowsTable } from "../db-tables/WorkspaceDB";
-import { IconX } from "@tabler/icons-react";
+import { IconArrowLeft } from "@tabler/icons-react";
 import { WorkspaceContext } from "../WorkspaceContext";
 import { Media } from "../types/dbTypes";
 import { GalleryCarouselImageViewer } from "./components/GalleryCarouselImageViewer.tsx";
 import GalleryGridView from "./components/GalleryGridView.tsx";
 import { useDebounce } from "../customHooks/useDebounce.ts";
 import SearchInput from "../components/SearchInput.tsx";
-import { GalleryContext } from "./GalleryContext.ts";
+import { GalleryContext, GallerySection } from "./GalleryContext.ts";
+import { GallerySidebar } from "./components/GallerySidebar.tsx";
+import { GalleryLivePreview } from "./components/GalleryLivePreview.tsx";
 
 export default function GalleryModal({ onclose }: { onclose: () => void }) {
   const { curFlowID } = useContext(WorkspaceContext);
   const [workflowName, setWorkflowName] = useState("");
-  const [selectedID, setSelectedID] = useState<string[]>([]);
-  const [isSelecting, setIsSelecting] = useState(false);
-  const [images, setImages] = useState<Media[]>([]);
-  const [curMedia, setCurMedia] = useState<Media | null>();
+  const [section, setSection] = useState<GallerySection>("workflow");
+  const [curMedia, setCurMedia] = useState<Media | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [workflowMedia, setWorkflowMedia] = useState<Media[]>([]);
+  const [allMedia, setAllMedia] = useState<Media[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const debounceSearchValue = useDebounce(searchValue, 300);
-  const [showAllImages, setShowAllImages] = useState(false);
 
   const loadData = async () => {
     if (curFlowID == null) return;
     const media = await mediaTable?.listByWorkflowID(curFlowID);
-    setImages(media ?? []);
+    setWorkflowMedia(media ?? []);
     if (media?.length) {
       setCurMedia(media[0]);
     }
+    const all = await mediaTable?.listAll();
+    setAllMedia(
+      (all ?? []).slice().sort((a, b) => b.createTime - a.createTime),
+    );
   };
 
   useEffect(() => {
@@ -56,71 +63,111 @@ export default function GalleryModal({ onclose }: { onclose: () => void }) {
     return null;
   }
 
-  const isAllSelected =
-    images.length > 0 && selectedID.length === images.length;
+  const removeMedia = (id: string) => {
+    setWorkflowMedia((prev) => prev.filter((m) => m.id !== id));
+    setAllMedia((prev) => prev.filter((m) => m.id !== id));
+    setCurMedia((prev) => (prev?.id === id ? null : prev));
+  };
+
+  const openDetail = (media: Media) => {
+    setCurMedia(media);
+    setDetailOpen(true);
+  };
+  const closeDetail = () => setDetailOpen(false);
+
+  const selectSection = (next: GallerySection) => {
+    setSection(next);
+    setDetailOpen(false);
+  };
+
+  const baseList = section === "all" ? allMedia : workflowMedia;
+  const query = debounceSearchValue.trim().toLowerCase();
+  const filteredList = query
+    ? baseList.filter(
+        (m) =>
+          (m.localPath?.toLowerCase().includes(query) ?? false) ||
+          (m.workflowJSON?.toLowerCase().includes(query) ?? false),
+      )
+    : baseList;
+
+  const sectionTitle =
+    section === "workflow"
+      ? workflowName || "Dieser Workflow"
+      : section === "all"
+        ? "Alle Bilder"
+        : "Live-Vorschau";
 
   return (
     <GalleryContext.Provider
       value={{
-        curMedia: curMedia ?? null,
+        curMedia,
         setCurMedia,
-        setMediaList: setImages,
-        showAllImages,
-        setShowAllImages,
+        openDetail,
+        closeDetail,
+        removeMedia,
       }}
     >
       <Modal isOpen={true} onClose={onclose} blockScrollOnMount={true}>
         <ModalOverlay />
         <ModalContent width={"90%"} maxWidth={"90vw"} height={"90vh"}>
-          <ModalHeader>
-            <HStack gap={2} mb={2}>
-              <Heading size={"md"} mr={2}>
-                Gallery - {workflowName}
-              </Heading>
-
-              <SearchInput
-                searchValue={searchValue}
-                onUpdateSearchValue={(val) => {
-                  setSearchValue(val);
-                  if (!showAllImages) {
-                    setShowAllImages(true);
-                  }
-                }}
-                placeholder="Search prompt, model name, etc."
-                style={{ width: "300px" }}
-              />
-            </HStack>
-            {isSelecting && (
-              <HStack gap={3}>
-                <Checkbox
-                  isChecked={isAllSelected}
-                  onChange={() => {
-                    if (isAllSelected) {
-                      setSelectedID([]);
-                    } else {
-                      setSelectedID(images.map((i) => i.id));
-                    }
-                  }}
-                >
-                  All
-                </Checkbox>
-                <Text fontSize={16}>{selectedID.length} Selected</Text>
-                <IconButton
-                  size={"sm"}
-                  icon={<IconX size={19} />}
-                  onClick={() => setIsSelecting(false)}
-                  aria-label="cancel"
-                />
+          <ModalCloseButton zIndex={2} />
+          <ModalBody p={0} display={"flex"} overflow={"hidden"}>
+            <GallerySidebar
+              section={section}
+              onSelect={selectSection}
+              workflowCount={workflowMedia.length}
+              allCount={allMedia.length}
+              liveCount={0}
+              isGenerating={false}
+            />
+            <Flex direction={"column"} flex={1} minW={0} p={4} gap={3}>
+              <HStack justify={"space-between"} gap={3} align={"center"}>
+                <HStack gap={2} minW={0}>
+                  {detailOpen && (
+                    <Tooltip label={"Zurück zur Übersicht"}>
+                      <IconButton
+                        size={"sm"}
+                        variant={"ghost"}
+                        icon={<IconArrowLeft size={19} />}
+                        aria-label={"back to grid"}
+                        onClick={closeDetail}
+                      />
+                    </Tooltip>
+                  )}
+                  <Heading size={"md"} noOfLines={1}>
+                    {sectionTitle}
+                  </Heading>
+                  {section !== "live" && (
+                    <Badge
+                      colorScheme={"gray"}
+                      borderRadius={"full"}
+                      px={2}
+                      flexShrink={0}
+                    >
+                      {filteredList.length}
+                    </Badge>
+                  )}
+                </HStack>
+                {section !== "live" && !detailOpen && (
+                  <SearchInput
+                    searchValue={searchValue}
+                    onUpdateSearchValue={setSearchValue}
+                    placeholder="Search prompt, model name, etc."
+                    style={{ width: "300px" }}
+                  />
+                )}
               </HStack>
-            )}
-          </ModalHeader>
-          <ModalCloseButton />
-          <ModalBody overflowY={"auto"}>
-            {showAllImages ? (
-              <GalleryGridView searchQuery={debounceSearchValue} />
-            ) : (
-              <GalleryCarouselImageViewer mediaList={images} />
-            )}
+
+              <Box flex={1} minH={0} overflowY={"auto"}>
+                {section === "live" ? (
+                  <GalleryLivePreview frames={[]} isGenerating={false} />
+                ) : detailOpen && curMedia ? (
+                  <GalleryCarouselImageViewer mediaList={filteredList} />
+                ) : (
+                  <GalleryGridView medias={filteredList} />
+                )}
+              </Box>
+            </Flex>
           </ModalBody>
         </ModalContent>
       </Modal>

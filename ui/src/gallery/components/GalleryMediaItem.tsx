@@ -1,7 +1,6 @@
 import React, { useContext } from "react";
 import {
   Link,
-  Checkbox,
   Stack,
   HStack,
   Tooltip,
@@ -19,16 +18,14 @@ import MediaPreview from "../../components/MediaPreview";
 
 interface GalleryMediaItemProps {
   media: Media;
-  isSelecting: boolean;
-  selectedID: string[];
   onClickMedia: (media: Media) => void;
+  onDeleted?: () => void;
 }
 
 const GalleryMediaItem: React.FC<GalleryMediaItemProps> = ({
   media,
-  isSelecting,
-  selectedID,
   onClickMedia,
+  onDeleted,
 }) => {
   const IMAGE_SIZE = 180; // Define your image size
   const { curFlowID, loadFilePath } = useContext(WorkspaceContext);
@@ -41,19 +38,12 @@ const GalleryMediaItem: React.FC<GalleryMediaItemProps> = ({
   }
   const mediaPreview = (
     <Link isExternal onClick={() => onClickMedia(media)} position="relative">
-      {isSelecting && (
-        <Checkbox
-          isChecked={selectedID.includes(media.id)}
-          position="absolute"
-          top={2}
-          left={2}
-        />
-      )}
       <MediaPreview
         mediaLocalPath={media.localPath}
         size={IMAGE_SIZE}
         onBrokenLink={() => {
           mediaTable?.delete(media.id);
+          onDeleted?.();
         }}
         hideBrokenImage
         autoPlay={true}
@@ -72,7 +62,7 @@ const GalleryMediaItem: React.FC<GalleryMediaItemProps> = ({
           {media.localPath}
         </Text>
       </Tooltip>
-      <HStack hidden={isSelecting} gap={0}>
+      <HStack gap={0}>
         <Button
           flexGrow={1}
           onClick={() =>
@@ -121,6 +111,7 @@ const GalleryMediaItem: React.FC<GalleryMediaItemProps> = ({
               );
               if (!res) return;
               await mediaTable?.delete(media.id);
+              onDeleted?.();
             }}
           />
         </Tooltip>

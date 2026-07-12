@@ -30,7 +30,7 @@ export const GalleryRightColHeaderButtons = ({
   media?: MediaWithMetaData;
 }) => {
   const [isCover, setIsCover] = useState(false);
-  const { setMediaList } = useContext(GalleryContext);
+  const { removeMedia } = useContext(GalleryContext);
   const { loadFilePath } = useContext(WorkspaceContext);
   const { showDialog } = useDialog();
 
@@ -81,7 +81,7 @@ export const GalleryRightColHeaderButtons = ({
             );
             if (!res) return;
             await mediaTable?.delete(media.id);
-            setMediaList((prev) => prev.filter((v) => v.id !== media.id));
+            removeMedia(media.id);
           }}
         />
       </Tooltip>

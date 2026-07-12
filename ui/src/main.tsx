@@ -54,6 +54,10 @@ const theme = extendTheme({
       // literals ("#E2E8F0"/"#4A5568") that were previously duplicated.
       rowHoverBg: { default: "gray.200", _dark: "gray.600" },
       rowBorderColor: { default: "gray.200", _dark: "gray.700" },
+      // Gallery left-nav surface + active item, kept in the same dark,
+      // minimalist family as the topbar (comfy.topbarBg) and Models panel.
+      galleryPanelBg: { default: "gray.50", _dark: "#202226" },
+      galleryActiveBg: { default: "gray.200", _dark: "#2C2F34" },
     },
   },
   components: {
