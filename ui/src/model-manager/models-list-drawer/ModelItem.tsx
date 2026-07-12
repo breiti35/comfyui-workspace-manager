@@ -28,7 +28,8 @@ export function ModelItem({ data }: Props) {
   const [url, setUrl] = useState(
     "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/27fd7433-cb0a-4a87-88c1-21ccb2b1a842/width=450/00060-881622046.jpeg",
   );
-  const [isNsfw, setIsNsfw] = useState(false);
+  // Defaults to true (blur) until proven safe - see civitUtils.ts.
+  const [isNsfw, setIsNsfw] = useState(true);
   const [showNsfw, setShowNsfw] = useState(false);
   const [hashing, setHashing] = useState(!data.file_hash);
   const [model, setModel] = useState<Model>();
@@ -60,14 +61,16 @@ export function ModelItem({ data }: Props) {
     if (model != null) {
       setModel(model);
       model.imageUrl?.length && setUrl(model.imageUrl);
-      setIsNsfw(model.imageIsNsfw ?? false);
+      // A stale record from before this fix (or from the model-list bulk
+      // scan) may lack this field entirely - treat that as unknown, not safe.
+      setIsNsfw(model.imageIsNsfw ?? true);
     }
     if (!model?.imageUrl && data.file_hash != null) {
       try {
         const json = await fetchCivitModelFromHashKey(data.file_hash);
         const image_url = json.imageUrl;
         image_url && setUrl(image_url);
-        setIsNsfw(json.imageIsNsfw ?? false);
+        setIsNsfw(json.imageIsNsfw ?? true);
 
         const newModel: Model = {
           id: data.model_name + "@" + data.model_type,
@@ -78,9 +81,9 @@ export function ModelItem({ data }: Props) {
           civitModelID: json.civitModelID,
           civitModelVersionID: json.civitModelVersionID,
           imageUrl: image_url ?? null,
-          imageIsNsfw: json.imageIsNsfw ?? false,
+          imageIsNsfw: json.imageIsNsfw ?? true,
         };
-        // indexdb.models.put(newModel);
+        indexdb.models.put(newModel);
         setModel(newModel);
       } catch (e) {}
     }

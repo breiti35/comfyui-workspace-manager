@@ -55,8 +55,10 @@ export type Model = {
   downloadUrl?: string;
   civitModelVersionID?: string;
   imageUrl?: string | null;
-  // Whether imageUrl points at NSFW content that should be blurred unless
-  // the user opted into "Show NSFW" (see ModelItem.tsx).
+  // Whether imageUrl should be blurred unless the user opted into "Show
+  // NSFW" (see ModelItem.tsx). True for confirmed-NSFW content AND for
+  // anything whose status is unknown (failed/unresolved Civitai lookup) -
+  // unknown must never be treated the same as confirmed-safe.
   imageIsNsfw?: boolean;
 };
 

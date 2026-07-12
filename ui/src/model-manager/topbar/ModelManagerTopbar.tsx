@@ -41,6 +41,8 @@ export default function ModelManagerTopbar() {
             civitModelID: json.civitModelID,
             civitModelVersionID: json.civitModelVersionID,
             imageUrl: json.imageUrl ?? null,
+            // Unknown must default to true (blur) - see civitUtils.ts.
+            imageIsNsfw: json.imageIsNsfw ?? true,
           };
           return newModel;
         });
