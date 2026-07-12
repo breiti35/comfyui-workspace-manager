@@ -4,9 +4,10 @@ import { ModelItem } from "./ModelItem";
 
 interface Props {
   list: ModelsListRespItem[];
+  onOpenDetail: (data: ModelsListRespItem) => void;
 }
 
-export function ModelsList({ list }: Props) {
+export function ModelsList({ list, onOpenDetail }: Props) {
   return (
     <Grid
       templateColumns="repeat(auto-fill, minmax(180px, 1fr))"
@@ -15,7 +16,7 @@ export function ModelsList({ list }: Props) {
     >
       {list.map((v) => (
         <GridItem key={v.model_name + v.date.getTime()}>
-          <ModelItem data={v} />
+          <ModelItem data={v} onOpenDetail={onOpenDetail} />
         </GridItem>
       ))}
     </Grid>

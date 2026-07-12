@@ -51,6 +51,10 @@ export type Model = {
   fileFolder: string;
   fileHash: string | null; // files are not guaranteed to finish hashing
   modelName: string | null;
+  // Matched Civitai version name + base model (e.g. "v6" / "SDXL 1.0"), used
+  // for the card's version chip. Populated from the hash lookup.
+  versionName?: string;
+  baseModel?: string;
   civitModelID?: string;
   downloadUrl?: string;
   civitModelVersionID?: string;

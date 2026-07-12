@@ -6,15 +6,16 @@ import { Model } from "../../types/dbTypes";
 import type { DragEvent } from "react";
 import {
   fetchCivitModelFromHashKey,
-  getCivitModelPageUrl,
   isNsfwBlurEligibleCategory,
 } from "../../utils/civitUtils";
 import { userSettingsTable } from "../../db-tables/WorkspaceDB";
 
 const NSFW_BLUR_FILTER = "blur(20px)";
+const CARD_IMAGE_HEIGHT = 220;
 
 interface Props {
   data: ModelsListRespItem;
+  onOpenDetail: (data: ModelsListRespItem) => void;
 }
 
 const MODEL_TYPE_TO_NODE_MAPPING: Record<string, string> = {
@@ -25,7 +26,7 @@ const MODEL_TYPE_TO_NODE_MAPPING: Record<string, string> = {
   upscale_models: "UpscaleModelLoader",
 };
 
-export function ModelItem({ data }: Props) {
+export function ModelItem({ data, onOpenDetail }: Props) {
   const [url, setUrl] = useState(
     "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/27fd7433-cb0a-4a87-88c1-21ccb2b1a842/width=450/00060-881622046.jpeg",
   );
@@ -83,6 +84,8 @@ export function ModelItem({ data }: Props) {
           fileFolder: data.model_type,
           fileName: data.model_name + data.model_extension,
           modelName: json.modelName ?? null,
+          versionName: json.versionName,
+          baseModel: json.baseModel,
           civitModelID: json.civitModelID,
           civitModelVersionID: json.civitModelVersionID,
           imageUrl: image_url ?? null,
@@ -108,79 +111,82 @@ export function ModelItem({ data }: Props) {
     e.dataTransfer.setData("nodeType", nodeType);
   };
 
+  const versionChip = model?.versionName ?? model?.baseModel ?? undefined;
+
   return (
-    <Box>
+    <Box
+      position="relative"
+      borderRadius="md"
+      overflow="hidden"
+      draggable
+      onDragStart={handleDragStart}
+      cursor="pointer"
+      onClick={() => onOpenDetail(data)}
+      role="group"
+      border="1px solid"
+      borderColor="rowBorderColor"
+      _hover={{ borderColor: "blue.400" }}
+      transition="border-color 0.12s ease"
+    >
+      {hashing ? (
+        <Flex
+          bg="rgba(0, 0, 0, 0.5)"
+          height={CARD_IMAGE_HEIGHT}
+          justifyContent="center"
+          alignItems="center"
+        >
+          <Spinner />
+        </Flex>
+      ) : (
+        <Image
+          src={url}
+          draggable={false}
+          width="100%"
+          height={CARD_IMAGE_HEIGHT}
+          objectFit="cover"
+          filter={isNsfw && !showNsfw ? NSFW_BLUR_FILTER : undefined}
+        />
+      )}
+
+      {!hashing && isNsfw && !showNsfw && (
+        <Text
+          position="absolute"
+          top={1}
+          left={1}
+          bg="rgba(0, 0, 0, 0.65)"
+          color="white"
+          fontSize={11}
+          borderRadius="sm"
+          px={1.5}
+          py={"1px"}
+        >
+          NSFW
+        </Text>
+      )}
+
+      {/* Name + version chip overlaid on the bottom of the cover. */}
       <Box
-        position="relative"
-        borderRadius="md"
-        draggable
-        onDragStart={handleDragStart}
+        position="absolute"
+        bottom={0}
+        left={0}
+        right={0}
+        px={2}
+        pt={8}
+        pb={2}
+        bgGradient="linear(to-t, rgba(0,0,0,0.9), rgba(0,0,0,0.55) 55%, transparent)"
+        pointerEvents="none"
       >
-        {hashing ? (
-          <Flex
-            bg="rgba(0, 0, 0, 0.5)"
-            height={180}
-            justifyContent="center"
-            alignItems="center"
-          >
-            <Spinner />
-          </Flex>
-        ) : (
-          <Image
-            src={url}
-            draggable={false}
-            boxSize="100%"
-            height={180}
-            objectFit="cover"
-            borderRadius="md"
-            filter={isNsfw && !showNsfw ? NSFW_BLUR_FILTER : undefined}
-            cursor={model?.civitModelID != null ? "pointer" : "auto"}
-            onClick={async () => {
-              if (
-                model?.civitModelID == null ||
-                model?.civitModelVersionID == null
-              ) {
-                return;
-              }
-              const win = window.open();
-              if (win) {
-                win.location.href = await getCivitModelPageUrl(
-                  model.civitModelID,
-                  model.civitModelVersionID,
-                );
-              }
-            }}
-          />
-        )}
-        {!hashing && isNsfw && !showNsfw && (
-          <Text
-            position="absolute"
-            bottom="0"
-            left="0"
-            right="0"
-            bg="rgba(0, 0, 0, 0.6)"
-            color="white"
-            fontSize={12}
-            textAlign="center"
-            py={"1px"}
-          >
-            NSFW
+        <Tooltip label={data.model_name + data.model_extension}>
+          <Text color="white" fontSize="sm" fontWeight={600} noOfLines={2}>
+            {data.model_name}
+          </Text>
+        </Tooltip>
+        {versionChip && (
+          <Text color="whiteAlpha.800" fontSize="xs" noOfLines={1} mt={0.5}>
+            {versionChip}
           </Text>
         )}
       </Box>
-      <Tooltip
-        label={
-          <span>
-            {data.model_name + data.model_extension}
-            <br />
-            {data.date.toLocaleDateString()}
-          </span>
-        }
-      >
-        <Text textAlign="center" p="1" fontSize={14} noOfLines={2}>
-          {data.model_name + data.model_extension}
-        </Text>
-      </Tooltip>
     </Box>
   );
 }

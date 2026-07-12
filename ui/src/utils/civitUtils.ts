@@ -49,7 +49,10 @@ export function getHgModelInfoUrlFromDownloadUrl(downloadUrl: string) {
 interface ResponsePartial {
   id: number;
   modelId: number;
+  // The version name (e.g. "v6", "ZENITH (V9)") - Civitai returns this at the
+  // top level of the by-hash response, the model name is nested under `model`.
   name: string;
+  baseModel?: string;
   model: {
     name: string;
     type: string;
@@ -78,6 +81,10 @@ export function isNsfwBlurEligibleCategory(modelType: string): boolean {
 
 interface HashLookupResult {
   modelName?: string;
+  // The matched version's name and base model (e.g. "SDXL 1.0"), used for the
+  // card's version chip. Only present on a confirmed hit.
+  versionName?: string;
+  baseModel?: string;
   civitModelID?: string;
   civitModelVersionID?: string;
   imageUrl?: string;
@@ -96,7 +103,7 @@ const HASH_LOOKUP_CACHE_PREFIX = "civit-hash-lookup:";
 // results computed by earlier (buggy) versions are never reused. The key
 // carries the version, and runCivitCacheMigrationOnce() also proactively
 // deletes entries from earlier versions on startup.
-export const CIVIT_HASH_CACHE_VERSION = 5;
+export const CIVIT_HASH_CACHE_VERSION = 6;
 const HASH_LOOKUP_VERSIONED_PREFIX = `${HASH_LOOKUP_CACHE_PREFIX}v${CIVIT_HASH_CACHE_VERSION}:`;
 const CIVIT_CACHE_MIGRATION_LS_KEY = "WORKSPACE_CIVIT_CACHE_MIGRATION_VERSION";
 const HASH_LOOKUP_SUCCESS_TTL_MS = 2 * 24 * 60 * 60 * 1000; // 2 days
@@ -213,6 +220,8 @@ async function lookupCivitModelFromHashKey(
 
     return {
       modelName: json.model?.name,
+      versionName: json.name,
+      baseModel: json.baseModel,
       civitModelID: json.modelId != null ? String(json.modelId) : undefined,
       civitModelVersionID: json.id != null ? String(json.id) : undefined,
       imageUrl: chosenImage?.url,
