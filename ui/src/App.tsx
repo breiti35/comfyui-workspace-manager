@@ -33,6 +33,7 @@ import EnableTwowaySyncConfirm from "./settings/EnableTwowaySyncConfirm";
 import { api, app } from "./utils/comfyapp";
 import { fetchApi } from "./Api";
 import { serverInfo } from "./utils/OsPathUtils";
+import { startPreviewImageCapture } from "./gallery/previewImageStore";
 
 export default function App() {
   const [curFlowName, setCurFlowName] = useState<string | null>(null);
@@ -351,6 +352,10 @@ export default function App() {
     }
     graphAppSetup();
     setLoadChild(true);
+
+    // Capture "Preview Image" node outputs at app level so they're kept even
+    // while the gallery modal is closed (the gallery only reads the store).
+    startPreviewImageCapture();
 
     const handleExecuted = (e: any) => {
       e.detail?.output?.images?.forEach(
