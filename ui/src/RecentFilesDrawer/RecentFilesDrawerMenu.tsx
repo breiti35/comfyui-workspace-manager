@@ -28,9 +28,9 @@ export default function RecentFilesDrawerMenu({}: Props) {
         <MenuButton
           as={IconButton}
           aria-label="Options"
-          icon={<IconMenu2 />}
+          icon={<IconMenu2 size={18} />}
           size={"sm"}
-          variant="outline"
+          variant="ghost"
         />
         <MenuList>
           <MenuItem

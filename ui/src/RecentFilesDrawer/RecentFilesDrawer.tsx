@@ -1,5 +1,4 @@
 import {
-  Text,
   Button,
   HStack,
   IconButton,
@@ -13,6 +12,7 @@ import {
   Flex,
   Heading,
   Tooltip,
+  Divider,
 } from "@chakra-ui/react";
 import { useEffect, useState, useRef, useCallback, useContext } from "react";
 import {
@@ -184,7 +184,7 @@ export default function RecentFilesDrawer({ onClose, onClickNewFlow }: Props) {
     setSearchValue(newValue);
   };
 
-  const DRAWER_WIDTH = 450;
+  const DRAWER_WIDTH = 340;
   return (
     <RecentFilesContext.Provider
       value={{
@@ -203,33 +203,40 @@ export default function RecentFilesDrawer({ onClose, onClickNewFlow }: Props) {
         <Card
           width={DRAWER_WIDTH}
           height={"100vh"}
-          pl={2}
-          pr={2}
-          pt={4}
-          gap={4}
+          p={0}
+          gap={0}
           position={"absolute"}
           top={0}
           left={0}
           shadow={"xl"}
           zIndex={DRAWER_Z_INDEX}
-          // boxShadow={"rgba(200, 200, 200, 0.4) 1px 4px 8px 1px"}
         >
-          <Flex alignItems={"center"} justifyContent={"space-between"}>
-            <HStack gap={4}>
-              <HStack gap={2}>
-                <Heading size={"md"}>🦄Workspace</Heading>
-                {/* <Tooltip label="Login to share and sync your workflows to cloud">
-                  <Link onClick={openCognitoPopup}>Login</Link>
-                </Tooltip> */}
-              </HStack>
+          {/* Zone 1 - Header: title + primary actions, set off by a divider. */}
+          <Flex
+            alignItems={"center"}
+            justifyContent={"space-between"}
+            px={3}
+            pt={3}
+            pb={2}
+            gap={2}
+          >
+            <Heading
+              size={"sm"}
+              display={"flex"}
+              alignItems={"center"}
+              gap={1.5}
+              noOfLines={1}
+            >
+              <span>🦄</span> Workspace
+            </Heading>
+            <HStack gap={1} flexShrink={0}>
               <ImportFlowsFileInput />
               <Tooltip label="Open workspace save directory">
                 <IconButton
                   aria-label="Open workspace save directory"
                   size={"sm"}
-                  icon={<IconFolder />}
-                  variant={"outline"}
-                  colorScheme="teal"
+                  icon={<IconFolder size={18} />}
+                  variant={"ghost"}
                   onClick={() => openWorkflowsFolder()}
                 />
               </Tooltip>
@@ -237,25 +244,25 @@ export default function RecentFilesDrawer({ onClose, onClickNewFlow }: Props) {
                 <IconButton
                   aria-label="New workflow"
                   size={"sm"}
-                  icon={<IconPlus />}
-                  variant={"outline"}
-                  colorScheme="teal"
+                  icon={<IconPlus size={18} />}
+                  variant={"ghost"}
                   onClick={onClickNewFlow}
                 />
               </Tooltip>
-            </HStack>
-            <HStack alignItems={"center"}>
               <RecentFilesDrawerMenu />
-              {/* <Button onClick={onclose}>CLOSE</Button> */}
             </HStack>
           </Flex>
-          <Flex direction="column" h="calc(100% - 64px)">
+          <Divider borderColor={"rowBorderColor"} />
+
+          {/* Zone 2 - Toolbar: tag filter + list actions (select / new folder /
+              sort), visually grouped and kept subtle. */}
+          <Box px={3} pt={2}>
             <MyTagsRow
               selectedTag={selectedTag}
               setSelectedTag={setSelectedTag}
             />
-            <HStack mb={2} mt={2} p={0} justifyContent="space-between">
-              <HStack>
+            <HStack mt={2} justifyContent="space-between">
+              <HStack gap={1}>
                 <MultipleSelectionOperation
                   multipleState={multipleState}
                   changeMultipleState={(state) => {
@@ -272,8 +279,8 @@ export default function RecentFilesDrawer({ onClose, onClickNewFlow }: Props) {
                   <Tooltip hasArrow label="New folder" placement="bottom-start">
                     <IconButton
                       size={"sm"}
-                      variant={"outline"}
-                      icon={<IconFolderPlus size={21} />}
+                      variant={"ghost"}
+                      icon={<IconFolderPlus size={18} />}
                       onClick={async () => {
                         await foldersTable?.create({
                           name: "New Folder",
@@ -290,13 +297,11 @@ export default function RecentFilesDrawer({ onClose, onClickNewFlow }: Props) {
                   as={Button}
                   variant={"ghost"}
                   size="xs"
-                  pr={0}
-                  rightIcon={<IconChevronDown size="16" />}
+                  color={"GrayText"}
+                  fontWeight={500}
+                  rightIcon={<IconChevronDown size="14" />}
                 >
-                  <HStack>
-                    <Text>Sort by:</Text>
-                    <Text display="inline-block">{sortTypeRef.current}</Text>
-                  </HStack>
+                  {sortTypeRef.current}
                 </MenuButton>
                 <MenuList>
                   <MenuOptionGroup
@@ -318,22 +323,31 @@ export default function RecentFilesDrawer({ onClose, onClickNewFlow }: Props) {
                 </MenuList>
               </Menu>
             </HStack>
+          </Box>
+
+          {/* Zone 3 - Search. */}
+          <Box px={3} pt={2}>
             <SearchInput
               searchValue={searchValue}
               onUpdateSearchValue={onUpdateSearchValue}
             />
-            <Flex
-              overflowY={"auto"}
-              overflowX={"hidden"}
-              direction="column"
-              style={{
-                overflowY: "scroll",
-                scrollbarWidth: "none", // For Firefox
-                msOverflowStyle: "none", // For Internet Explorer and Edge
-              }}
-            >
-              <ItemsList items={currentRenderingData} />
-            </Flex>
+          </Box>
+
+          {/* Zone 4 - The workflow list (scrolls independently). */}
+          <Flex
+            flex={1}
+            minH={0}
+            px={2}
+            pb={2}
+            overflowY={"auto"}
+            overflowX={"hidden"}
+            direction="column"
+            style={{
+              scrollbarWidth: "none", // For Firefox
+              msOverflowStyle: "none", // For Internet Explorer and Edge
+            }}
+          >
+            <ItemsList items={currentRenderingData} />
           </Flex>
         </Card>
       </Box>

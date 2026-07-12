@@ -1,5 +1,12 @@
 import { ChangeEvent, useContext, useRef, useState } from "react";
-import { Button, Menu, MenuButton, MenuList, MenuItem } from "@chakra-ui/react";
+import {
+  IconButton,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  Tooltip,
+} from "@chakra-ui/react";
 import { IconFile, IconFileImport, IconFolder } from "@tabler/icons-react";
 import { workflowsTable, foldersTable } from "../db-tables/WorkspaceDB";
 import { RecentFilesContext } from "../WorkspaceContext";
@@ -199,16 +206,15 @@ export default function ImportFlowsFileInput({
         </MenuItem>
       ) : (
         <Menu closeOnSelect={true}>
-          <MenuButton
-            as={Button}
-            leftIcon={<IconFileImport size={18} />}
-            variant="outline"
-            iconSpacing={1}
-            size={"sm"}
-            colorScheme="teal"
-          >
-            Import
-          </MenuButton>
+          <Tooltip label="Import workflows">
+            <MenuButton
+              as={IconButton}
+              aria-label="Import workflows"
+              icon={<IconFileImport size={18} />}
+              variant="ghost"
+              size={"sm"}
+            />
+          </Tooltip>
           <MenuList>
             {importMenuItemList.map((item, index) => (
               <MenuItem
