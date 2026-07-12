@@ -5,6 +5,7 @@ import {
   IconFolder,
   IconGripVertical,
   IconPhoto,
+  IconSettings,
   IconTriangleInvertedFilled,
   IconLock,
 } from "@tabler/icons-react";
@@ -30,6 +31,9 @@ const ModelManagerTopbar = lazy(
   () => import("../model-manager/topbar/ModelManagerTopbar"),
 );
 const SpotlightSearch = lazy(() => import("../components/SpotlightSearch"));
+const WorkspaceSettingsModal = lazy(
+  () => import("../RecentFilesDrawer/WorkspaceSettingsModal"),
+);
 
 interface Props {
   curFlowName: string | null;
@@ -159,6 +163,15 @@ export function Topbar({ curFlowName, setCurFlowName }: Props) {
         )}
         <VersionNameTopbar />
         <AppIsDirtyEventListener />
+        <Tooltip label="Settings">
+          <IconButton
+            onClick={() => setRoute("settings")}
+            icon={<IconSettings size={20} color="white" />}
+            size={"sm"}
+            aria-label="settings"
+            variant={"ghost"}
+          />
+        </Tooltip>
         <Tooltip label="Drag to move toolbar">
           <IconGripVertical
             id="dragPanelIcon"
@@ -169,6 +182,11 @@ export function Topbar({ curFlowName, setCurFlowName }: Props) {
           />
         </Tooltip>
         {route === "spotlightSearch" && <SpotlightSearch />}
+        {route === "settings" && (
+          <Suspense fallback={null}>
+            <WorkspaceSettingsModal onClose={() => setRoute("root")} />
+          </Suspense>
+        )}
       </HStack>
     </Draggable>
   );

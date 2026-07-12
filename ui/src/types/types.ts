@@ -9,4 +9,5 @@ export type WorkspaceRoute =
   | "spotlightSearch"
   | "downloadSpaceJson"
   | "installModels"
-  | "share";
+  | "share"
+  | "settings";
