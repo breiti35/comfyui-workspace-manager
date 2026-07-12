@@ -24,6 +24,7 @@ import SearchInput from "../components/SearchInput.tsx";
 import { GalleryContext, GallerySection } from "./GalleryContext.ts";
 import { GallerySidebar } from "./components/GallerySidebar.tsx";
 import { GalleryLivePreview } from "./components/GalleryLivePreview.tsx";
+import { useLivePreview } from "./useLivePreview.ts";
 
 export default function GalleryModal({ onclose }: { onclose: () => void }) {
   const { curFlowID } = useContext(WorkspaceContext);
@@ -36,17 +37,22 @@ export default function GalleryModal({ onclose }: { onclose: () => void }) {
   const [searchValue, setSearchValue] = useState("");
   const debounceSearchValue = useDebounce(searchValue, 300);
 
-  const loadData = async () => {
+  const refreshLists = async () => {
     if (curFlowID == null) return;
     const media = await mediaTable?.listByWorkflowID(curFlowID);
     setWorkflowMedia(media ?? []);
-    if (media?.length) {
-      setCurMedia(media[0]);
-    }
     const all = await mediaTable?.listAll();
     setAllMedia(
       (all ?? []).slice().sort((a, b) => b.createTime - a.createTime),
     );
+    return media;
+  };
+
+  const loadData = async () => {
+    const media = await refreshLists();
+    if (media?.length) {
+      setCurMedia(media[0]);
+    }
   };
 
   useEffect(() => {
@@ -58,6 +64,13 @@ export default function GalleryModal({ onclose }: { onclose: () => void }) {
         }
       });
   }, []);
+
+  // Attach to ComfyUI's existing WebSocket for live intermediate previews.
+  // When a run finishes, its finished image is written by the plugin and we
+  // refresh the saved lists so it appears under "Dieser Workflow".
+  const { frames: liveFrames, isGenerating } = useLivePreview({
+    onSavedMediaChanged: refreshLists,
+  });
 
   if (curFlowID == null) {
     return null;
@@ -117,8 +130,8 @@ export default function GalleryModal({ onclose }: { onclose: () => void }) {
               onSelect={selectSection}
               workflowCount={workflowMedia.length}
               allCount={allMedia.length}
-              liveCount={0}
-              isGenerating={false}
+              liveCount={liveFrames.length}
+              isGenerating={isGenerating}
             />
             <Flex direction={"column"} flex={1} minW={0} p={4} gap={3}>
               <HStack justify={"space-between"} gap={3} align={"center"}>
@@ -160,7 +173,10 @@ export default function GalleryModal({ onclose }: { onclose: () => void }) {
 
               <Box flex={1} minH={0} overflowY={"auto"}>
                 {section === "live" ? (
-                  <GalleryLivePreview frames={[]} isGenerating={false} />
+                  <GalleryLivePreview
+                    frames={liveFrames}
+                    isGenerating={isGenerating}
+                  />
                 ) : detailOpen && curMedia ? (
                   <GalleryCarouselImageViewer mediaList={filteredList} />
                 ) : (
