@@ -82,13 +82,15 @@ export function Topbar({ curFlowName, setCurFlowName }: Props) {
     >
       <HStack
         style={{
-          padding: 2,
+          padding: 4,
           position: "fixed",
           ...positionStyle,
         }}
+        backgroundColor="comfy.topbarBg"
+        borderRadius="lg"
         justifyContent={"space-between"}
         alignItems={"center"}
-        gap={2}
+        gap={1}
         draggable={false}
         id="workspaceManagerPanel"
         className="workspaceManagerPanel"
@@ -96,6 +98,7 @@ export function Topbar({ curFlowName, setCurFlowName }: Props) {
         <Tooltip label="Recent files & folders">
           <Button
             size={"sm"}
+            variant={"ghost"}
             aria-label="workspace folder"
             height={TOPBAR_BUTTON_HEIGHT + "px"}
             onClick={() => setRoute("recentFlows")}

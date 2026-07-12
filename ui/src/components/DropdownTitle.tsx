@@ -123,7 +123,7 @@ export default function DropdownTitle() {
               height={TOPBAR_BUTTON_HEIGHT + "px"}
               aria-label="menu"
               size={"sm"}
-              backgroundColor={"comfy.topbarButtonBg"}
+              variant={"ghost"}
             >
               File
               <IconChevronDown size={20} />

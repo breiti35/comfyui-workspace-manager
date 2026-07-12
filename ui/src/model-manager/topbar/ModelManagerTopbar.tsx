@@ -61,7 +61,7 @@ export default function ModelManagerTopbar() {
     <Stack style={{ position: "relative" }}>
       <Button
         size={"sm"}
-        backgroundColor={"comfy.topbarButtonBg"}
+        variant={"ghost"}
         color={"white"}
         colorScheme="blue"
         aria-label="My models"

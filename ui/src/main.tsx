@@ -41,8 +41,10 @@ const theme = extendTheme({
   zIndices,
   colors: {
     comfy: {
-      // Shared background for the dark topbar dropdown buttons (File, Models)
-      topbarButtonBg: "#434554",
+      // Matches native ComfyUI's own toolbar group background (measured via
+      // devtools on its queue-button-group: rgb(38, 39, 41)), so our topbar
+      // reads as one continuous bar instead of separately floating buttons.
+      topbarBg: "#262729",
     },
   },
   semanticTokens: {
