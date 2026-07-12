@@ -7,7 +7,10 @@ import { WorkspaceContext } from "../../WorkspaceContext";
 import { api } from "/scripts/api.js";
 
 import { Model } from "../../types/dbTypes";
-import { fetchCivitModelFromHashKey } from "../../utils/civitUtils";
+import {
+  fetchCivitModelFromHashKey,
+  isNsfwBlurEligibleCategory,
+} from "../../utils/civitUtils";
 import { indexdb } from "../../db-tables/indexdb";
 import type { ModelsListRespItemFromApi } from "../types";
 import InatallModelsModal from "../install-models/InstallModelsModal";
@@ -41,8 +44,11 @@ export default function ModelManagerTopbar() {
             civitModelID: json.civitModelID,
             civitModelVersionID: json.civitModelVersionID,
             imageUrl: json.imageUrl ?? null,
-            // Unknown must default to true (blur) - see civitUtils.ts.
-            imageIsNsfw: json.imageIsNsfw ?? true,
+            // Only checkpoints/loras can ever be blurred, and only on a
+            // confirmed Civitai NSFW hit - see civitUtils.ts.
+            imageIsNsfw:
+              isNsfwBlurEligibleCategory(item.model_type) &&
+              (json.imageIsNsfw ?? false),
           };
           return newModel;
         });

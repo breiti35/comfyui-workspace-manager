@@ -7,6 +7,7 @@ import type { DragEvent } from "react";
 import {
   fetchCivitModelFromHashKey,
   getCivitModelPageUrl,
+  isNsfwBlurEligibleCategory,
 } from "../../utils/civitUtils";
 import { userSettingsTable } from "../../db-tables/WorkspaceDB";
 
@@ -28,8 +29,9 @@ export function ModelItem({ data }: Props) {
   const [url, setUrl] = useState(
     "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/27fd7433-cb0a-4a87-88c1-21ccb2b1a842/width=450/00060-881622046.jpeg",
   );
-  // Defaults to true (blur) until proven safe - see civitUtils.ts.
-  const [isNsfw, setIsNsfw] = useState(true);
+  // Only true for checkpoints/loras on a confirmed Civitai NSFW hit -
+  // see civitUtils.ts.
+  const [isNsfw, setIsNsfw] = useState(false);
   const [showNsfw, setShowNsfw] = useState(false);
   const [hashing, setHashing] = useState(!data.file_hash);
   const [model, setModel] = useState<Model>();
@@ -55,22 +57,25 @@ export function ModelItem({ data }: Props) {
   }, []);
 
   const getThumbnail = async () => {
+    // vae/upscale_models/ultralytics_*/sams/etc. never generate images
+    // themselves, so blurring them makes no sense regardless of what a
+    // hash lookup (or a stale cached record) says.
+    const nsfwEligible = isNsfwBlurEligibleCategory(data.model_type);
     const model = await indexdb.models.get(
       data.model_name + "@" + data.model_type,
     );
     if (model != null) {
       setModel(model);
       model.imageUrl?.length && setUrl(model.imageUrl);
-      // A stale record from before this fix (or from the model-list bulk
-      // scan) may lack this field entirely - treat that as unknown, not safe.
-      setIsNsfw(model.imageIsNsfw ?? true);
+      setIsNsfw(nsfwEligible && (model.imageIsNsfw ?? false));
     }
     if (!model?.imageUrl && data.file_hash != null) {
       try {
         const json = await fetchCivitModelFromHashKey(data.file_hash);
         const image_url = json.imageUrl;
         image_url && setUrl(image_url);
-        setIsNsfw(json.imageIsNsfw ?? true);
+        const imageIsNsfw = nsfwEligible && (json.imageIsNsfw ?? false);
+        setIsNsfw(imageIsNsfw);
 
         const newModel: Model = {
           id: data.model_name + "@" + data.model_type,
@@ -81,7 +86,7 @@ export function ModelItem({ data }: Props) {
           civitModelID: json.civitModelID,
           civitModelVersionID: json.civitModelVersionID,
           imageUrl: image_url ?? null,
-          imageIsNsfw: json.imageIsNsfw ?? true,
+          imageIsNsfw,
         };
         indexdb.models.put(newModel);
         setModel(newModel);

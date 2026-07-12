@@ -56,9 +56,11 @@ export type Model = {
   civitModelVersionID?: string;
   imageUrl?: string | null;
   // Whether imageUrl should be blurred unless the user opted into "Show
-  // NSFW" (see ModelItem.tsx). True for confirmed-NSFW content AND for
-  // anything whose status is unknown (failed/unresolved Civitai lookup) -
-  // unknown must never be treated the same as confirmed-safe.
+  // NSFW" (see ModelItem.tsx). Only ever true for a confirmed Civitai NSFW
+  // hit on a blur-eligible category (checkpoints/loras, see
+  // isNsfwBlurEligibleCategory in civitUtils.ts) - a failed/unknown lookup
+  // or a non-image-generating category (vae, upscale_models, etc.) is never
+  // blurred.
   imageIsNsfw?: boolean;
 };
 

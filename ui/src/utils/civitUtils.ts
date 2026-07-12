@@ -64,15 +64,28 @@ interface ResponsePartial {
   }[];
 }
 
+// Local ComfyUI model-folder categories where a Civitai NSFW confirmation
+// is actually meaningful, i.e. folders that hold image-generating models.
+// Everything else (vae, upscale_models, ultralytics_bbox, ultralytics_segm,
+// ultralytics, sams, kjnodes_fonts, seedvr2, controlnet, etc.) is never
+// blurred, no matter what a hash lookup returns - blurring a VAE or a face
+// detector thumbnail makes no sense and just made the feature unusable.
+const NSFW_BLUR_ELIGIBLE_CATEGORIES = new Set(["checkpoints", "loras"]);
+
+export function isNsfwBlurEligibleCategory(modelType: string): boolean {
+  return NSFW_BLUR_ELIGIBLE_CATEGORIES.has(modelType);
+}
+
 interface HashLookupResult {
   modelName?: string;
   civitModelID?: string;
   civitModelVersionID?: string;
   imageUrl?: string;
-  // Whether this should be blurred, not a raw "is this actually NSFW" flag:
-  // true both for confirmed-NSFW images AND for anything we couldn't
-  // confirm as safe (failed/404/network error). "Unknown" must never look
-  // identical to "confirmed safe" - see the fallback policy below.
+  // Whether Civitai actively confirmed this image as NSFW (nsfwLevel !== 1
+  // on the chosen image). Only true on a confirmed hit - a failed/404/
+  // unknown lookup is NOT treated as NSFW (that was too aggressive: most
+  // models simply aren't registered on Civitai at all). Callers must also
+  // gate this by isNsfwBlurEligibleCategory() before using it to blur.
   imageIsNsfw: boolean;
 }
 
@@ -87,9 +100,9 @@ const HASH_LOOKUP_FAILURE_TTL_MS = 60 * 60 * 1000; // 1 hour
 /**
  * Looks up a model on Civitai by file hash, with a persistent cache (keyed
  * by host + hash, so civitai.com/civitai.red results never mix) covering
- * both successes and failures. Fallback policy: if the lookup fails or the
- * response can't be parsed, the NSFW status is unknown - and unknown must
- * default to "blur", not "show clearly" (see imageIsNsfw doc above).
+ * both successes and failures. Fallback policy: if the lookup fails, 404s,
+ * or the model simply isn't registered on Civitai, imageIsNsfw is false -
+ * "unknown" is not treated as NSFW, only a confirmed hit is.
  */
 export async function fetchCivitModelFromHashKey(
   filehash: string,
@@ -132,11 +145,11 @@ async function lookupCivitModelFromHashKey(
     const url = `${baseUrl}/api/v1/model-versions/by-hash/${filehash}`;
     const resp = await fetch(url);
     if (!resp.ok) {
-      // e.g. a 404 - not registered on this host (or this host/path is
-      // wrong/unreachable). Either way the NSFW status is unknown, so we
-      // must not fall through to parsing an error body as if it were a
-      // model record.
-      return { imageIsNsfw: true };
+      // e.g. a 404 - most often just means the model isn't registered on
+      // Civitai at all (private/custom checkpoints, LoRAs trained locally,
+      // etc.), which is the common case, not the exception. Unknown is not
+      // NSFW.
+      return { imageIsNsfw: false };
     }
     const json: ResponsePartial = await resp.json();
     // Always resolve to the best available image - prefer an explicitly
@@ -156,8 +169,8 @@ async function lookupCivitModelFromHashKey(
       imageIsNsfw: chosenImage == null ? false : chosenImage.nsfwLevel !== 1,
     };
   } catch (e) {
-    // Network error, malformed JSON, etc. - status unknown, same fallback
-    // as a non-ok response above.
-    return { imageIsNsfw: true };
+    // Network error, malformed JSON, etc. - same fallback as a non-ok
+    // response above: unknown is not NSFW.
+    return { imageIsNsfw: false };
   }
 }
