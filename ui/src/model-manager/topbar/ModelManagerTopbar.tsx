@@ -41,10 +41,7 @@ export default function ModelManagerTopbar() {
             fileName: item.model_name + item.model_extension,
           };
           if (!item.file_hash) return newModel;
-          const json = await fetchCivitModelFromHashKey(
-            item.file_hash,
-            item.model_name,
-          );
+          const json = await fetchCivitModelFromHashKey(item.file_hash);
           newModel = {
             ...newModel,
             modelName: json.modelName ?? null,

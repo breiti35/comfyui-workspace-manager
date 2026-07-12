@@ -106,13 +106,6 @@ const HASH_LOOKUP_SUCCESS_TTL_MS = 2 * 24 * 60 * 60 * 1000; // 2 days
 // repeatedly" bug).
 const HASH_LOOKUP_FAILURE_TTL_MS = 60 * 60 * 1000; // 1 hour
 
-// TEMPORARY DIAGNOSTIC: short, readable hash prefix so console logs from
-// civitUtils (which only knows the hash) can be correlated with ModelItem
-// logs (which know the model name).
-function shortHash(filehash: string): string {
-  return filehash ? filehash.slice(0, 12) : String(filehash);
-}
-
 /**
  * One-time reset of stale NSFW/Civitai caches left over from earlier fix
  * iterations. Runs at most once per CIVIT_HASH_CACHE_VERSION (guarded by a
@@ -147,13 +140,9 @@ export async function runCivitCacheMigrationOnce(): Promise<void> {
       CIVIT_CACHE_MIGRATION_LS_KEY,
       String(CIVIT_HASH_CACHE_VERSION),
     );
-    console.log(
-      `[NSFW-DEBUG] cache migration -> v${CIVIT_HASH_CACHE_VERSION}: deleted ${staleIds.length} old hash-lookup cache entr${
-        staleIds.length === 1 ? "y" : "ies"
-      }, cleared models table for a fresh rescan`,
-    );
   } catch (e) {
-    console.warn("[NSFW-DEBUG] cache migration failed", e);
+    // best-effort reset; if it fails, the versioned cache key still keeps
+    // old-version entries from being reused.
   }
 }
 
@@ -164,12 +153,9 @@ export async function runCivitCacheMigrationOnce(): Promise<void> {
  * lookup fails, 404s, or the model simply isn't registered on Civitai,
  * imageIsNsfw is false - "unknown" is not treated as NSFW, only a confirmed
  * hit is.
- *
- * `debugLabel` is only used for the temporary [NSFW-DEBUG] console output.
  */
 export async function fetchCivitModelFromHashKey(
   filehash: string,
-  debugLabel?: string,
 ): Promise<HashLookupResult> {
   const baseUrl = await getCivitBaseUrl();
   const cacheKey = `${HASH_LOOKUP_VERSIONED_PREFIX}${baseUrl}:${filehash}`;
@@ -182,14 +168,6 @@ export async function fetchCivitModelFromHashKey(
         ? HASH_LOOKUP_FAILURE_TTL_MS
         : HASH_LOOKUP_SUCCESS_TTL_MS;
       if (Date.now() - timestamp < ttlMs) {
-        console.log("[NSFW-DEBUG] hashLookup CACHE-HIT", {
-          label: debugLabel,
-          hash: shortHash(filehash),
-          baseUrl,
-          failed: !!failed,
-          cachedImageIsNsfw: (data as HashLookupResult).imageIsNsfw,
-          ageMin: Math.round((Date.now() - timestamp) / 60000),
-        });
         return data as HashLookupResult;
       }
     } catch (e) {
@@ -197,7 +175,7 @@ export async function fetchCivitModelFromHashKey(
     }
   }
 
-  const result = await lookupCivitModelFromHashKey(baseUrl, filehash, debugLabel);
+  const result = await lookupCivitModelFromHashKey(baseUrl, filehash);
   await indexdb.cache?.put({
     id: cacheKey,
     value: JSON.stringify({
@@ -212,9 +190,7 @@ export async function fetchCivitModelFromHashKey(
 async function lookupCivitModelFromHashKey(
   baseUrl: string,
   filehash: string,
-  debugLabel?: string,
 ): Promise<HashLookupResult> {
-  const hash = shortHash(filehash);
   try {
     const url = `${baseUrl}/api/v1/model-versions/by-hash/${filehash}`;
     const resp = await fetch(url);
@@ -223,58 +199,28 @@ async function lookupCivitModelFromHashKey(
       // Civitai at all (private/custom checkpoints, LoRAs trained locally,
       // etc.), which is the common case, not the exception. Unknown is not
       // NSFW.
-      console.log("[NSFW-DEBUG] hashLookup FETCH", {
-        label: debugLabel,
-        hash,
-        baseUrl,
-        httpStatus: resp.status,
-        imageIsNsfw: false,
-        reason: "response not ok (likely 404 - not registered on Civitai)",
-      });
       return { imageIsNsfw: false };
     }
     const json: ResponsePartial = await resp.json();
     // For the thumbnail we still prefer an explicitly SFW image (so the
     // preview shown - blurred or not - isn't the most explicit one), but the
-    // blur DECISION is now the model-level adult flag, not the chosen image's
+    // blur DECISION is the model-level adult flag, not the chosen image's
     // nsfwLevel. The old per-image logic was unreliable: it read the flag off
     // a deliberately SFW-preferred image, so hardcore models resolved to
     // "safe" and the result flipped between versions of the same model.
     const sfwImage = json.images?.find((i) => i.nsfwLevel == 1);
     const chosenImage = sfwImage ?? json.images?.[0];
-    const imageIsNsfw = json.model?.nsfw === true;
-
-    console.log("[NSFW-DEBUG] hashLookup FETCH", {
-      label: debugLabel,
-      hash,
-      baseUrl,
-      httpStatus: resp.status,
-      civitModelName: json.model?.name,
-      modelNsfwFlag: json.model?.nsfw,
-      imageNsfwLevels: json.images?.map((i) => i.nsfwLevel),
-      chosenImageNsfwLevel: chosenImage?.nsfwLevel,
-      imageIsNsfw,
-      note: "rule: imageIsNsfw = model.nsfw === true (model-level adult flag)",
-    });
 
     return {
       modelName: json.model?.name,
       civitModelID: json.modelId != null ? String(json.modelId) : undefined,
       civitModelVersionID: json.id != null ? String(json.id) : undefined,
       imageUrl: chosenImage?.url,
-      imageIsNsfw,
+      imageIsNsfw: json.model?.nsfw === true,
     };
   } catch (e) {
     // Network error, malformed JSON, etc. - same fallback as a non-ok
     // response above: unknown is not NSFW.
-    console.log("[NSFW-DEBUG] hashLookup FETCH", {
-      label: debugLabel,
-      hash,
-      baseUrl,
-      imageIsNsfw: false,
-      reason: "exception (network / JSON parse error)",
-      error: String(e),
-    });
     return { imageIsNsfw: false };
   }
 }
