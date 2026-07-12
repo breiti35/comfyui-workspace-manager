@@ -91,6 +91,7 @@ export default memo(function FilesListFolderItem({ folder }: Props) {
       <HStack
         w={"100%"}
         as={"button"}
+        px={1.5}
         py={1}
         borderRadius="md"
         onClick={() => {
@@ -116,9 +117,9 @@ export default memo(function FilesListFolderItem({ folder }: Props) {
       >
         <HStack gap={1}>
           {isCollapsed ? (
-            <IconChevronRight size={20} />
+            <IconChevronRight size={18} />
           ) : (
-            <IconChevronDown size={20} />
+            <IconChevronDown size={18} />
           )}
           <svg
             xmlns="http://www.w3.org/2000/svg"

@@ -25,90 +25,91 @@ export default memo(function WorkflowListItem({ workflow }: Props) {
   const { curFlowID, loadWorkflowID } = useContext(WorkspaceContext);
   const isSelected = curFlowID === workflow.id;
   const [isHovering, setIsHovering] = useState(false);
+  const activeRow = isSelected && !isMultiSelecting;
+  const hasCover =
+    !userSettingsTable?.settings?.hideCoverImage &&
+    !!(workflow.coverMediaPath?.length || workflow.latestImage?.length);
+
+  // Name + timestamp stacked together in one compact block, with an optional
+  // small cover thumbnail. This is the draggable / click-to-open surface.
   const basicInfoComp = (
-    <Box
-      flexShrink={1}
+    <HStack
       flexGrow={1}
-      backgroundColor={isSelected ? "teal.200" : undefined}
-      color={isSelected && !isMultiSelecting ? "#333" : undefined}
+      minW={0}
+      gap={2.5}
       draggable={!isMultiSelecting}
       onDragStart={() => setDraggingFile?.(workflow)}
-      borderRadius="md"
-      px={1}
-      py={"5px"}
+      cursor={"pointer"}
       onClick={() => {
         !isMultiSelecting && loadWorkflowID(workflow.id);
       }}
-      _hover={{
-        bg: "rowHoverBg",
-      }}
     >
-      <HStack flexGrow={1}>
-        {!userSettingsTable?.settings?.hideCoverImage &&
-          (workflow.coverMediaPath?.length || workflow.latestImage?.length) && (
-            <MediaPreview
-              mediaLocalPath={
-                workflow.coverMediaPath ?? workflow.latestImage ?? ""
-              }
-              size={60}
-              hideBrokenImage
-              isPreview
-            />
+      {hasCover && (
+        <MediaPreview
+          mediaLocalPath={workflow.coverMediaPath ?? workflow.latestImage ?? ""}
+          size={40}
+          hideBrokenImage
+          isPreview
+        />
+      )}
+      <Box textAlign={"left"} flexGrow={1} minW={0}>
+        <Flex alignItems={"center"} gap={1}>
+          <Text
+            fontWeight={"500"}
+            fontSize={"sm"}
+            noOfLines={1}
+            wordBreak={"break-all"}
+          >
+            {workflow.name ?? "untitled"}
+          </Text>
+          {workflow.saveLock && (
+            <IconLock size={14} style={{ flexShrink: 0 }} />
           )}
-
-        <Box
-          textAlign={"left"}
-          gap={0}
-          justifyContent={"space-between"}
-          flexGrow={1}
-        >
-          <Flex alignItems={"center"}>
-            <Text fontWeight={"500"} noOfLines={1} wordBreak={"break-all"}>
-              {workflow.name ?? "untitled"}
-            </Text>
-            {workflow.saveLock && (
-              <IconLock size={18} style={{ display: "inline-block" }} />
-            )}
-          </Flex>
-        </Box>
-      </HStack>
-    </Box>
+        </Flex>
+        <Text fontSize={"xs"} color={"GrayText"} noOfLines={1}>
+          {formatTimestamp(workflow.updateTime, false, false, "/")}
+        </Text>
+      </Box>
+    </HStack>
   );
 
   return (
-    <HStack
+    <Box
       w={"100%"}
-      justify={"space-between"}
-      borderBottom={"1px solid"}
-      borderColor="rowBorderColor"
+      px={1.5}
+      py={1}
+      borderRadius={"md"}
+      borderLeft={"2px solid"}
+      borderLeftColor={activeRow ? "blue.400" : "transparent"}
+      bg={activeRow ? "galleryActiveBg" : "transparent"}
+      _hover={{ bg: activeRow ? "galleryActiveBg" : "rowHoverBg" }}
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
     >
-      {isMultiSelecting ? (
-        <Checkbox
-          isChecked={isChecked}
-          spacing={4}
-          onChange={(e: ChangeEvent<HTMLInputElement>) => {
-            onMultiSelectFlow &&
-              onMultiSelectFlow(workflow.id, e.target.checked);
-          }}
-        >
-          {basicInfoComp}
-        </Checkbox>
-      ) : (
-        <>
-          {basicInfoComp}
-          <Box width={"fit-content"}>
-            {isHovering ? (
-              <WorkflowListItemActionButtons workflow={workflow} />
-            ) : (
-              <Text color={"GrayText"} fontSize={"sm"}>
-                {formatTimestamp(workflow.updateTime, false, false, "/")}
-              </Text>
+      <HStack w={"100%"} justify={"space-between"} gap={1}>
+        {isMultiSelecting ? (
+          <Checkbox
+            isChecked={isChecked}
+            spacing={3}
+            w={"100%"}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => {
+              onMultiSelectFlow &&
+                onMultiSelectFlow(workflow.id, e.target.checked);
+            }}
+          >
+            {basicInfoComp}
+          </Checkbox>
+        ) : (
+          <>
+            {basicInfoComp}
+            {isHovering && (
+              <Box flexShrink={0}>
+                <WorkflowListItemActionButtons workflow={workflow} />
+              </Box>
             )}
-          </Box>
-        </>
-      )}
-    </HStack>
+          </>
+        )}
+      </HStack>
+    </Box>
   );
 });
