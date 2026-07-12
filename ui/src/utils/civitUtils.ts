@@ -81,10 +81,12 @@ interface HashLookupResult {
   civitModelID?: string;
   civitModelVersionID?: string;
   imageUrl?: string;
-  // Whether Civitai actively confirmed this image as NSFW (nsfwLevel !== 1
-  // on the chosen image). Only true on a confirmed hit - a failed/404/
-  // unknown lookup is NOT treated as NSFW (that was too aggressive: most
-  // models simply aren't registered on Civitai at all). Callers must also
+  // Whether Civitai classifies the MODEL as adult (model.nsfw === true).
+  // Deliberately model-level, not per-image: the per-image nsfwLevel of the
+  // displayed thumbnail is unreliable (we prefer a SFW preview image, so it
+  // almost always reads as "safe" even for hardcore models, and it flips
+  // between versions of the same model). Only true on a confirmed hit -
+  // a failed/404/unknown lookup is NOT treated as NSFW. Callers must also
   // gate this by isNsfwBlurEligibleCategory() before using it to blur.
   imageIsNsfw: boolean;
 }
@@ -94,7 +96,7 @@ const HASH_LOOKUP_CACHE_PREFIX = "civit-hash-lookup:";
 // results computed by earlier (buggy) versions are never reused. The key
 // carries the version, and runCivitCacheMigrationOnce() also proactively
 // deletes entries from earlier versions on startup.
-export const CIVIT_HASH_CACHE_VERSION = 4;
+export const CIVIT_HASH_CACHE_VERSION = 5;
 const HASH_LOOKUP_VERSIONED_PREFIX = `${HASH_LOOKUP_CACHE_PREFIX}v${CIVIT_HASH_CACHE_VERSION}:`;
 const CIVIT_CACHE_MIGRATION_LS_KEY = "WORKSPACE_CIVIT_CACHE_MIGRATION_VERSION";
 const HASH_LOOKUP_SUCCESS_TTL_MS = 2 * 24 * 60 * 60 * 1000; // 2 days
@@ -232,15 +234,15 @@ async function lookupCivitModelFromHashKey(
       return { imageIsNsfw: false };
     }
     const json: ResponsePartial = await resp.json();
-    // Always resolve to the best available image - prefer an explicitly
-    // SFW-tagged one, otherwise fall back to the first image and flag it
-    // as NSFW. Whether to actually show it clearly or blurred is a
-    // display-time decision (see ModelItem.tsx), not something baked into
-    // the fetched/cached data, so toggling "Show NSFW" doesn't need a
-    // re-fetch from Civitai.
+    // For the thumbnail we still prefer an explicitly SFW image (so the
+    // preview shown - blurred or not - isn't the most explicit one), but the
+    // blur DECISION is now the model-level adult flag, not the chosen image's
+    // nsfwLevel. The old per-image logic was unreliable: it read the flag off
+    // a deliberately SFW-preferred image, so hardcore models resolved to
+    // "safe" and the result flipped between versions of the same model.
     const sfwImage = json.images?.find((i) => i.nsfwLevel == 1);
     const chosenImage = sfwImage ?? json.images?.[0];
-    const imageIsNsfw = chosenImage == null ? false : chosenImage.nsfwLevel !== 1;
+    const imageIsNsfw = json.model?.nsfw === true;
 
     console.log("[NSFW-DEBUG] hashLookup FETCH", {
       label: debugLabel,
@@ -250,10 +252,9 @@ async function lookupCivitModelFromHashKey(
       civitModelName: json.model?.name,
       modelNsfwFlag: json.model?.nsfw,
       imageNsfwLevels: json.images?.map((i) => i.nsfwLevel),
-      sfwImageFound: sfwImage != null,
       chosenImageNsfwLevel: chosenImage?.nsfwLevel,
       imageIsNsfw,
-      note: "current rule: prefer an nsfwLevel==1 image if ANY exists, then imageIsNsfw = chosenImage.nsfwLevel !== 1",
+      note: "rule: imageIsNsfw = model.nsfw === true (model-level adult flag)",
     });
 
     return {

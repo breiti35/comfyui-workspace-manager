@@ -107,8 +107,8 @@ export function ModelItem({ data }: Props) {
             : json.civitModelID == null
               ? "no Civitai hit (unknown -> not NSFW)"
               : json.imageIsNsfw
-                ? "Civitai chosen image is NSFW"
-                : "Civitai chosen image is SFW",
+                ? "Civitai model flagged adult (model.nsfw=true)"
+                : "Civitai model not flagged adult (model.nsfw=false)",
         });
 
         const newModel: Model = {
