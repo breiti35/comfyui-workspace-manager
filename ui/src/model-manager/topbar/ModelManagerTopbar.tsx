@@ -10,6 +10,7 @@ import { Model } from "../../types/dbTypes";
 import {
   fetchCivitModelFromHashKey,
   isNsfwBlurEligibleCategory,
+  runCivitCacheMigrationOnce,
 } from "../../utils/civitUtils";
 import { indexdb } from "../../db-tables/indexdb";
 import type { ModelsListRespItemFromApi } from "../types";
@@ -20,6 +21,9 @@ export default function ModelManagerTopbar() {
   const { setRoute, route } = useContext(WorkspaceContext);
 
   useEffect(() => {
+    // One-time reset of stale NSFW caches from earlier fix iterations, before
+    // any scan repopulates indexdb.models with the current logic.
+    runCivitCacheMigrationOnce();
     api.addEventListener(
       "model_list",
       async (e: { detail: ModelsListRespItemFromApi[] }) => {
@@ -37,7 +41,10 @@ export default function ModelManagerTopbar() {
             fileName: item.model_name + item.model_extension,
           };
           if (!item.file_hash) return newModel;
-          const json = await fetchCivitModelFromHashKey(item.file_hash);
+          const json = await fetchCivitModelFromHashKey(
+            item.file_hash,
+            item.model_name,
+          );
           newModel = {
             ...newModel,
             modelName: json.modelName ?? null,

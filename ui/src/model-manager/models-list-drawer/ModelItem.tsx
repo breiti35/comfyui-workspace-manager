@@ -67,15 +67,49 @@ export function ModelItem({ data }: Props) {
     if (model != null) {
       setModel(model);
       model.imageUrl?.length && setUrl(model.imageUrl);
-      setIsNsfw(nsfwEligible && (model.imageIsNsfw ?? false));
+      const decided = nsfwEligible && (model.imageIsNsfw ?? false);
+      setIsNsfw(decided);
+      console.log("[NSFW-DEBUG] ModelItem", {
+        model: data.model_name,
+        category: data.model_type,
+        eligible: nsfwEligible,
+        source: "indexdb.models (stored record, no Civitai call)",
+        storedImageIsNsfw: model.imageIsNsfw,
+        hasStoredImageUrl: !!model.imageUrl?.length,
+        decision: decided ? "BLUR" : "no blur",
+        reason: !nsfwEligible
+          ? "category not blur-eligible"
+          : model.imageIsNsfw
+            ? "stored imageIsNsfw=true"
+            : "stored imageIsNsfw is falsy/absent",
+      });
     }
     if (!model?.imageUrl && data.file_hash != null) {
       try {
-        const json = await fetchCivitModelFromHashKey(data.file_hash);
+        const json = await fetchCivitModelFromHashKey(
+          data.file_hash,
+          data.model_name,
+        );
         const image_url = json.imageUrl;
         image_url && setUrl(image_url);
         const imageIsNsfw = nsfwEligible && (json.imageIsNsfw ?? false);
         setIsNsfw(imageIsNsfw);
+        console.log("[NSFW-DEBUG] ModelItem", {
+          model: data.model_name,
+          category: data.model_type,
+          eligible: nsfwEligible,
+          source: "fresh Civitai hash lookup",
+          lookupImageIsNsfw: json.imageIsNsfw,
+          civitModelID: json.civitModelID ?? "(none - not on Civitai)",
+          decision: imageIsNsfw ? "BLUR" : "no blur",
+          reason: !nsfwEligible
+            ? "category not blur-eligible"
+            : json.civitModelID == null
+              ? "no Civitai hit (unknown -> not NSFW)"
+              : json.imageIsNsfw
+                ? "Civitai chosen image is NSFW"
+                : "Civitai chosen image is SFW",
+        });
 
         const newModel: Model = {
           id: data.model_name + "@" + data.model_type,
