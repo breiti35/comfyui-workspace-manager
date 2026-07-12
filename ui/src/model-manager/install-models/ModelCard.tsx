@@ -1,4 +1,5 @@
 import {
+  Box,
   Button,
   HStack,
   Text,
@@ -18,10 +19,11 @@ import {
   isCivitModel,
 } from "./util/modelTypes";
 import { KBtoGB } from "../utils";
-import { findSfwImageFromModel } from "../../utils/findSfwImage";
+import { findImageFromModel } from "../../utils/findSfwImage";
 import { getCivitModelPageUrl } from "../../utils/civitUtils";
 import { userSettingsTable } from "../../db-tables/WorkspaceDB";
 const IMAGE_SIZE = 280;
+const NSFW_BLUR_FILTER = "blur(20px)";
 
 interface ModelCardProps {
   model: apiResponse;
@@ -34,17 +36,27 @@ export default function ModelCard({
   installing,
 }: ModelCardProps) {
   const [modelPhoto, setModelPhoto] = useState<string>();
+  const [isNsfw, setIsNsfw] = useState(false);
+  const [showNsfw, setShowNsfw] = useState(false);
   useEffect(() => {
-    loadPhoto();
-    async function loadPhoto() {
-      const showNsfwThumbnail = await userSettingsTable?.getSetting(
-        "showNsfwModelThumbnail",
-      );
-      setModelPhoto(
-        findSfwImageFromModel(model, IMAGE_SIZE, showNsfwThumbnail),
-      );
-    }
+    const picked = findImageFromModel(model, IMAGE_SIZE);
+    setModelPhoto(picked.url);
+    setIsNsfw(picked.isNsfw);
   }, [model]);
+  useEffect(() => {
+    const updateShowNsfw = () => {
+      userSettingsTable?.getSetting("showNsfwModelThumbnail").then((res) => {
+        setShowNsfw(res ?? false);
+      });
+    };
+    updateShowNsfw();
+    // Purely a local setting read (no Civitai call), so this can run on
+    // every toggle without needing to re-fetch the photo itself.
+    window.addEventListener("showNsfwModelThumbnail", updateShowNsfw);
+    return () => {
+      window.removeEventListener("showNsfwModelThumbnail", updateShowNsfw);
+    };
+  }, []);
   const versions = isCivitModel(model) ? model.modelVersions : model.versions;
   const [selectedFile, setSelectedFile] = useState<string>(
     versions?.[0]?.name ?? "",
@@ -69,15 +81,33 @@ export default function ModelCard({
   const sizeKB = getFileEssential(curFile)?.sizeKB;
   return (
     <Card width={IMAGE_SIZE} justifyContent={"space-between"} mb={2} gap={1}>
-      <Image
-        borderRadius="md"
-        boxSize={IMAGE_SIZE + "px"}
-        objectFit="cover"
-        src={modelPhoto}
-        alt={"model cover image"}
-        cursor={"pointer"}
-        onClick={() => onClickMedia()}
-      />
+      <Box position="relative">
+        <Image
+          borderRadius="md"
+          boxSize={IMAGE_SIZE + "px"}
+          objectFit="cover"
+          src={modelPhoto}
+          alt={"model cover image"}
+          cursor={"pointer"}
+          filter={isNsfw && !showNsfw ? NSFW_BLUR_FILTER : undefined}
+          onClick={() => onClickMedia()}
+        />
+        {isNsfw && !showNsfw && (
+          <Text
+            position="absolute"
+            bottom="0"
+            left="0"
+            right="0"
+            bg="rgba(0, 0, 0, 0.6)"
+            color="white"
+            fontSize={12}
+            textAlign="center"
+            py={"1px"}
+          >
+            NSFW
+          </Text>
+        )}
+      </Box>
       <Stack p={1}>
         <Tooltip label={model.name}>
           <Text fontWeight={500} noOfLines={1}>

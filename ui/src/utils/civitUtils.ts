@@ -68,28 +68,28 @@ export async function fetchCivitModelFromHashKey(filehash: string): Promise<{
   civitModelID?: string;
   civitModelVersionID?: string;
   imageUrl?: string;
+  imageIsNsfw?: boolean;
 }> {
   try {
     const baseUrl = await getCivitBaseUrl();
     const url = `${baseUrl}/api/v1/model-versions/by-hash/${filehash}`;
     const resp = await fetch(url);
     const json: ResponsePartial = await resp.json();
-    let image_url: string | undefined;
-    const showNsfwThumbnail = await userSettingsTable?.getSetting(
-      "showNsfwModelThumbnail",
-    );
-    if (showNsfwThumbnail === true) {
-      image_url = json?.images?.[0]?.url;
-    } else if (!json.model.nsfw) {
-      const sfwImage = json.images.find((i) => i.nsfwLevel == 1);
-      image_url = sfwImage?.url;
-    }
+    // Always resolve to the best available image - prefer an explicitly
+    // SFW-tagged one, otherwise fall back to the first image and flag it
+    // as NSFW. Whether to actually show it clearly or blurred is a
+    // display-time decision (see ModelItem.tsx), not something baked into
+    // the fetched/cached data, so toggling "Show NSFW" doesn't need a
+    // re-fetch from Civitai.
+    const sfwImage = json.images?.find((i) => i.nsfwLevel == 1);
+    const chosenImage = sfwImage ?? json.images?.[0];
 
     return {
       modelName: json.model.name,
       civitModelID: String(json.modelId),
       civitModelVersionID: String(json.id),
-      imageUrl: image_url ?? undefined,
+      imageUrl: chosenImage?.url,
+      imageIsNsfw: chosenImage != null && chosenImage.nsfwLevel !== 1,
     };
   } catch (e) {
     return {};

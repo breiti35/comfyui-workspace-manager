@@ -55,6 +55,9 @@ export type Model = {
   downloadUrl?: string;
   civitModelVersionID?: string;
   imageUrl?: string | null;
+  // Whether imageUrl points at NSFW content that should be blurred unless
+  // the user opted into "Show NSFW" (see ModelItem.tsx).
+  imageIsNsfw?: boolean;
 };
 
 export interface ModelManagerPosition {

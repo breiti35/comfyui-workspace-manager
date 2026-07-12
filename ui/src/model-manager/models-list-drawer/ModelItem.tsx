@@ -8,6 +8,9 @@ import {
   fetchCivitModelFromHashKey,
   getCivitModelPageUrl,
 } from "../../utils/civitUtils";
+import { userSettingsTable } from "../../db-tables/WorkspaceDB";
+
+const NSFW_BLUR_FILTER = "blur(20px)";
 
 interface Props {
   data: ModelsListRespItem;
@@ -25,6 +28,8 @@ export function ModelItem({ data }: Props) {
   const [url, setUrl] = useState(
     "https://image.civitai.com/xG1nkqKTMzGDvpLrqFT7WA/27fd7433-cb0a-4a87-88c1-21ccb2b1a842/width=450/00060-881622046.jpeg",
   );
+  const [isNsfw, setIsNsfw] = useState(false);
+  const [showNsfw, setShowNsfw] = useState(false);
   const [hashing, setHashing] = useState(!data.file_hash);
   const [model, setModel] = useState<Model>();
 
@@ -33,6 +38,21 @@ export function ModelItem({ data }: Props) {
     getThumbnail();
   }, [data.file_hash]);
 
+  useEffect(() => {
+    const updateShowNsfw = () => {
+      userSettingsTable?.getSetting("showNsfwModelThumbnail").then((res) => {
+        setShowNsfw(res ?? false);
+      });
+    };
+    updateShowNsfw();
+    // Purely a local setting read (no Civitai call), so this can run on
+    // every toggle without needing to re-fetch the thumbnail itself.
+    window.addEventListener("showNsfwModelThumbnail", updateShowNsfw);
+    return () => {
+      window.removeEventListener("showNsfwModelThumbnail", updateShowNsfw);
+    };
+  }, []);
+
   const getThumbnail = async () => {
     const model = await indexdb.models.get(
       data.model_name + "@" + data.model_type,
@@ -40,12 +60,14 @@ export function ModelItem({ data }: Props) {
     if (model != null) {
       setModel(model);
       model.imageUrl?.length && setUrl(model.imageUrl);
+      setIsNsfw(model.imageIsNsfw ?? false);
     }
     if (!model?.imageUrl && data.file_hash != null) {
       try {
         const json = await fetchCivitModelFromHashKey(data.file_hash);
         const image_url = json.imageUrl;
         image_url && setUrl(image_url);
+        setIsNsfw(json.imageIsNsfw ?? false);
 
         const newModel: Model = {
           id: data.model_name + "@" + data.model_type,
@@ -56,6 +78,7 @@ export function ModelItem({ data }: Props) {
           civitModelID: json.civitModelID,
           civitModelVersionID: json.civitModelVersionID,
           imageUrl: image_url ?? null,
+          imageIsNsfw: json.imageIsNsfw ?? false,
         };
         // indexdb.models.put(newModel);
         setModel(newModel);
@@ -102,6 +125,7 @@ export function ModelItem({ data }: Props) {
             height={180}
             objectFit="cover"
             borderRadius="md"
+            filter={isNsfw && !showNsfw ? NSFW_BLUR_FILTER : undefined}
             cursor={model?.civitModelID != null ? "pointer" : "auto"}
             onClick={async () => {
               if (
@@ -120,14 +144,21 @@ export function ModelItem({ data }: Props) {
             }}
           />
         )}
-        <Text
-          position="absolute"
-          bottom="0"
-          left="0"
-          right="0"
-          color="white"
-          fontSize={14}
-        ></Text>
+        {!hashing && isNsfw && !showNsfw && (
+          <Text
+            position="absolute"
+            bottom="0"
+            left="0"
+            right="0"
+            bg="rgba(0, 0, 0, 0.6)"
+            color="white"
+            fontSize={12}
+            textAlign="center"
+            py={"1px"}
+          >
+            NSFW
+          </Text>
+        )}
       </Box>
       <Tooltip
         label={
