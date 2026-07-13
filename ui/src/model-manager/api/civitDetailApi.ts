@@ -51,9 +51,9 @@ export async function getCivitModelDetail(
 export interface CivitImageWithMeta {
   id?: number;
   url?: string;
-  // Civitai's numeric browsing level on the images endpoint: 1=PG(None),
-  // 2=PG13(Soft), 4=R(Mature), 8=X, 16=XXX. We blur >= 4 unless "Show NSFW".
-  nsfwLevel?: number;
+  // The images endpoint returns nsfwLevel either as a number (1/2/4/8/16) or a
+  // string (None/Soft/Mature/X) depending on API version - handle both.
+  nsfwLevel?: number | string;
   meta?: {
     prompt?: string;
     negativePrompt?: string;
@@ -92,12 +92,22 @@ export async function getCivitVersionImages(
   }
 
   try {
+    // withMeta=true is REQUIRED for the `meta` object (prompt, sampler, …) to be
+    // included - without it Civitai omits it and every image reads as "no
+    // prompt data". limit kept modest so the gallery loads fast.
     const resp = await fetch(
-      `${baseUrl}/api/v1/images?modelVersionId=${modelVersionId}&limit=24`,
+      `${baseUrl}/api/v1/images?modelVersionId=${modelVersionId}&limit=20&withMeta=true`,
     );
     if (!resp.ok) return [];
     const json = await resp.json();
     const items: CivitImageWithMeta[] = json?.items ?? [];
+    // Lightweight, one-off diagnostic so a live install can confirm whether the
+    // API returns images and whether they carry meta.
+    console.info(
+      `[CIVIT-IMAGES] version=${modelVersionId} items=${items.length} withMeta=${
+        items.filter((i) => i.meta && i.meta.prompt).length
+      }`,
+    );
     await indexdb.cache?.put({
       id: cacheKey,
       value: JSON.stringify({ data: items, timestamp: Date.now() }),
@@ -106,6 +116,23 @@ export async function getCivitVersionImages(
   } catch {
     return [];
   }
+}
+
+/**
+ * Rewrites a Civitai CDN image URL to a smaller rendered width so the detail
+ * gallery loads thumbnails instead of full-resolution originals (a big perf
+ * win). Civitai supports on-the-fly transforms in the path
+ * (…/width=NNN/… or …/original=true/…); we swap those for a modest width.
+ */
+export function civitThumbUrl(url?: string, width = 450): string | undefined {
+  if (!url) return url;
+  if (/\/(?:width|height)=\d+\//.test(url)) {
+    return url.replace(/\/(?:width|height)=\d+\//, `/width=${width}/`);
+  }
+  if (/\/original=true\//.test(url)) {
+    return url.replace(/\/original=true\//, `/width=${width}/`);
+  }
+  return url;
 }
 
 /**

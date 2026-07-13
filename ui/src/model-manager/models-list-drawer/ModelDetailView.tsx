@@ -27,6 +27,7 @@ import { indexdb } from "../../db-tables/indexdb";
 import type { Model } from "../../types/dbTypes";
 import {
   civitDescriptionToText,
+  civitThumbUrl,
   getCivitModelDetail,
   getCivitVersionImages,
   type CivitImageWithMeta,
@@ -58,6 +59,7 @@ export default function ModelDetailView({ data, onBack }: Props) {
   const [showNsfw, setShowNsfw] = useState(false);
   const [openMetaIdx, setOpenMetaIdx] = useState<number>();
   const [versionImages, setVersionImages] = useState<CivitImageWithMeta[]>([]);
+  const [imagesLoading, setImagesLoading] = useState(false);
   const toast = useToast();
 
   useEffect(() => {
@@ -110,30 +112,48 @@ export default function ModelDetailView({ data, onBack }: Props) {
 
   // Fetch the selected version's example images WITH generation meta (prompts)
   // from the dedicated images endpoint - the models endpoint omits `meta`.
+  // A loading flag prevents showing fallback images first and then swapping
+  // them out (the visible "everything reloads / cover changes" flicker).
   useEffect(() => {
     let cancelled = false;
     setOpenMetaIdx(undefined);
     setVersionImages([]);
     const vid = selectedVersion?.id;
-    if (vid == null) return;
+    if (vid == null) {
+      setImagesLoading(false);
+      return;
+    }
+    setImagesLoading(true);
     getCivitVersionImages(vid).then((imgs) => {
-      if (!cancelled) setVersionImages(imgs);
+      if (!cancelled) {
+        setVersionImages(imgs);
+        setImagesLoading(false);
+      }
     });
     return () => {
       cancelled = true;
     };
   }, [selectedVersion?.id]);
 
-  // Prefer images-with-meta; fall back to the version's plain images (no meta).
+  // Gallery = the images-with-meta result. Only fall back to the version's
+  // plain (meta-less) images once the fetch has actually finished empty, so we
+  // never render one set and then swap to another.
   const galleryImages: CivitImageWithMeta[] = versionImages.length
     ? versionImages
-    : (selectedVersion?.images ?? []).map((im) => ({
-        url: im.url,
-        meta: im.meta,
-        nsfwLevel: im.nsfw ? NSFW_STRING_TO_LEVEL[im.nsfw] ?? 1 : 1,
-      }));
+    : imagesLoading
+      ? []
+      : (selectedVersion?.images ?? []).map((im) => ({
+          url: im.url,
+          meta: im.meta,
+          nsfwLevel: im.nsfw,
+        }));
 
-  const isBlur = (nsfwLevel?: number) => (nsfwLevel ?? 1) >= 4 && !showNsfw;
+  const levelNum = (lvl?: number | string): number => {
+    if (typeof lvl === "number") return lvl;
+    if (typeof lvl === "string") return NSFW_STRING_TO_LEVEL[lvl] ?? 1;
+    return 1;
+  };
+  const isBlur = (lvl?: number | string) => levelNum(lvl) >= 4 && !showNsfw;
 
   const copy = (text: string, label: string) => {
     navigator.clipboard?.writeText(text);
@@ -156,7 +176,9 @@ export default function ModelDetailView({ data, onBack }: Props) {
     return file?.sizeKB ? KBtoGB(file.sizeKB) : undefined;
   };
 
-  const cover = galleryImages[0];
+  // Cover comes from the model's own (stable) version image, decoupled from the
+  // async example-image gallery - so it appears once and doesn't swap.
+  const cover = selectedVersion?.images?.[0];
 
   return (
     <Flex direction={"column"} h={"100%"} minH={0}>
@@ -210,13 +232,13 @@ export default function ModelDetailView({ data, onBack }: Props) {
             <Box w={"320px"} flexShrink={0}>
               {cover?.url && (
                 <Image
-                  src={cover.url}
+                  src={civitThumbUrl(cover.url, 512)}
                   loading={"lazy"}
                   w={"100%"}
                   borderRadius={"md"}
                   objectFit={"cover"}
                   maxH={"320px"}
-                  filter={isBlur(cover.nsfwLevel) ? NSFW_BLUR_FILTER : undefined}
+                  filter={isBlur(cover.nsfw) ? NSFW_BLUR_FILTER : undefined}
                   alt={"model cover"}
                 />
               )}
@@ -338,17 +360,22 @@ export default function ModelDetailView({ data, onBack }: Props) {
             </Box>
           )}
 
-          {/* Example images with generation meta (prompt on click). */}
-          {galleryImages.length ? (
-            <Box mt={5}>
-              <SectionLabel>Beispielbilder – zum Prompt anklicken</SectionLabel>
+          {/* Example images with generation meta (prompt on click). A single
+              loading state avoids rendering one set and swapping to another. */}
+          <Box mt={5}>
+            <SectionLabel>Beispielbilder – zum Prompt anklicken</SectionLabel>
+            {imagesLoading ? (
+              <Flex py={8} justify={"center"}>
+                <Spinner size={"sm"} />
+              </Flex>
+            ) : galleryImages.length ? (
               <Flex wrap={"wrap"} gap={3} align={"flex-start"}>
                 {galleryImages.map((img, idx) => {
                   const open = openMetaIdx === idx;
                   return (
                     <Box key={idx} w={"180px"}>
                       <Image
-                        src={img.url}
+                        src={civitThumbUrl(img.url)}
                         loading={"lazy"}
                         w={"180px"}
                         h={"180px"}
@@ -358,9 +385,7 @@ export default function ModelDetailView({ data, onBack }: Props) {
                         filter={
                           isBlur(img.nsfwLevel) ? NSFW_BLUR_FILTER : undefined
                         }
-                        onClick={() =>
-                          setOpenMetaIdx(open ? undefined : idx)
-                        }
+                        onClick={() => setOpenMetaIdx(open ? undefined : idx)}
                         alt={"example"}
                       />
                       {open && <ImageMeta meta={img.meta} onCopy={copy} />}
@@ -368,8 +393,12 @@ export default function ModelDetailView({ data, onBack }: Props) {
                   );
                 })}
               </Flex>
-            </Box>
-          ) : null}
+            ) : (
+              <Text fontSize={"sm"} color={"gray.500"}>
+                Keine Beispielbilder verfügbar.
+              </Text>
+            )}
+          </Box>
         </Box>
       )}
     </Flex>
