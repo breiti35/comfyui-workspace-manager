@@ -109,13 +109,6 @@ export async function getCivitVersionImages(
     if (!resp.ok) return [];
     const json = await resp.json();
     const items: CivitImageWithMeta[] = json?.items ?? [];
-    // Lightweight, one-off diagnostic so a live install can confirm whether the
-    // API returns images and whether they carry meta.
-    console.info(
-      `[CIVIT-IMAGES] version=${modelVersionId} items=${items.length} withMeta=${
-        items.filter((i) => i.meta && i.meta.prompt).length
-      }`,
-    );
     await indexdb.cache?.put({
       id: cacheKey,
       value: JSON.stringify({ data: items, timestamp: Date.now() }),
