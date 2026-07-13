@@ -13,6 +13,7 @@ type Props = {
   variant?: string;
   borderRadius?: string | number;
   mb?: number;
+  onEnter?: () => void;
 };
 
 const IconSearchStyle: CSSProperties = {
@@ -56,6 +57,9 @@ export default function SearchInput(props: Props) {
         paddingBlock={"5px"}
         value={searchValue}
         onChange={({ target }) => onUpdateSearchValue(target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") props.onEnter?.();
+        }}
       />
     </Box>
   );
