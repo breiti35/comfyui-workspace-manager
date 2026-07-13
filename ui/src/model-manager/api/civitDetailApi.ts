@@ -95,8 +95,16 @@ export async function getCivitVersionImages(
     // withMeta=true is REQUIRED for the `meta` object (prompt, sampler, …) to be
     // included - without it Civitai omits it and every image reads as "no
     // prompt data". limit kept modest so the gallery loads fast.
+    //
+    // civitai.com only ever returns SFW ("None") images, so for an NSFW model
+    // you'd otherwise get only the few tangential SFW community images. When the
+    // user has opted into adult content (baseUrl -> civitai.red), request the
+    // full browsing level so the model's ACTUAL examples come through (they're
+    // still blurred at display time unless "Show NSFW" is on).
+    const includeAdult = baseUrl.includes("civitai.red");
+    const levelParam = includeAdult ? "&browsingLevel=31" : "";
     const resp = await fetch(
-      `${baseUrl}/api/v1/images?modelVersionId=${modelVersionId}&limit=20&withMeta=true`,
+      `${baseUrl}/api/v1/images?modelVersionId=${modelVersionId}&limit=20&withMeta=true${levelParam}`,
     );
     if (!resp.ok) return [];
     const json = await resp.json();
