@@ -7,8 +7,9 @@ import {
   ModalCloseButton,
   ModalBody,
   useDisclosure,
+  useToast,
 } from "@chakra-ui/react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { installModelsApi } from "../api/modelsApi";
 import InstallModelCard from "./InstallModelCard";
 import InstallToolbar, { SORT_OPTIONS } from "./InstallToolbar";
@@ -66,6 +67,10 @@ export default function InstallModelsModal({
   const [detailItem, setDetailItem] = useState<CivitiModel | null>(null);
 
   const { isOpen, onOpen, onClose: onCloseChooseFolderModal } = useDisclosure();
+  const toast = useToast();
+  // Filenames that have appeared in a download_progress queue at least once,
+  // so we can tell "completed" (was seen, now gone) from "not started yet".
+  const seenDownloadsRef = useRef<Set<string>>(new Set());
   const [fileState, setFile, file] = useStateRef<FileEssential>();
   const [defaultFolders, setDefaultFolders] = useState<
     Record<MODEL_TYPE, string>
@@ -115,10 +120,39 @@ export default function InstallModelsModal({
   // Download-Fortschritt (globales Event) für die Karten-Anzeige.
   useEffect(() => {
     const onProgress = (e: { detail: ProgressEntry[] }) => {
-      setProgressQueue(e.detail ?? []);
+      const queue = e.detail ?? [];
+      setProgressQueue(queue);
+      const active = new Set(queue.map((q) => basename(q.save_path)));
+      active.forEach((n) => seenDownloadsRef.current.add(n));
+      // Drop optimistic "installing" markers once their download has appeared
+      // in a queue and then left it again (i.e. finished). Keep markers that
+      // haven't shown up yet (backend still preparing the download).
+      setInstalling((cur) =>
+        cur.filter(
+          (name) => active.has(name) || !seenDownloadsRef.current.has(name),
+        ),
+      );
+    };
+    const onError = (e: { detail: string }) => {
+      toast({
+        title: "Download-Fehler",
+        description: e.detail,
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+      // A failed download emits no further progress; clear optimistic markers so
+      // no card stays stuck under the spinner overlay. Still-active downloads
+      // remain covered by their live progress entry.
+      setProgressQueue([]);
+      setInstalling([]);
     };
     api.addEventListener("download_progress", onProgress);
-    return () => api.removeEventListener("download_progress", onProgress);
+    api.addEventListener("download_error", onError);
+    return () => {
+      api.removeEventListener("download_progress", onProgress);
+      api.removeEventListener("download_error", onError);
+    };
   }, []);
 
   const progressForFile = (fileName?: string): number | undefined => {
