@@ -96,6 +96,15 @@ export default function InstallModelsModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modelType, sortBy, baseModel]);
 
+  // Adult-Content-Umschaltung (NSFW-Button) wechselt Host/Params -> neu laden,
+  // damit die NSFW-Ergebnisse und Cover sofort erscheinen.
+  useEffect(() => {
+    const reload = () => loadData();
+    window.addEventListener("civitaiIncludeAdultContent", reload);
+    return () =>
+      window.removeEventListener("civitaiIncludeAdultContent", reload);
+  }, [loadData]);
+
   // Lokale Modelle -> „installiert"-Mengen (Modell- und Versions-IDs).
   useEffect(() => {
     (async () => {

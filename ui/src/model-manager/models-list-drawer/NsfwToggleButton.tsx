@@ -4,16 +4,20 @@ import { useEffect, useState } from "react";
 import { userSettingsTable } from "../../db-tables/WorkspaceDB";
 
 /**
- * NSFW visibility as an on/off toggle button (not a bare checkbox), to fit the
- * toolbar's button-based concept. Reads/writes the same `showNsfwModelThumbnail`
- * setting and fires the same `showNsfwModelThumbnail` event that the cards
- * listen on, so toggling it un-blurs/blurs thumbnails live.
+ * Single adult-content switch. One click turns adult content fully on/off:
+ * - `civitaiIncludeAdultContent` decides the Civitai host (civitai.red vs .com)
+ *   and whether NSFW results/covers are requested at all, and
+ * - `showNsfwModelThumbnail` un-blurs the thumbnails.
+ * Both are kept in lockstep so the user never has to hunt for a second setting.
+ * Fires `showNsfwModelThumbnail` (cards re-read blur) and
+ * `civitaiIncludeAdultContent` (panels re-fetch from the new host) so it all
+ * updates live.
  */
 export default function NsfwToggleButton() {
   const [checked, setChecked] = useState(false);
 
   const read = () => {
-    userSettingsTable?.getSetting("showNsfwModelThumbnail").then((res) => {
+    userSettingsTable?.getSetting("civitaiIncludeAdultContent").then((res) => {
       setChecked(res ?? false);
     });
   };
@@ -21,23 +25,32 @@ export default function NsfwToggleButton() {
   useEffect(() => {
     read();
     // Keep in sync if another surface toggles the same setting.
-    window.addEventListener("showNsfwModelThumbnail", read);
-    return () => window.removeEventListener("showNsfwModelThumbnail", read);
+    window.addEventListener("civitaiIncludeAdultContent", read);
+    return () =>
+      window.removeEventListener("civitaiIncludeAdultContent", read);
   }, []);
 
   const toggle = () => {
     const next = !checked;
     userSettingsTable
-      ?.upsert({ showNsfwModelThumbnail: next })
+      ?.upsert({
+        showNsfwModelThumbnail: next,
+        civitaiIncludeAdultContent: next,
+      })
       .then(() => {
         setChecked(next);
         window.dispatchEvent(new Event("showNsfwModelThumbnail"));
+        window.dispatchEvent(new Event("civitaiIncludeAdultContent"));
       });
   };
 
   return (
     <Tooltip
-      label={checked ? "NSFW-Vorschauen ausblenden" : "NSFW-Vorschauen anzeigen"}
+      label={
+        checked
+          ? "Adult-Inhalte ausblenden"
+          : "Adult-Inhalte anzeigen (NSFW)"
+      }
     >
       <Button
         size={"sm"}
