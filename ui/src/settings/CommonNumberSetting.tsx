@@ -3,7 +3,6 @@ import {
   Text,
   NumberInput,
   NumberInputField,
-  useToast,
 } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
 import { userSettingsTable } from "../db-tables/WorkspaceDB";
@@ -17,7 +16,6 @@ export function CommonNumberSetting({
   settingKey: keyof UserSettings;
 }) {
   const [inputNumber, setInputNumber] = useState<number>(200);
-  const toast = useToast();
   const onInputChange = (newValue: string) => {
     if (!newValue.length) {
       setInputNumber(0);
@@ -32,12 +30,6 @@ export function CommonNumberSetting({
     }
     await userSettingsTable?.upsert({
       [settingKey]: Number(inputNumber),
-    });
-    toast({
-      title: "Setting saved",
-      status: "success",
-      duration: 3000,
-      isClosable: true,
     });
   };
   const loadCurrentSetting = () => {
