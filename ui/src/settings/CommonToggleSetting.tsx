@@ -8,7 +8,6 @@ interface CommonToggleSettingProps {
   label: string;
   helpText?: string;
   warning?: string;
-  note?: string;
   isDisabled?: boolean;
   onAfterChange?: (value: boolean) => void;
 }
@@ -18,7 +17,6 @@ export default function CommonToggleSetting({
   label,
   helpText,
   warning,
-  note,
   isDisabled = false,
   onAfterChange,
 }: CommonToggleSettingProps) {
@@ -54,11 +52,6 @@ export default function CommonToggleSetting({
         {warning && (
           <Text fontSize={"xs"} color={"red.300"} mt={1}>
             ⛔️ {warning}
-          </Text>
-        )}
-        {note && (
-          <Text fontSize={"xs"} color={"blue.300"} mt={1}>
-            {note}
           </Text>
         )}
       </Box>
