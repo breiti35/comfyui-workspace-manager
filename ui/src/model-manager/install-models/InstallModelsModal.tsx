@@ -1,14 +1,18 @@
 import {
   Box,
+  Button,
+  Flex,
   Grid,
   Modal,
   ModalOverlay,
   ModalContent,
   ModalCloseButton,
   ModalBody,
+  Text,
   useDisclosure,
   useToast,
 } from "@chakra-ui/react";
+import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { installModelsApi } from "../api/modelsApi";
 import InstallModelCard from "./InstallModelCard";
@@ -56,6 +60,15 @@ export default function InstallModelsModal({
   const [searchQuery, setSearchQuery] = useState(searchQueryProp);
   const [sortBy, setSortBy] = useState(SORT_OPTIONS[0].key);
   const [baseModel, setBaseModel] = useState("");
+  const [pageSize, setPageSize] = useState(25);
+  // Cursor-based paging: current page's cursor, a stack of previous cursors to
+  // walk back, the nextCursor from the last response (enables "Weiter"), and a
+  // display-only running page number (the API gives no total).
+  const [cursor, setCursor] = useState<string | undefined>(undefined);
+  const [prevCursors, setPrevCursors] = useState<(string | undefined)[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | undefined>(undefined);
+  const [pageNumber, setPageNumber] = useState(1);
+  const gridScrollRef = useRef<HTMLDivElement>(null);
   const [installing, setInstalling] = useState<string[]>([]);
   const [progressQueue, setProgressQueue] = useState<ProgressEntry[]>([]);
   const [installedModelIds, setInstalledModelIds] = useState<Set<string>>(
@@ -76,34 +89,71 @@ export default function InstallModelsModal({
     Record<MODEL_TYPE, string>
   >(MODEL_TYPE_TO_FOLDER_MAPPING);
 
-  const loadData = useCallback(async () => {
-    setLoading(true);
-    const result = await getModelFromCivitAPi(
-      modelType,
-      searchQuery,
-      sortBy,
-      baseModel || undefined,
-    );
-    setModels(result);
-    const df = await userSettingsTable?.getSetting("defaultFolders");
-    df && setDefaultFolders(df);
-    setLoading(false);
-  }, [modelType, searchQuery, sortBy, baseModel]);
+  const loadData = useCallback(
+    async (pageCursor?: string) => {
+      setLoading(true);
+      const { items, nextCursor: nc } = await getModelFromCivitAPi(
+        modelType,
+        searchQuery,
+        sortBy,
+        baseModel || undefined,
+        pageSize,
+        pageCursor,
+      );
+      setModels(items);
+      setNextCursor(nc);
+      const df = await userSettingsTable?.getSetting("defaultFolders");
+      df && setDefaultFolders(df);
+      setLoading(false);
+    },
+    [modelType, searchQuery, sortBy, baseModel, pageSize],
+  );
 
-  // Trending-Feed beim Öffnen + Neuladen bei Typ/Sort/Basismodell.
+  // Zur ersten Seite zurück und laden. Wird bei jeder Filter-/Such-/
+  // Seitengrößen-Änderung aufgerufen (die Cursor-Historie ist dann hinfällig).
+  const resetAndLoad = useCallback(() => {
+    setPrevCursors([]);
+    setCursor(undefined);
+    setNextCursor(undefined);
+    setPageNumber(1);
+    gridScrollRef.current?.scrollTo({ top: 0 });
+    loadData(undefined);
+  }, [loadData]);
+
+  const goNext = () => {
+    if (!nextCursor || loading) return;
+    setPrevCursors((s) => [...s, cursor]);
+    setCursor(nextCursor);
+    setPageNumber((n) => n + 1);
+    gridScrollRef.current?.scrollTo({ top: 0 });
+    loadData(nextCursor);
+  };
+
+  const goPrev = () => {
+    if (pageNumber <= 1 || loading) return;
+    const prev = prevCursors[prevCursors.length - 1];
+    setPrevCursors((s) => s.slice(0, -1));
+    setCursor(prev);
+    setPageNumber((n) => n - 1);
+    gridScrollRef.current?.scrollTo({ top: 0 });
+    loadData(prev);
+  };
+
+  // Trending-Feed beim Öffnen + Reset-auf-Seite-1 bei Typ/Sort/Basismodell/
+  // Seitengröße.
   useEffect(() => {
-    loadData();
+    resetAndLoad();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [modelType, sortBy, baseModel]);
+  }, [modelType, sortBy, baseModel, pageSize]);
 
-  // Adult-Content-Umschaltung (NSFW-Button) wechselt Host/Params -> neu laden,
-  // damit die NSFW-Ergebnisse und Cover sofort erscheinen.
+  // Adult-Content-Umschaltung (Settings) wechselt Host/Params -> zurück auf
+  // Seite 1 laden, damit die NSFW-Ergebnisse und Cover sofort erscheinen.
   useEffect(() => {
-    const reload = () => loadData();
+    const reload = () => resetAndLoad();
     window.addEventListener("civitaiIncludeAdultContent", reload);
     return () =>
       window.removeEventListener("civitaiIncludeAdultContent", reload);
-  }, [loadData]);
+  }, [resetAndLoad]);
 
   // Lokale Modelle -> „installiert"-Mengen (Modell- und Versions-IDs).
   useEffect(() => {
@@ -283,18 +333,21 @@ export default function InstallModelsModal({
                 <InstallToolbar
                   searchQuery={searchQuery}
                   setSearchQuery={setSearchQuery}
-                  onSearch={loadData}
+                  onSearch={resetAndLoad}
                   modelType={modelType}
                   onSelectModelType={setModelType}
                   sortBy={sortBy}
                   setSortBy={setSortBy}
                   baseModel={baseModel}
                   setBaseModel={setBaseModel}
+                  pageSize={pageSize}
+                  setPageSize={setPageSize}
                   onCustomUrlInstall={onOpen}
                   resultCount={models.length}
                   loading={loading}
                 />
                 <Box
+                  ref={gridScrollRef}
                   flex={1}
                   minHeight={0}
                   overflowY={"auto"}
@@ -329,6 +382,42 @@ export default function InstallModelsModal({
                     })}
                   </Grid>
                 </Box>
+
+                {/* Blätter-Leiste: cursor-basiert, daher nur Vor/Zurück +
+                    laufender Seitenzähler (keine Gesamtzahl von der API). */}
+                <Flex
+                  flexShrink={0}
+                  align={"center"}
+                  justify={"center"}
+                  gap={4}
+                  px={4}
+                  py={2}
+                  borderTop={"1px solid"}
+                  borderColor={"rowBorderColor"}
+                  bg={"galleryPanelBg"}
+                >
+                  <Button
+                    size={"sm"}
+                    variant={"ghost"}
+                    leftIcon={<IconChevronLeft size={16} />}
+                    isDisabled={pageNumber <= 1 || loading}
+                    onClick={goPrev}
+                  >
+                    Zurück
+                  </Button>
+                  <Text fontSize={"sm"} color={"gray.400"} minW={"64px"} textAlign={"center"}>
+                    Seite {pageNumber}
+                  </Text>
+                  <Button
+                    size={"sm"}
+                    variant={"ghost"}
+                    rightIcon={<IconChevronRight size={16} />}
+                    isDisabled={!nextCursor || loading}
+                    onClick={goNext}
+                  >
+                    Weiter
+                  </Button>
+                </Flex>
               </>
             )}
           </ModalBody>

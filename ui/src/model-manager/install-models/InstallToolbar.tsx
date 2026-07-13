@@ -27,6 +27,9 @@ export const SORT_OPTIONS: { key: string; label: string }[] = [
   { key: "Newest", label: "Neueste" },
 ];
 
+// Civitai `limit` accepts up to 100; we offer a small, sensible set. Standard 25.
+export const PAGE_SIZE_OPTIONS = [10, 15, 25, 50];
+
 // key = exakter Civitai-`baseModels`-Wert (muss 1:1 zur API passen, sonst leere
 // Treffer); "" = kein Filter. Label = derselbe String, damit unmissverständlich.
 // Nach Familien geordnet, gängige oben. Neue Basismodelle tauchen bei Civitai
@@ -81,6 +84,8 @@ interface InstallToolbarProps {
   setSortBy: (v: string) => void;
   baseModel: string;
   setBaseModel: (v: string) => void;
+  pageSize: number;
+  setPageSize: (v: number) => void;
   onCustomUrlInstall: () => void;
   resultCount: number;
   loading: boolean;
@@ -96,6 +101,8 @@ export default function InstallToolbar({
   setSortBy,
   baseModel,
   setBaseModel,
+  pageSize,
+  setPageSize,
   onCustomUrlInstall,
   resultCount,
   loading,
@@ -235,9 +242,34 @@ export default function InstallToolbar({
           </MenuList>
         </Menu>
 
+        <Menu>
+          <MenuButton
+            as={Box}
+            cursor={"pointer"}
+            px={3}
+            py={1}
+            borderRadius={"md"}
+            border={"1px solid"}
+            borderColor={"rowBorderColor"}
+            _hover={{ bg: "rowHoverBg" }}
+          >
+            <HStack gap={1}>
+              <Text fontSize={"sm"}>Anzeigen: {pageSize}</Text>
+              <IconChevronDown size={14} />
+            </HStack>
+          </MenuButton>
+          <MenuList>
+            {PAGE_SIZE_OPTIONS.map((n) => (
+              <MenuItem key={n} onClick={() => setPageSize(n)}>
+                {n} pro Seite
+              </MenuItem>
+            ))}
+          </MenuList>
+        </Menu>
+
         <Box flex={1} />
         <Text fontSize={"sm"} color={"gray.500"}>
-          {loading ? "Lädt…" : `${resultCount} Treffer`}
+          {loading ? "Lädt…" : `${resultCount} auf dieser Seite`}
         </Text>
       </Flex>
     </Box>
