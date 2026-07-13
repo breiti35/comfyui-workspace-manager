@@ -16,7 +16,7 @@ import {
   Wrap,
   WrapItem,
 } from "@chakra-ui/react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   IconArrowLeft,
   IconCopy,
@@ -28,10 +28,12 @@ import type { Model } from "../../types/dbTypes";
 import {
   civitDescriptionToText,
   getCivitModelDetail,
+  getCivitVersionImages,
+  type CivitImageWithMeta,
 } from "../api/civitDetailApi";
 import { getCivitModelPageUrl } from "../../utils/civitUtils";
 import { userSettingsTable } from "../../db-tables/WorkspaceDB";
-import { KBtoGB } from "../utils";
+import { KBtoGB, hideScrollbarSx } from "../utils";
 
 const NSFW_BLUR_FILTER = "blur(20px)";
 
@@ -40,7 +42,13 @@ interface Props {
   onBack: () => void;
 }
 
-const isImgNsfw = (nsfw?: string) => nsfw === "Mature" || nsfw === "X";
+// Civitai's numeric browsing level: 1=PG, 2=PG13, 4=R, 8=X, 16=XXX.
+const NSFW_STRING_TO_LEVEL: Record<string, number> = {
+  None: 1,
+  Soft: 2,
+  Mature: 4,
+  X: 8,
+};
 
 export default function ModelDetailView({ data, onBack }: Props) {
   const [loading, setLoading] = useState(true);
@@ -48,7 +56,8 @@ export default function ModelDetailView({ data, onBack }: Props) {
   const [detail, setDetail] = useState<CivitiModel | null>(null);
   const [selectedVersionId, setSelectedVersionId] = useState<number>();
   const [showNsfw, setShowNsfw] = useState(false);
-  const [openMetaId, setOpenMetaId] = useState<number>();
+  const [openMetaIdx, setOpenMetaIdx] = useState<number>();
+  const [versionImages, setVersionImages] = useState<CivitImageWithMeta[]>([]);
   const toast = useToast();
 
   useEffect(() => {
@@ -62,7 +71,7 @@ export default function ModelDetailView({ data, onBack }: Props) {
     (async () => {
       setLoading(true);
       setDetail(null);
-      setOpenMetaId(undefined);
+      setOpenMetaIdx(undefined);
       const m = await indexdb.models.get(
         data.model_name + "@" + data.model_type,
       );
@@ -90,15 +99,41 @@ export default function ModelDetailView({ data, onBack }: Props) {
   const versions = detail?.modelVersions ?? [];
   const selectedVersion =
     versions.find((v) => v.id === selectedVersionId) ?? versions[0];
-  // Parse the HTML description once per model, not on every render / version
-  // switch (DOMParser is not free and this was running twice per render).
+  const installedVid = dbModel?.civitModelVersionID
+    ? Number(dbModel.civitModelVersionID)
+    : undefined;
+
   const descriptionText = useMemo(
     () => civitDescriptionToText(detail?.description),
     [detail?.description],
   );
-  const installedVid = dbModel?.civitModelVersionID
-    ? Number(dbModel.civitModelVersionID)
-    : undefined;
+
+  // Fetch the selected version's example images WITH generation meta (prompts)
+  // from the dedicated images endpoint - the models endpoint omits `meta`.
+  useEffect(() => {
+    let cancelled = false;
+    setOpenMetaIdx(undefined);
+    setVersionImages([]);
+    const vid = selectedVersion?.id;
+    if (vid == null) return;
+    getCivitVersionImages(vid).then((imgs) => {
+      if (!cancelled) setVersionImages(imgs);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedVersion?.id]);
+
+  // Prefer images-with-meta; fall back to the version's plain images (no meta).
+  const galleryImages: CivitImageWithMeta[] = versionImages.length
+    ? versionImages
+    : (selectedVersion?.images ?? []).map((im) => ({
+        url: im.url,
+        meta: im.meta,
+        nsfwLevel: im.nsfw ? NSFW_STRING_TO_LEVEL[im.nsfw] ?? 1 : 1,
+      }));
+
+  const isBlur = (nsfwLevel?: number) => (nsfwLevel ?? 1) >= 4 && !showNsfw;
 
   const copy = (text: string, label: string) => {
     navigator.clipboard?.writeText(text);
@@ -121,12 +156,22 @@ export default function ModelDetailView({ data, onBack }: Props) {
     return file?.sizeKB ? KBtoGB(file.sizeKB) : undefined;
   };
 
-  const cover = selectedVersion?.images?.find((i) => i.url) ?? undefined;
-  const coverBlur = isImgNsfw(cover?.nsfw) && !showNsfw;
+  const cover = galleryImages[0];
 
   return (
     <Flex direction={"column"} h={"100%"} minH={0}>
-      <HStack mb={3} gap={2} flexShrink={0}>
+      {/* Gray header bar - matches the panel's toolbar chrome. */}
+      <Flex
+        align={"center"}
+        gap={2}
+        px={4}
+        py={2}
+        pr={12}
+        flexShrink={0}
+        bg={"galleryPanelBg"}
+        borderBottom={"1px solid"}
+        borderColor={"rowBorderColor"}
+      >
         <Tooltip label={"Zurück zur Übersicht"}>
           <IconButton
             size={"sm"}
@@ -136,7 +181,7 @@ export default function ModelDetailView({ data, onBack }: Props) {
             onClick={onBack}
           />
         </Tooltip>
-        <Heading size={"md"} noOfLines={1}>
+        <Heading size={"sm"} noOfLines={1}>
           {detail?.name ?? data.model_name}
         </Heading>
         {dbModel?.civitModelID && (
@@ -150,7 +195,7 @@ export default function ModelDetailView({ data, onBack }: Props) {
             Auf Civitai öffnen
           </Button>
         )}
-      </HStack>
+      </Flex>
 
       {loading ? (
         <Flex justify={"center"} align={"center"} flex={1}>
@@ -159,39 +204,30 @@ export default function ModelDetailView({ data, onBack }: Props) {
       ) : !detail ? (
         <FallbackLocalInfo data={data} />
       ) : (
-        <Box flex={1} minH={0} overflowY={"auto"} pr={2}>
-          {/* Cover + description + trigger words */}
-          <Flex gap={4} align={"flex-start"} wrap={"wrap"}>
-            {cover?.url && (
-              <Image
-                src={cover.url}
-                loading={"lazy"}
-                w={"260px"}
-                maxW={"100%"}
-                borderRadius={"md"}
-                objectFit={"cover"}
-                filter={coverBlur ? NSFW_BLUR_FILTER : undefined}
-                alt={"model cover"}
-              />
-            )}
-            <Box flex={1} minW={"280px"}>
-              <Text fontSize={"sm"} color={"gray.500"} mb={3}>
+        <Box flex={1} minH={0} overflowY={"auto"} p={4} sx={hideScrollbarSx}>
+          {/* Top row: cover + meta (left) | version list (right, contained) */}
+          <Flex gap={4} align={"stretch"} wrap={"wrap"}>
+            <Box w={"320px"} flexShrink={0}>
+              {cover?.url && (
+                <Image
+                  src={cover.url}
+                  loading={"lazy"}
+                  w={"100%"}
+                  borderRadius={"md"}
+                  objectFit={"cover"}
+                  maxH={"320px"}
+                  filter={isBlur(cover.nsfwLevel) ? NSFW_BLUR_FILTER : undefined}
+                  alt={"model cover"}
+                />
+              )}
+              <Text fontSize={"sm"} color={"gray.500"} mt={3}>
                 {[detail.type, selectedVersion?.baseModel]
                   .filter(Boolean)
                   .join(" · ")}
               </Text>
-
               {selectedVersion?.trainedWords?.length ? (
-                <Box mb={4}>
-                  <Text
-                    fontSize={"xs"}
-                    textTransform={"uppercase"}
-                    letterSpacing={"wider"}
-                    color={"gray.500"}
-                    mb={2}
-                  >
-                    Trigger-Wörter
-                  </Text>
+                <Box mt={3}>
+                  <SectionLabel>Trigger-Wörter</SectionLabel>
                   <Wrap>
                     {selectedVersion.trainedWords.map((w, i) => (
                       <WrapItem key={i}>
@@ -210,97 +246,107 @@ export default function ModelDetailView({ data, onBack }: Props) {
                   </Wrap>
                 </Box>
               ) : null}
+            </Box>
 
-              {descriptionText && (
-                <Text fontSize={"sm"} whiteSpace={"pre-wrap"}>
-                  {descriptionText}
-                </Text>
-              )}
+            {/* Versions - compact, self-scrolling so a long list stays small. */}
+            <Box flex={1} minW={"280px"}>
+              <SectionLabel>
+                Versionen{versions.length ? ` (${versions.length})` : ""}
+              </SectionLabel>
+              <Box
+                maxH={"320px"}
+                overflowY={"auto"}
+                border={"1px solid"}
+                borderColor={"rowBorderColor"}
+                borderRadius={"md"}
+                sx={hideScrollbarSx}
+              >
+                <Stack spacing={0}>
+                  {versions.map((v) => {
+                    const active = v.id === selectedVersion?.id;
+                    return (
+                      <Flex
+                        as={"button"}
+                        key={v.id}
+                        onClick={() => setSelectedVersionId(v.id)}
+                        justify={"space-between"}
+                        align={"center"}
+                        gap={2}
+                        px={3}
+                        py={2}
+                        borderLeft={"2px solid"}
+                        borderColor={active ? "blue.400" : "transparent"}
+                        bg={active ? "galleryActiveBg" : "transparent"}
+                        _hover={{
+                          bg: active ? "galleryActiveBg" : "rowHoverBg",
+                        }}
+                        textAlign={"left"}
+                      >
+                        <HStack gap={2} minW={0}>
+                          <Text
+                            fontWeight={500}
+                            fontSize={"sm"}
+                            noOfLines={1}
+                          >
+                            {v.name}
+                          </Text>
+                          {v.id === installedVid && (
+                            <Badge
+                              colorScheme={"green"}
+                              variant={"subtle"}
+                              borderRadius={"full"}
+                              flexShrink={0}
+                            >
+                              installiert
+                            </Badge>
+                          )}
+                        </HStack>
+                        <HStack
+                          gap={3}
+                          flexShrink={0}
+                          color={"gray.500"}
+                          fontSize={"xs"}
+                        >
+                          {v.baseModel && <Text>{v.baseModel}</Text>}
+                          {versionSize(v) && <Text>{versionSize(v)}</Text>}
+                        </HStack>
+                      </Flex>
+                    );
+                  })}
+                </Stack>
+              </Box>
             </Box>
           </Flex>
 
-          {/* Version list */}
-          {versions.length > 0 && (
-            <Box mt={6}>
-              <Text
-                fontSize={"xs"}
-                textTransform={"uppercase"}
-                letterSpacing={"wider"}
-                color={"gray.500"}
-                mb={2}
+          {/* Description - its own contained, self-scrolling section. */}
+          {descriptionText && (
+            <Box mt={5}>
+              <SectionLabel>Beschreibung</SectionLabel>
+              <Box
+                maxH={"460px"}
+                overflowY={"auto"}
+                border={"1px solid"}
+                borderColor={"rowBorderColor"}
+                borderRadius={"md"}
+                p={3}
+                sx={hideScrollbarSx}
               >
-                Versionen
-              </Text>
-              <Stack spacing={1}>
-                {versions.map((v) => {
-                  const active = v.id === selectedVersion?.id;
-                  return (
-                    <Flex
-                      as={"button"}
-                      key={v.id}
-                      onClick={() => {
-                        setSelectedVersionId(v.id);
-                        setOpenMetaId(undefined);
-                      }}
-                      justify={"space-between"}
-                      align={"center"}
-                      gap={2}
-                      px={3}
-                      py={2}
-                      borderRadius={"md"}
-                      borderLeft={"2px solid"}
-                      borderColor={active ? "blue.400" : "transparent"}
-                      bg={active ? "galleryActiveBg" : "transparent"}
-                      _hover={{ bg: active ? "galleryActiveBg" : "rowHoverBg" }}
-                      textAlign={"left"}
-                    >
-                      <HStack gap={2} minW={0}>
-                        <Text fontWeight={500} fontSize={"sm"} noOfLines={1}>
-                          {v.name}
-                        </Text>
-                        {v.id === installedVid && (
-                          <Badge
-                            colorScheme={"green"}
-                            borderRadius={"full"}
-                            flexShrink={0}
-                          >
-                            installiert
-                          </Badge>
-                        )}
-                      </HStack>
-                      <HStack gap={3} flexShrink={0} color={"gray.500"}>
-                        {v.baseModel && (
-                          <Text fontSize={"xs"}>{v.baseModel}</Text>
-                        )}
-                        {versionSize(v) && (
-                          <Text fontSize={"xs"}>{versionSize(v)}</Text>
-                        )}
-                      </HStack>
-                    </Flex>
-                  );
-                })}
-              </Stack>
+                <Text fontSize={"sm"} whiteSpace={"pre-wrap"}>
+                  {descriptionText}
+                </Text>
+              </Box>
             </Box>
           )}
 
-          {/* Example images with generation meta */}
-          {selectedVersion?.images?.length ? (
-            <Box mt={6}>
-              <Text
-                fontSize={"xs"}
-                textTransform={"uppercase"}
-                letterSpacing={"wider"}
-                color={"gray.500"}
-                mb={2}
-              >
-                Beispielbilder – zum Prompt anklicken
-              </Text>
+          {/* Example images with generation meta (prompt on click). */}
+          {galleryImages.length ? (
+            <Box mt={5}>
+              <SectionLabel>Beispielbilder – zum Prompt anklicken</SectionLabel>
               <Flex wrap={"wrap"} gap={3} align={"flex-start"}>
-                {selectedVersion.images.map((img) => {
-                  const blur = isImgNsfw(img.nsfw) && !showNsfw;
-                  const open = openMetaId === img.id;
+                {galleryImages.map((img, idx) => {
+                  const open = openMetaIdx === idx;
                   return (
-                    <Box key={img.id} w={"180px"}>
+                    <Box key={idx} w={"180px"}>
                       <Image
                         src={img.url}
                         loading={"lazy"}
@@ -309,15 +355,15 @@ export default function ModelDetailView({ data, onBack }: Props) {
                         objectFit={"cover"}
                         borderRadius={"md"}
                         cursor={"pointer"}
-                        filter={blur ? NSFW_BLUR_FILTER : undefined}
+                        filter={
+                          isBlur(img.nsfwLevel) ? NSFW_BLUR_FILTER : undefined
+                        }
                         onClick={() =>
-                          setOpenMetaId(open ? undefined : img.id)
+                          setOpenMetaIdx(open ? undefined : idx)
                         }
                         alt={"example"}
                       />
-                      {open && (
-                        <ImageMeta meta={img.meta} onCopy={copy} />
-                      )}
+                      {open && <ImageMeta meta={img.meta} onCopy={copy} />}
                     </Box>
                   );
                 })}
@@ -330,18 +376,25 @@ export default function ModelDetailView({ data, onBack }: Props) {
   );
 }
 
+function SectionLabel({ children }: { children: ReactNode }) {
+  return (
+    <Text
+      fontSize={"xs"}
+      textTransform={"uppercase"}
+      letterSpacing={"wider"}
+      color={"gray.500"}
+      mb={2}
+    >
+      {children}
+    </Text>
+  );
+}
+
 function ImageMeta({
   meta,
   onCopy,
 }: {
-  meta?: {
-    prompt?: string;
-    negativePrompt?: string;
-    sampler?: string;
-    steps?: number;
-    cfgScale?: number;
-    seed?: number;
-  };
+  meta?: CivitImageWithMeta["meta"];
   onCopy: (text: string, label: string) => void;
 }) {
   if (!meta || (!meta.prompt && !meta.sampler && meta.seed == null)) {
@@ -387,7 +440,7 @@ function ImageMeta({
 
 function FallbackLocalInfo({ data }: { data: ModelsListRespItem }) {
   return (
-    <Box flex={1} minH={0} overflowY={"auto"}>
+    <Box flex={1} minH={0} overflowY={"auto"} p={4}>
       <Flex gap={4} align={"flex-start"} wrap={"wrap"}>
         {data.preview && (
           <Image

@@ -38,6 +38,14 @@ export function KBtoGB(kilobytes: number, decimalPlaces: number = 1) {
   }
 }
 
+// Keep scrolling but hide the scrollbar (modern, no chunky native bar).
+// Chakra `sx` value - works in Chrome/Firefox/Edge.
+export const hideScrollbarSx = {
+  scrollbarWidth: "none" as const,
+  msOverflowStyle: "none" as const,
+  "&::-webkit-scrollbar": { display: "none" },
+};
+
 // fro folder_path.py
 export const modelExtensions = [
   "ckpt",

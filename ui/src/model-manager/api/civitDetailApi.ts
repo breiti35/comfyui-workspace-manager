@@ -48,6 +48,66 @@ export async function getCivitModelDetail(
   }
 }
 
+export interface CivitImageWithMeta {
+  id?: number;
+  url?: string;
+  // Civitai's numeric browsing level on the images endpoint: 1=PG(None),
+  // 2=PG13(Soft), 4=R(Mature), 8=X, 16=XXX. We blur >= 4 unless "Show NSFW".
+  nsfwLevel?: number;
+  meta?: {
+    prompt?: string;
+    negativePrompt?: string;
+    sampler?: string;
+    steps?: number;
+    cfgScale?: number;
+    seed?: number;
+  } | null;
+}
+
+const VERSION_IMAGES_CACHE_PREFIX = "civit-version-images:v1:";
+
+/**
+ * Fetches example images WITH their generation metadata (prompt, sampler, …)
+ * for a model version. The `/api/v1/models/{id}` response's images do NOT carry
+ * `meta`, so prompts must come from the dedicated `/api/v1/images` endpoint.
+ * Host-aware + cached; returns [] on failure so the caller can fall back to the
+ * model-version's plain images.
+ */
+export async function getCivitVersionImages(
+  modelVersionId: number | string,
+): Promise<CivitImageWithMeta[]> {
+  const baseUrl = await getCivitBaseUrl();
+  const cacheKey = `${VERSION_IMAGES_CACHE_PREFIX}${baseUrl}:${modelVersionId}`;
+
+  const cached = await indexdb.cache?.get(cacheKey);
+  if (cached?.value != null) {
+    try {
+      const { data, timestamp } = JSON.parse(cached.value);
+      if (Date.now() - timestamp < DETAIL_CACHE_TTL_MS) {
+        return data as CivitImageWithMeta[];
+      }
+    } catch {
+      // fall through
+    }
+  }
+
+  try {
+    const resp = await fetch(
+      `${baseUrl}/api/v1/images?modelVersionId=${modelVersionId}&limit=24`,
+    );
+    if (!resp.ok) return [];
+    const json = await resp.json();
+    const items: CivitImageWithMeta[] = json?.items ?? [];
+    await indexdb.cache?.put({
+      id: cacheKey,
+      value: JSON.stringify({ data: items, timestamp: Date.now() }),
+    });
+    return items;
+  } catch {
+    return [];
+  }
+}
+
 /**
  * Safely turns Civitai's HTML description into plain text with basic line
  * breaks. We deliberately do NOT render the raw HTML (no dangerouslySetInnerHTML)

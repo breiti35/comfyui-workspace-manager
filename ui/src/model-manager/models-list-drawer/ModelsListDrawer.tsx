@@ -20,6 +20,7 @@ import { indexdb } from "../../db-tables/indexdb";
 import { type Model } from "../../types/dbTypes";
 import ModelDropEventListener from "../topbar/ModelDropEventListener";
 import { WorkspaceContext } from "../../WorkspaceContext";
+import { hideScrollbarSx } from "../utils";
 
 interface Props {
   onClose: () => void;
@@ -128,13 +129,7 @@ export default function ModelsListDrawer({ onClose }: Props) {
             minHeight={0}
           >
             {detailItem ? (
-              <Box
-                p={4}
-                flex={1}
-                minHeight={0}
-                display={"flex"}
-                flexDirection={"column"}
-              >
+              <Box flex={1} minHeight={0}>
                 <ModelDetailView
                   data={detailItem}
                   onBack={() => setDetailItem(null)}
@@ -156,7 +151,14 @@ export default function ModelsListDrawer({ onClose }: Props) {
                   onInstall={() => setRoute("installModels")}
                   resultCount={curModelList.length}
                 />
-                <Box flex={1} minHeight={0} overflowY={"auto"} px={4} pb={4}>
+                <Box
+                  flex={1}
+                  minHeight={0}
+                  overflowY={"auto"}
+                  px={4}
+                  pb={4}
+                  sx={hideScrollbarSx}
+                >
                   {loading && (
                     <Flex justifyContent={"center"} alignItems={"center"} py={8}>
                       <Spinner />
