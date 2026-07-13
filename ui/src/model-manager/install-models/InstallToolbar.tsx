@@ -1,5 +1,6 @@
 import {
   Box,
+  Button,
   Flex,
   HStack,
   IconButton,
@@ -26,14 +27,48 @@ export const SORT_OPTIONS: { key: string; label: string }[] = [
   { key: "Newest", label: "Neueste" },
 ];
 
-// key = exakter Civitai-`baseModels`-Wert; "" = kein Filter.
+// key = exakter Civitai-`baseModels`-Wert (muss 1:1 zur API passen, sonst leere
+// Treffer); "" = kein Filter. Label = derselbe String, damit unmissverständlich.
+// Nach Familien geordnet, gängige oben. Neue Basismodelle tauchen bei Civitai
+// laufend auf - Liste bei Bedarf ergänzen.
 export const BASE_MODEL_OPTIONS: { key: string; label: string }[] = [
   { key: "", label: "Alle Basismodelle" },
+  // SD 1.x / 2.x
   { key: "SD 1.5", label: "SD 1.5" },
-  { key: "SDXL 1.0", label: "SDXL" },
+  { key: "SD 1.5 LCM", label: "SD 1.5 LCM" },
+  { key: "SD 1.5 Hyper", label: "SD 1.5 Hyper" },
+  { key: "SD 2.0", label: "SD 2.0" },
+  { key: "SD 2.1 768", label: "SD 2.1 768" },
+  // SDXL + Varianten
+  { key: "SDXL 0.9", label: "SDXL 0.9" },
+  { key: "SDXL 1.0", label: "SDXL 1.0" },
+  { key: "SDXL 1.0 LCM", label: "SDXL 1.0 LCM" },
+  { key: "SDXL Lightning", label: "SDXL Lightning" },
+  { key: "SDXL Hyper", label: "SDXL Hyper" },
+  // SDXL-basierte Anime-Modelle
   { key: "Pony", label: "Pony" },
-  { key: "Flux.1 D", label: "Flux" },
   { key: "Illustrious", label: "Illustrious" },
+  { key: "NoobAI", label: "NoobAI" },
+  // Flux
+  { key: "Flux.1 S", label: "Flux.1 S" },
+  { key: "Flux.1 D", label: "Flux.1 D" },
+  { key: "Flux.1 Kontext", label: "Flux.1 Kontext" },
+  { key: "Flux.1 Krea", label: "Flux.1 Krea" },
+  { key: "Flux.2 D", label: "Flux.2 D" },
+  // Weitere Bildmodelle
+  { key: "Chroma", label: "Chroma" },
+  { key: "HiDream", label: "HiDream" },
+  { key: "Qwen", label: "Qwen" },
+  { key: "Krea 2", label: "Krea 2" },
+  { key: "Stable Cascade", label: "Stable Cascade" },
+  { key: "Kolors", label: "Kolors" },
+  { key: "AuraFlow", label: "AuraFlow" },
+  { key: "PixArt a", label: "PixArt α" },
+  { key: "PixArt E", label: "PixArt Σ" },
+  { key: "Hunyuan 1", label: "Hunyuan DiT" },
+  // Video
+  { key: "Wan Video", label: "Wan Video" },
+  { key: "LTXV 2.3", label: "LTXV 2.3" },
 ];
 
 interface InstallToolbarProps {
@@ -73,7 +108,7 @@ export default function InstallToolbar({
 
   return (
     <Box flexShrink={0}>
-      {/* Zeile 1: Titel + Suche + NSFW + ⋯ */}
+      {/* Zeile 1: Titel + Suche + Custom URL + NSFW + ⋯ */}
       <Flex
         align={"center"}
         gap={3}
@@ -98,7 +133,18 @@ export default function InstallToolbar({
             mb={0}
           />
         </Box>
+        <Button
+          size={"sm"}
+          variant={"outline"}
+          flexShrink={0}
+          leftIcon={<IconLink size={16} />}
+          onClick={onCustomUrlInstall}
+        >
+          Custom URL
+        </Button>
         <NsfwToggleButton />
+        {/* ⋯: vorerst nur der API-Key - der zieht später in die (dann
+            umgestalteten) Einstellungen um. */}
         <Menu>
           <MenuButton
             as={IconButton}
@@ -108,12 +154,6 @@ export default function InstallToolbar({
             variant={"ghost"}
           />
           <MenuList>
-            <MenuItem
-              icon={<IconLink size={16} />}
-              onClick={onCustomUrlInstall}
-            >
-              Custom URL Install
-            </MenuItem>
             <Box px={3} py={1}>
               <AddApiKeyPopover />
             </Box>
