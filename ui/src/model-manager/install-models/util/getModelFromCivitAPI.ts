@@ -46,7 +46,9 @@ export async function getModelFromCivitAPi(
       const { data, timestamp } = JSON.parse(cacheEntry?.value);
       // Check if cached data is still valid
       const ageInDays = (Date.now() - timestamp) / (1000 * 60 * 60 * 24);
-      if (ageInDays < CACHE_EXPIRY_DAYS) {
+      // Only trust the cache when it actually holds a list. A previously
+      // cached malformed response (non-array) must never poison later reads.
+      if (ageInDays < CACHE_EXPIRY_DAYS && Array.isArray(data)) {
         return data;
       }
     } catch (e) {
@@ -54,14 +56,29 @@ export async function getModelFromCivitAPi(
     }
   }
 
-  const data = await fetch(fullURL);
-  const json = await data.json();
-  indexdb.cache.put({
-    id: fullURL,
-    value: JSON.stringify({
-      data: json.items,
-      timestamp: Date.now(),
-    }),
-  });
-  return json.items;
+  try {
+    const data = await fetch(fullURL);
+    const json = await data.json();
+    // Civitai occasionally answers a search with an error/rate-limit payload
+    // that has no `items`. Coerce to an array so the caller never receives
+    // `undefined` (which would throw on `.length`/`.map` during render).
+    const items: CivitiModel[] = Array.isArray(json?.items) ? json.items : [];
+    // Cache only well-formed (array) responses - never a transient error
+    // payload, or it would keep returning nothing until cache expiry.
+    if (Array.isArray(json?.items)) {
+      indexdb.cache.put({
+        id: fullURL,
+        value: JSON.stringify({
+          data: items,
+          timestamp: Date.now(),
+        }),
+      });
+    }
+    return items;
+  } catch (e) {
+    // Network failure or non-JSON response: return an empty list so the
+    // caller keeps a valid array and the UI cannot crash.
+    console.error("err fetching civitai models", e);
+    return [];
+  }
 }

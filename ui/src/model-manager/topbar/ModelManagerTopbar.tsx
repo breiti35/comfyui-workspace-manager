@@ -16,6 +16,7 @@ import { indexdb } from "../../db-tables/indexdb";
 import type { ModelsListRespItemFromApi } from "../types";
 import InatallModelsModal from "../install-models/InstallModelsModal";
 import { TOPBAR_BUTTON_HEIGHT } from "../../const";
+import ErrorBoundary from "../../components/ErrorBoundary";
 
 export default function ModelManagerTopbar() {
   const { setRoute, route } = useContext(WorkspaceContext);
@@ -83,15 +84,23 @@ export default function ModelManagerTopbar() {
       >
         Models
       </Button>
-      {route === "modelList" && (
-        <ModelsListDrawer onClose={() => setRoute("root")} />
-      )}
-      {route === "installModels" && (
-        <InatallModelsModal
-          modelType="Checkpoint"
-          onclose={() => setRoute("root")}
-        />
-      )}
+      {/* A crash inside a drawer/modal must never take the whole plugin UI
+          (incl. this topbar) down - contain it here. key={route} gives each
+          route a fresh boundary so a caught error resets on navigation. */}
+      <ErrorBoundary
+        key={route}
+        label={"Der Model-Manager ist auf einen Fehler gestoßen."}
+      >
+        {route === "modelList" && (
+          <ModelsListDrawer onClose={() => setRoute("root")} />
+        )}
+        {route === "installModels" && (
+          <InatallModelsModal
+            modelType="Checkpoint"
+            onclose={() => setRoute("root")}
+          />
+        )}
+      </ErrorBoundary>
     </Stack>
   );
 }
