@@ -29,6 +29,13 @@ export const useUpdateModels = () => {
     updateModels(file_list);
   };
 
+  // Re-read the model list from the ComfyUI backend (the "Aktualisieren"
+  // action). Shows the spinner again until the fresh list arrives.
+  const refresh = async () => {
+    setLoading(true);
+    await initData();
+  };
+
   const updateModels = async (file_list?: ModelsListRespItemFromApi[]) => {
     if (!file_list) return;
     setLoading(false);
@@ -51,5 +58,6 @@ export const useUpdateModels = () => {
     modelTypeList,
     modelsList,
     loading,
+    refresh,
   };
 };

@@ -1,40 +1,47 @@
 import {
   Box,
   Flex,
-  Heading,
   Spinner,
-  Input,
-  Select,
-  HStack,
   Modal,
   ModalOverlay,
   ModalContent,
-  ModalHeader,
   ModalCloseButton,
   ModalBody,
 } from "@chakra-ui/react";
 import Fuse from "fuse.js/min-basic";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { ModelsList } from "./ModelsList";
-import InstallModelsButton from "../install-models/InstallModelsButton";
 import { type ModelsListRespItem } from "../types";
 import { useUpdateModels } from "../hooks/useUpdateModels";
-import ShowNsfwModelThumbnailSettings from "../../settings/ShowNsfwModelThumbnailSettings";
-import CategoryTabs from "../components/CategoryTabs";
 import ModelDetailView from "./ModelDetailView";
+import ModelsPanelToolbar from "./ModelsPanelToolbar";
+import { isModelFavorite } from "./modelFavorites";
 import { indexdb } from "../../db-tables/indexdb";
 import { type Model } from "../../types/dbTypes";
 import ModelDropEventListener from "../topbar/ModelDropEventListener";
+import { WorkspaceContext } from "../../WorkspaceContext";
 
 interface Props {
   onClose: () => void;
 }
 
+const SORT_CMP: Record<
+  string,
+  (a: ModelsListRespItem, b: ModelsListRespItem) => number
+> = {
+  az: (a, b) => a.model_name.localeCompare(b.model_name),
+  za: (a, b) => b.model_name.localeCompare(a.model_name),
+  newest: (a, b) => b.date.getTime() - a.date.getTime(),
+  oldest: (a, b) => a.date.getTime() - b.date.getTime(),
+};
+
 export default function ModelsListDrawer({ onClose }: Props) {
+  const { setRoute } = useContext(WorkspaceContext);
   const [selectedModel, setSelectedModel] = useState("checkpoints");
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState("name");
-  const { loading, modelTypeList, modelsList } = useUpdateModels();
+  const [sortBy, setSortBy] = useState("az");
+  const [favoritesOnly, setFavoritesOnly] = useState(false);
+  const { loading, modelTypeList, modelsList, refresh } = useUpdateModels();
   const [modelsListWithDBData, setModelsListWithDBData] = useState<
     Array<{ db?: Model } & ModelsListRespItem>
   >([]);
@@ -43,6 +50,7 @@ export default function ModelsListDrawer({ onClose }: Props) {
   const [curModelList, setCurModelList] = useState<ModelsListRespItem[]>([]);
   // when set, the detail view replaces the grid (gallery-style back nav).
   const [detailItem, setDetailItem] = useState<ModelsListRespItem | null>(null);
+
   useEffect(() => {
     getDbModels();
     async function getDbModels() {
@@ -58,29 +66,34 @@ export default function ModelsListDrawer({ onClose }: Props) {
     }
   }, [modelsList]);
 
-  // filter by model type
+  // filter by model type / search, sort, then optionally keep only favorites
   useEffect(() => {
     let res: ModelsListRespItem[] = [];
     if (!searchQuery.length) {
       res = modelsList
         .filter((item) => item.model_type === selectedModel)
-        .sort((a, b) => {
-          if (sortBy === "name") {
-            return a.model_name.localeCompare(b.model_name);
-          } else {
-            return b.date.getTime() - a.date.getTime();
-          }
-        });
+        .slice()
+        .sort(SORT_CMP[sortBy] ?? SORT_CMP.az);
     } else {
       const fuse = new Fuse(modelsListWithDBData, {
-        // getDbModels() will get the models from the indexdb
         keys: ["model_name", "db.modelName"],
       });
-      const results = fuse.search(searchQuery);
-      res = results.map((result) => result.item);
+      res = fuse.search(searchQuery).map((result) => result.item);
+    }
+    if (favoritesOnly) {
+      res = res.filter((item) =>
+        isModelFavorite(item.model_name + "@" + item.model_type),
+      );
     }
     setCurModelList(res);
-  }, [selectedModel, modelsList, searchQuery, sortBy, modelsListWithDBData]);
+  }, [
+    selectedModel,
+    modelsList,
+    searchQuery,
+    sortBy,
+    favoritesOnly,
+    modelsListWithDBData,
+  ]);
 
   return (
     <>
@@ -93,82 +106,55 @@ export default function ModelsListDrawer({ onClose }: Props) {
           display={"flex"}
           flexDirection={"column"}
         >
-          <ModalHeader>
-            <Flex justifyContent={"space-between"} alignContent={"center"}>
-              <Heading size={"md"} mr={2}>
-                Models
-              </Heading>
-              <InstallModelsButton />
-            </Flex>
-            {!detailItem && (
-              <HStack gap={4} mt={3} wrap={"wrap"}>
-                <Input
-                  size={"sm"}
-                  placeholder="Search"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  maxWidth={"300px"}
-                />
-                {!searchQuery.length && (
-                  <HStack>
-                    <span>Sort By</span>
-                    <Select
-                      value={sortBy}
-                      size={"sm"}
-                      width={"120px"}
-                      onChange={(e) => setSortBy(e.target.value)}
-                    >
-                      <option value="name">Name</option>
-                      <option value="date">Date</option>
-                    </Select>
-                  </HStack>
-                )}
-                <ShowNsfwModelThumbnailSettings />
-              </HStack>
-            )}
-          </ModalHeader>
-          <ModalCloseButton />
+          <ModalCloseButton zIndex={3} />
           <ModalBody
-            overflowY={"hidden"}
+            p={0}
+            overflow={"hidden"}
             display={"flex"}
             flexDirection={"column"}
             flex={1}
             minHeight={0}
           >
             {detailItem ? (
-              <ModelDetailView
-                data={detailItem}
-                onBack={() => setDetailItem(null)}
-              />
+              <Box
+                p={4}
+                flex={1}
+                minHeight={0}
+                display={"flex"}
+                flexDirection={"column"}
+              >
+                <ModelDetailView
+                  data={detailItem}
+                  onBack={() => setDetailItem(null)}
+                />
+              </Box>
             ) : (
               <>
-                {loading && (
-                  <Flex justifyContent={"center"} alignItems={"center"} py={8}>
-                    <Spinner />
-                  </Flex>
-                )}
-                {!searchQuery.length ? (
-                  <Flex direction={"column"} flex={1} minHeight={0}>
-                    <CategoryTabs
-                      items={modelTypeList.map((v) => ({ key: v, label: v }))}
-                      value={selectedModel}
-                      onChange={setSelectedModel}
-                    />
-                    <Box flex={1} minHeight={0} overflowY={"auto"} pt={2}>
-                      <ModelsList
-                        list={curModelList}
-                        onOpenDetail={setDetailItem}
-                      />
-                    </Box>
-                  </Flex>
-                ) : (
-                  <Box flex={1} minHeight={0} overflowY={"auto"}>
-                    <ModelsList
-                      list={curModelList}
-                      onOpenDetail={setDetailItem}
-                    />
-                  </Box>
-                )}
+                <ModelsPanelToolbar
+                  categories={modelTypeList}
+                  selectedModel={selectedModel}
+                  onSelectModel={setSelectedModel}
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
+                  sortBy={sortBy}
+                  setSortBy={setSortBy}
+                  favoritesOnly={favoritesOnly}
+                  setFavoritesOnly={setFavoritesOnly}
+                  onRefresh={refresh}
+                  onInstall={() => setRoute("installModels")}
+                  resultCount={curModelList.length}
+                />
+                <Box flex={1} minHeight={0} overflowY={"auto"} px={4} pb={4}>
+                  {loading && (
+                    <Flex justifyContent={"center"} alignItems={"center"} py={8}>
+                      <Spinner />
+                    </Flex>
+                  )}
+                  <ModelsList
+                    list={curModelList}
+                    onOpenDetail={setDetailItem}
+                  />
+                </Box>
               </>
             )}
           </ModalBody>
