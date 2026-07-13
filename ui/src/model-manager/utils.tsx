@@ -55,3 +55,12 @@ export const modelExtensions = [
   "safetensors",
   "onnx",
 ];
+
+// Compact human-readable counts for the discovery cards, e.g. 12_400 -> "12.4k".
+export function formatCount(n?: number): string {
+  if (n == null) return "0";
+  if (n >= 1_000_000)
+    return (n / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
+  if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, "") + "k";
+  return String(n);
+}

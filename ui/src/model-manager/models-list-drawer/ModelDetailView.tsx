@@ -16,7 +16,7 @@ import {
   Wrap,
   WrapItem,
 } from "@chakra-ui/react";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   IconArrowLeft,
   IconCopy,
@@ -35,21 +35,17 @@ import {
 import { getCivitModelPageUrl } from "../../utils/civitUtils";
 import { userSettingsTable } from "../../db-tables/WorkspaceDB";
 import { KBtoGB, hideScrollbarSx } from "../utils";
-
-const NSFW_BLUR_FILTER = "blur(20px)";
+import {
+  ImageMeta,
+  NSFW_BLUR_FILTER,
+  nsfwLevelNum,
+  SectionLabel,
+} from "../components/CivitDetailShared";
 
 interface Props {
   data: ModelsListRespItem;
   onBack: () => void;
 }
-
-// Civitai's numeric browsing level: 1=PG, 2=PG13, 4=R, 8=X, 16=XXX.
-const NSFW_STRING_TO_LEVEL: Record<string, number> = {
-  None: 1,
-  Soft: 2,
-  Mature: 4,
-  X: 8,
-};
 
 export default function ModelDetailView({ data, onBack }: Props) {
   const [loading, setLoading] = useState(true);
@@ -148,12 +144,7 @@ export default function ModelDetailView({ data, onBack }: Props) {
           nsfwLevel: im.nsfw,
         }));
 
-  const levelNum = (lvl?: number | string): number => {
-    if (typeof lvl === "number") return lvl;
-    if (typeof lvl === "string") return NSFW_STRING_TO_LEVEL[lvl] ?? 1;
-    return 1;
-  };
-  const isBlur = (lvl?: number | string) => levelNum(lvl) >= 4 && !showNsfw;
+  const isBlur = (lvl?: number | string) => nsfwLevelNum(lvl) >= 4 && !showNsfw;
 
   const copy = (text: string, label: string) => {
     navigator.clipboard?.writeText(text);
@@ -402,68 +393,6 @@ export default function ModelDetailView({ data, onBack }: Props) {
         </Box>
       )}
     </Flex>
-  );
-}
-
-function SectionLabel({ children }: { children: ReactNode }) {
-  return (
-    <Text
-      fontSize={"xs"}
-      textTransform={"uppercase"}
-      letterSpacing={"wider"}
-      color={"gray.500"}
-      mb={2}
-    >
-      {children}
-    </Text>
-  );
-}
-
-function ImageMeta({
-  meta,
-  onCopy,
-}: {
-  meta?: CivitImageWithMeta["meta"];
-  onCopy: (text: string, label: string) => void;
-}) {
-  if (!meta || (!meta.prompt && !meta.sampler && meta.seed == null)) {
-    return (
-      <Text fontSize={"xs"} color={"gray.500"} mt={1}>
-        Keine Prompt-Daten hinterlegt.
-      </Text>
-    );
-  }
-  return (
-    <Box
-      mt={1}
-      p={2}
-      borderRadius={"md"}
-      border={"1px solid"}
-      borderColor={"rowBorderColor"}
-      fontSize={"xs"}
-    >
-      {meta.prompt && (
-        <Box mb={2}>
-          <HStack justify={"space-between"} mb={1}>
-            <Text color={"gray.500"}>Prompt</Text>
-            <IconButton
-              size={"xs"}
-              variant={"ghost"}
-              aria-label={"copy prompt"}
-              icon={<IconCopy size={13} />}
-              onClick={() => onCopy(meta.prompt ?? "", "Prompt")}
-            />
-          </HStack>
-          <Text noOfLines={4}>{meta.prompt}</Text>
-        </Box>
-      )}
-      <Wrap spacing={2} color={"gray.500"}>
-        {meta.sampler && <WrapItem>Sampler: {meta.sampler}</WrapItem>}
-        {meta.steps != null && <WrapItem>Steps: {meta.steps}</WrapItem>}
-        {meta.cfgScale != null && <WrapItem>CFG: {meta.cfgScale}</WrapItem>}
-        {meta.seed != null && <WrapItem>Seed: {meta.seed}</WrapItem>}
-      </Wrap>
-    </Box>
   );
 }
 
