@@ -129,7 +129,11 @@ export default function InstallModelCard({
           </HStack>
           <HStack gap={0.5}>
             <IconHeart size={12} />
-            <Text>{formatCount(model.stats?.favoriteCount)}</Text>
+            <Text>
+              {formatCount(
+                model.stats?.thumbsUpCount ?? model.stats?.favoriteCount,
+              )}
+            </Text>
           </HStack>
         </HStack>
       </Flex>

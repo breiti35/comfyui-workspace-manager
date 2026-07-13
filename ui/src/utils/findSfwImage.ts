@@ -6,10 +6,18 @@ interface ImageLike {
   url?: string;
   nsfw?: "None" | "Soft" | "Mature" | "X";
   nsfwLevel?: number;
+  type?: string;
 }
 
 function isSfw(image: ImageLike): boolean {
   return image.nsfw === "None" || image.nsfwLevel === 1;
+}
+
+// Civitai example media can be a video (type "video" / .mp4/.webm URL). Those
+// don't render in an <img>, so a video first-image leaves the card blank -
+// prefer a real image for the cover.
+function isVideo(image: ImageLike): boolean {
+  return image.type === "video" || /\.(mp4|webm)$/i.test(image.url ?? "");
 }
 
 export interface PickedImage {
@@ -29,8 +37,12 @@ export function findSfwImage<T extends ImageLike>(
   if (!images || images.length === 0) {
     return { isNsfw: false };
   }
-  const sfw = images.find(isSfw);
-  const chosen = sfw ?? images[0];
+  // Prefer real images over videos for the cover; only fall back to videos if
+  // there is nothing else.
+  const notVideo = images.filter((im) => !isVideo(im));
+  const pool = notVideo.length ? notVideo : images;
+  const sfw = pool.find(isSfw);
+  const chosen = sfw ?? pool[0];
   return { url: chosen?.url, isNsfw: !isSfw(chosen) };
 }
 

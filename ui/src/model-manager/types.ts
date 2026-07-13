@@ -54,6 +54,9 @@ export type CivitiModelVersion = {
 
 export type CivitiModelStats = {
   downloadCount?: number;
+  // Civitai replaced the old `favoriteCount` with reaction counts; current
+  // /api/v1/models responses carry `thumbsUpCount` (favoriteCount is gone).
+  thumbsUpCount?: number;
   favoriteCount?: number;
   commentCount?: number;
   ratingCount?: number;
