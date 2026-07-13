@@ -141,10 +141,11 @@ export default function InstallModelsModal({
         duration: 5000,
         isClosable: true,
       });
-      // A failed download emits no further progress; clear optimistic markers so
-      // no card stays stuck under the spinner overlay. Still-active downloads
-      // remain covered by their live progress entry.
-      setProgressQueue([]);
+      // The failed download's optimistic marker can't be cleared via the progress
+      // handler when the error fires before it ever entered a progress queue
+      // (e.g. missing-API-key → file_size 0 raises immediately). Clear optimistic
+      // markers here; still-active/queued downloads stay covered by their own
+      // live progressQueue entries, so we deliberately do NOT clear progressQueue.
       setInstalling([]);
     };
     api.addEventListener("download_progress", onProgress);
@@ -170,6 +171,7 @@ export default function InstallModelsModal({
     let version = fileEssential.name ?? url.split("/").pop();
     if (!version) return;
     setInstalling((cur) => [...cur, version as string]);
+    seenDownloadsRef.current.delete(version as string);
     const apiKey = getCivitApiKey();
     if (apiKey) {
       try {
@@ -324,6 +326,7 @@ export default function InstallModelsModal({
             // Custom URL Install: direkt über die bestehende API laden.
             const version = customUrl.split("/").pop() ?? "download";
             setInstalling((cur) => [...cur, version]);
+            seenDownloadsRef.current.delete(version);
             const apiKey = getCivitApiKey();
             let url = customUrl;
             if (apiKey && !/[?&]token=/.test(url)) {
