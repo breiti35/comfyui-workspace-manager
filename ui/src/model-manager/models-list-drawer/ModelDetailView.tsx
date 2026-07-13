@@ -16,7 +16,7 @@ import {
   Wrap,
   WrapItem,
 } from "@chakra-ui/react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   IconArrowLeft,
   IconCopy,
@@ -90,6 +90,12 @@ export default function ModelDetailView({ data, onBack }: Props) {
   const versions = detail?.modelVersions ?? [];
   const selectedVersion =
     versions.find((v) => v.id === selectedVersionId) ?? versions[0];
+  // Parse the HTML description once per model, not on every render / version
+  // switch (DOMParser is not free and this was running twice per render).
+  const descriptionText = useMemo(
+    () => civitDescriptionToText(detail?.description),
+    [detail?.description],
+  );
   const installedVid = dbModel?.civitModelVersionID
     ? Number(dbModel.civitModelVersionID)
     : undefined;
@@ -159,6 +165,7 @@ export default function ModelDetailView({ data, onBack }: Props) {
             {cover?.url && (
               <Image
                 src={cover.url}
+                loading={"lazy"}
                 w={"260px"}
                 maxW={"100%"}
                 borderRadius={"md"}
@@ -204,9 +211,9 @@ export default function ModelDetailView({ data, onBack }: Props) {
                 </Box>
               ) : null}
 
-              {civitDescriptionToText(detail.description) && (
+              {descriptionText && (
                 <Text fontSize={"sm"} whiteSpace={"pre-wrap"}>
-                  {civitDescriptionToText(detail.description)}
+                  {descriptionText}
                 </Text>
               )}
             </Box>
@@ -296,6 +303,7 @@ export default function ModelDetailView({ data, onBack }: Props) {
                     <Box key={img.id} w={"180px"}>
                       <Image
                         src={img.url}
+                        loading={"lazy"}
                         w={"180px"}
                         h={"180px"}
                         objectFit={"cover"}
