@@ -1,6 +1,7 @@
-import { Box, Heading, Stack, StackDivider } from "@chakra-ui/react";
+import { Box, Stack, Text } from "@chakra-ui/react";
 import { ReactNode } from "react";
 
+// House-style settings card: charcoal panel, hairline border, uppercase label.
 export default function SettingsSection({
   title,
   children,
@@ -9,19 +10,23 @@ export default function SettingsSection({
   children: ReactNode;
 }) {
   return (
-    <Box>
-      <Heading
-        size="xs"
-        textTransform="uppercase"
-        letterSpacing="wide"
-        color="gray.500"
+    <Box
+      bg={"galleryPanelBg"}
+      border={"1px solid"}
+      borderColor={"rowBorderColor"}
+      borderRadius={"lg"}
+      p={4}
+    >
+      <Text
+        fontSize={"xs"}
+        textTransform={"uppercase"}
+        letterSpacing={"wider"}
+        color={"gray.500"}
         mb={3}
       >
         {title}
-      </Heading>
-      <Stack spacing={4} divider={<StackDivider borderColor="gray.600" />}>
-        {children}
-      </Stack>
+      </Text>
+      <Stack spacing={4}>{children}</Stack>
     </Box>
   );
 }
