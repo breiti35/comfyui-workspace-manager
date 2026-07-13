@@ -131,6 +131,16 @@ export default function InstallModelsModal({
     const onProgress = (e: { detail: ProgressEntry[] }) => {
       const queue = e.detail ?? [];
       setProgressQueue(queue);
+      // The worker emits an empty queue once it has drained all tasks, so
+      // nothing is downloading anymore - clear every optimistic marker. This
+      // also covers the case where the backend renamed a file via
+      // Content-Disposition (so its basename never matched and the seen-based
+      // pruning below couldn't catch it), preventing a stuck overlay.
+      if (queue.length === 0) {
+        seenDownloadsRef.current.clear();
+        setInstalling([]);
+        return;
+      }
       const active = new Set(queue.map((q) => basename(q.save_path)));
       active.forEach((n) => seenDownloadsRef.current.add(n));
       // Drop optimistic "installing" markers once their download has appeared
