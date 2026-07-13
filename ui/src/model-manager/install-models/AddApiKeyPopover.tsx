@@ -35,7 +35,7 @@ export default function AddApiKeyPopover() {
           Set Civitai API Key
         </Button>
       </PopoverTrigger>
-      <PopoverContent p={5}>
+      <PopoverContent p={5} onKeyDown={(e) => e.stopPropagation()}>
         <PopoverArrow />
         <PopoverCloseButton />
         <Stack spacing={4}>
