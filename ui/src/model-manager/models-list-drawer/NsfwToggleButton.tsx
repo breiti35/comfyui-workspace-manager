@@ -4,14 +4,12 @@ import { useEffect, useState } from "react";
 import { userSettingsTable } from "../../db-tables/WorkspaceDB";
 
 /**
- * Single adult-content switch. One click turns adult content fully on/off:
- * - `civitaiIncludeAdultContent` decides the Civitai host (civitai.red vs .com)
- *   and whether NSFW results/covers are requested at all, and
- * - `showNsfwModelThumbnail` un-blurs the thumbnails.
- * Both are kept in lockstep so the user never has to hunt for a second setting.
- * Fires `showNsfwModelThumbnail` (cards re-read blur) and
- * `civitaiIncludeAdultContent` (panels re-fetch from the new host) so it all
- * updates live.
+ * Adult-content host switch. One click toggles ONLY
+ * `civitaiIncludeAdultContent` (civitai.red vs .com) and fires the
+ * `civitaiIncludeAdultContent` event so panels re-fetch from the new host.
+ * NSFW thumbnail blur (`showNsfwModelThumbnail`) is a SEPARATE setting owned by
+ * the Settings panel - deliberately not coupled here, so blur stays meaningful
+ * (adult content available but previews blurred).
  */
 export default function NsfwToggleButton() {
   const [checked, setChecked] = useState(false);
@@ -33,13 +31,9 @@ export default function NsfwToggleButton() {
   const toggle = () => {
     const next = !checked;
     userSettingsTable
-      ?.upsert({
-        showNsfwModelThumbnail: next,
-        civitaiIncludeAdultContent: next,
-      })
+      ?.upsert({ civitaiIncludeAdultContent: next })
       .then(() => {
         setChecked(next);
-        window.dispatchEvent(new Event("showNsfwModelThumbnail"));
         window.dispatchEvent(new Event("civitaiIncludeAdultContent"));
       });
   };
