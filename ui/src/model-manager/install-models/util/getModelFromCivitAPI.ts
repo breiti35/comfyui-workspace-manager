@@ -9,19 +9,23 @@ type CivitModelQueryParams = {
   query?: string;
   limit?: string;
   nsfw?: string;
+  sort?: string;
+  baseModels?: string;
 };
 
 export async function getModelFromCivitAPi(
   types?: MODEL_TYPE,
   query?: string,
+  sort?: string,
+  baseModels?: string,
 ): Promise<CivitiModel[]> {
   const params: CivitModelQueryParams = {
-    limit: "30",
-    types,
+    limit: "40",
   };
-  if (query) {
-    params.query = query;
-  }
+  if (types) params.types = types;
+  if (query) params.query = query;
+  if (sort) params.sort = sort;
+  if (baseModels) params.baseModels = baseModels;
   const includeAdultContent = await userSettingsTable?.getSetting(
     "civitaiIncludeAdultContent",
   );
