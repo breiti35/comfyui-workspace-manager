@@ -24,7 +24,7 @@ import {
 } from "@tabler/icons-react";
 import CategoryTabs from "../components/CategoryTabs";
 import SearchInput from "../../components/SearchInput";
-import ShowNsfwModelThumbnailSettings from "../../settings/ShowNsfwModelThumbnailSettings";
+import NsfwToggleButton from "./NsfwToggleButton";
 
 interface Props {
   categories: string[];
@@ -100,23 +100,27 @@ export default function ModelsPanelToolbar({
           <Heading size={"sm"}>Models</Heading>
         </HStack>
         <Box flex={1} />
-        <SearchInput
-          searchValue={searchQuery}
-          onUpdateSearchValue={setSearchQuery}
-          placeholder="Modelle durchsuchen…"
-          style={{ width: "300px" }}
-        />
-        <ShowNsfwModelThumbnailSettings />
-        <Button
-          size={"sm"}
-          colorScheme={"blue"}
-          leftIcon={<IconDownload size={16} />}
-          onClick={onInstall}
-          flexShrink={0}
-          mr={8}
-        >
-          Install Models
-        </Button>
+        <HStack gap={2} flexShrink={0} pr={12}>
+          <SearchInput
+            searchValue={searchQuery}
+            onUpdateSearchValue={setSearchQuery}
+            placeholder="Modelle durchsuchen…"
+            style={{ width: "300px" }}
+            variant={"filled"}
+            borderRadius={"full"}
+            mb={0}
+          />
+          <NsfwToggleButton />
+          <Button
+            size={"sm"}
+            colorScheme={"blue"}
+            leftIcon={<IconDownload size={16} />}
+            onClick={onInstall}
+            flexShrink={0}
+          >
+            Install Models
+          </Button>
+        </HStack>
       </Flex>
 
       {/* Row 2 - the tab strip: model categories. */}
@@ -196,8 +200,14 @@ export default function ModelsPanelToolbar({
           >
             <Button
               size={"xs"}
-              variant={favoritesOnly ? "solid" : "ghost"}
-              colorScheme={favoritesOnly ? "yellow" : undefined}
+              variant={favoritesOnly ? "outline" : "ghost"}
+              // Tinted gold when active - quieter than a solid yellow fill.
+              borderColor={favoritesOnly ? "yellow.500" : undefined}
+              color={favoritesOnly ? "yellow.200" : undefined}
+              bg={favoritesOnly ? "rgba(236, 201, 75, 0.16)" : undefined}
+              _hover={
+                favoritesOnly ? { bg: "rgba(236, 201, 75, 0.26)" } : undefined
+              }
               leftIcon={
                 favoritesOnly ? (
                   <IconStarFilled size={14} />

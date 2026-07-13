@@ -7,6 +7,12 @@ type Props = {
   onUpdateSearchValue: (value: string) => void;
   placeholder?: string;
   style?: CSSProperties;
+  // Optional look overrides (default preserves the existing outline style so
+  // current usages are unchanged); the models toolbar opts into a filled,
+  // rounded "address bar" look.
+  variant?: string;
+  borderRadius?: string | number;
+  mb?: number;
 };
 
 const IconSearchStyle: CSSProperties = {
@@ -24,7 +30,7 @@ export default function SearchInput(props: Props) {
   const isSearchValueNotEmpty = searchValue !== "";
 
   return (
-    <Box style={{ position: "relative", ...style }} mb={2}>
+    <Box style={{ position: "relative", ...style }} mb={props.mb ?? 2}>
       <IconSearch style={IconSearchStyle} />
       {isSearchValueNotEmpty && (
         <IconButton
@@ -44,6 +50,8 @@ export default function SearchInput(props: Props) {
       <Input
         placeholder={props.placeholder ?? "Search"}
         size={"sm"}
+        variant={props.variant}
+        borderRadius={props.borderRadius}
         paddingLeft={"35px"}
         paddingBlock={"5px"}
         value={searchValue}

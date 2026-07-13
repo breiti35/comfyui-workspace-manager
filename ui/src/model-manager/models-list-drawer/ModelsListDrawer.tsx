@@ -106,7 +106,19 @@ export default function ModelsListDrawer({ onClose }: Props) {
           display={"flex"}
           flexDirection={"column"}
         >
-          <ModalCloseButton zIndex={3} />
+          <ModalCloseButton
+            zIndex={3}
+            top={2}
+            right={4}
+            size={"md"}
+            borderRadius={"md"}
+            border={"1px solid"}
+            borderColor={"red.400"}
+            color={"red.300"}
+            bg={"rgba(245, 101, 101, 0.14)"}
+            _hover={{ bg: "rgba(245, 101, 101, 0.3)", color: "white" }}
+            _active={{ bg: "rgba(245, 101, 101, 0.42)" }}
+          />
           <ModalBody
             p={0}
             overflow={"hidden"}
