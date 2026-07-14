@@ -124,7 +124,19 @@ export default function GalleryModal({ onclose }: { onclose: () => void }) {
       <Modal isOpen={true} onClose={onclose} blockScrollOnMount={true}>
         <ModalOverlay />
         <ModalContent width={"90%"} maxWidth={"90vw"} height={"90vh"}>
-          <ModalCloseButton zIndex={2} />
+          <ModalCloseButton
+            zIndex={3}
+            top={3}
+            right={4}
+            size={"md"}
+            borderRadius={"md"}
+            border={"1px solid"}
+            borderColor={"red.400"}
+            color={"red.300"}
+            bg={"rgba(245, 101, 101, 0.14)"}
+            _hover={{ bg: "rgba(245, 101, 101, 0.3)", color: "white" }}
+            _active={{ bg: "rgba(245, 101, 101, 0.42)" }}
+          />
           <ModalBody p={0} display={"flex"} overflow={"hidden"}>
             <GallerySidebar
               section={section}
@@ -135,7 +147,12 @@ export default function GalleryModal({ onclose }: { onclose: () => void }) {
               isGenerating={isGenerating}
             />
             <Flex direction={"column"} flex={1} minW={0} p={4} gap={3}>
-              <HStack justify={"space-between"} gap={3} align={"center"}>
+              <HStack
+                justify={"space-between"}
+                gap={3}
+                align={"center"}
+                pr={12}
+              >
                 <HStack gap={2} minW={0}>
                   {detailOpen && (
                     <Tooltip label={"Zurück zur Übersicht"}>
@@ -166,7 +183,10 @@ export default function GalleryModal({ onclose }: { onclose: () => void }) {
                   <SearchInput
                     searchValue={searchValue}
                     onUpdateSearchValue={setSearchValue}
-                    placeholder="Search prompt, model name, etc."
+                    placeholder="Prompt, Modellname … durchsuchen"
+                    variant={"filled"}
+                    borderRadius={"full"}
+                    mb={0}
                     style={{ width: "300px" }}
                   />
                 )}

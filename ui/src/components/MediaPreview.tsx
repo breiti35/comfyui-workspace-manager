@@ -10,6 +10,8 @@ type Props = {
   hideBrokenImage?: boolean;
   isPreview?: boolean;
   objectFit?: "cover" | "contain";
+  // Fill the parent instead of a fixed square - used by the rich gallery tile.
+  fill?: boolean;
 };
 export default function MediaPreview({
   mediaLocalPath,
@@ -18,6 +20,7 @@ export default function MediaPreview({
   autoPlay,
   hideBrokenImage,
   objectFit,
+  fill,
   onBrokenLink,
 }: Props) {
   const [isVisible, setIsVisible] = useState(true);
@@ -46,10 +49,12 @@ export default function MediaPreview({
   if (!isVisible) return null;
   return isImageFormat(mediaLocalPath) ? (
     <Image
-      borderRadius={3}
-      boxSize={`${size}px`}
+      borderRadius={fill ? 0 : 3}
+      {...(fill ? { w: "100%", h: "100%" } : { boxSize: `${size}px` })}
       objectFit={objectFit ?? "cover"}
+      loading={"lazy"}
       src={`/workspace/view_media?filename=${mediaLocalPath}`}
+      onError={hideBrokenImage ? () => onBrokenLink?.() : undefined}
       alt="workflow image renamed or moved from output folder"
     />
   ) : null;

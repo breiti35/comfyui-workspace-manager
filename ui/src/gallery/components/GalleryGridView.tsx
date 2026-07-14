@@ -1,6 +1,6 @@
 import { useContext } from "react";
 import GalleryMediaItem from "./GalleryMediaItem";
-import { Flex, Text } from "@chakra-ui/react";
+import { Flex, Grid, Text } from "@chakra-ui/react";
 import { IconPhotoOff } from "@tabler/icons-react";
 import type { Media } from "../../types/dbTypes";
 import { GalleryContext } from "../GalleryContext";
@@ -25,7 +25,11 @@ export default function GalleryGridView({ medias }: { medias: Media[] }) {
   }
 
   return (
-    <Flex wrap={"wrap"} gap={4} pb={2} align={"flex-start"}>
+    <Grid
+      templateColumns={"repeat(auto-fill, minmax(160px, 1fr))"}
+      gap={4}
+      pb={2}
+    >
       {medias.map((media) => (
         <GalleryMediaItem
           key={media.id}
@@ -34,6 +38,6 @@ export default function GalleryGridView({ medias }: { medias: Media[] }) {
           onDeleted={() => removeMedia(media.id)}
         />
       ))}
-    </Flex>
+    </Grid>
   );
 }

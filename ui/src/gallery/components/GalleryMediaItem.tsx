@@ -1,16 +1,16 @@
-import React, { useContext } from "react";
+import { useContext } from "react";
 import {
-  Link,
-  Stack,
-  HStack,
-  Tooltip,
-  IconButton,
-  Text,
+  Box,
   Button,
+  Flex,
+  HStack,
+  IconButton,
+  Link,
+  Text,
+  Tooltip,
 } from "@chakra-ui/react";
-import { formatTimestamp } from "../../utils";
-import { Media } from "../../types/dbTypes";
 import { IconDownload, IconTrash } from "@tabler/icons-react";
+import { Media } from "../../types/dbTypes";
 import { mediaTable } from "../../db-tables/WorkspaceDB";
 import { WorkspaceContext } from "../../WorkspaceContext";
 import { useDialog } from "../../components/AlertDialogProvider";
@@ -22,102 +22,145 @@ interface GalleryMediaItemProps {
   onDeleted?: () => void;
 }
 
-const GalleryMediaItem: React.FC<GalleryMediaItemProps> = ({
+// Rich gallery tile: image fills a rounded, house-style cell; the actions
+// (Laden / Herunterladen / Entfernen) reveal on hover instead of a permanent
+// button row. Click opens the detail view.
+export default function GalleryMediaItem({
   media,
   onClickMedia,
   onDeleted,
-}) => {
-  const IMAGE_SIZE = 180; // Define your image size
+}: GalleryMediaItemProps) {
   const { curFlowID, loadFilePath } = useContext(WorkspaceContext);
   const { showDialog } = useDialog();
-  if (media.localPath == null) {
+  if (media.localPath == null || curFlowID == null) {
     return null;
   }
-  if (curFlowID == null) {
-    return null;
-  }
-  const mediaPreview = (
-    <Link isExternal onClick={() => onClickMedia(media)} position="relative">
+
+  const localPath = media.localPath;
+
+  const onLoad = () =>
+    showDialog("Wie möchtest du diesen Workflow laden?", [
+      {
+        label: "In neuem Workflow laden",
+        onClick: () => loadFilePath(localPath),
+        colorScheme: "teal",
+      },
+      {
+        label: "Aktuellen Workflow überschreiben",
+        onClick: () => loadFilePath(localPath, true),
+        colorScheme: "red",
+      },
+    ]);
+
+  const onDelete = () =>
+    showDialog(
+      "Dieses Bild aus der Galerie entfernen? (Die Datei auf der Festplatte bleibt erhalten.)",
+      [
+        {
+          label: "Entfernen",
+          colorScheme: "red",
+          onClick: async () => {
+            await mediaTable?.delete(media.id);
+            onDeleted?.();
+          },
+        },
+      ],
+    );
+
+  return (
+    <Box
+      role={"group"}
+      position={"relative"}
+      w={"100%"}
+      sx={{ aspectRatio: "1 / 1" }}
+      borderRadius={"lg"}
+      overflow={"hidden"}
+      bg={"galleryPanelBg"}
+      cursor={"pointer"}
+      onClick={() => onClickMedia(media)}
+    >
       <MediaPreview
-        mediaLocalPath={media.localPath}
-        size={IMAGE_SIZE}
+        mediaLocalPath={localPath}
+        size={0}
+        fill
+        objectFit={"cover"}
+        hideBrokenImage
         onBrokenLink={() => {
           mediaTable?.delete(media.id);
           onDeleted?.();
         }}
-        hideBrokenImage
-        autoPlay={true}
-        isPreview
       />
-    </Link>
-  );
 
-  return (
-    <Stack width={IMAGE_SIZE} mb={2}>
-      <Tooltip label={formatTimestamp(media.createTime, true)}>
-        {mediaPreview}
-      </Tooltip>
-      <Tooltip label={media.localPath}>
-        <Text color={"GrayText"} noOfLines={1}>
-          {media.localPath}
-        </Text>
-      </Tooltip>
-      <HStack gap={0}>
-        <Button
-          flexGrow={1}
-          onClick={() =>
-            showDialog("How do you want to load this workflow?", [
-              {
-                label: "Load in new workflow",
-                onClick: () => {
-                  loadFilePath(media.localPath);
-                },
-                colorScheme: "teal",
-              },
-              {
-                label: "Overwrite current workflow",
-                onClick: () => loadFilePath(media.localPath, true),
-                colorScheme: "red",
-              },
-            ])
-          }
-          size={"sm"}
-        >
-          Load
-        </Button>
-        <Tooltip label="Donwload image from gallery">
+      {/* Aktionen oben rechts, erscheinen beim Hover */}
+      <HStack
+        position={"absolute"}
+        top={2}
+        right={2}
+        gap={1}
+        opacity={0}
+        _groupHover={{ opacity: 1 }}
+        transition={"opacity 0.12s"}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <Tooltip label={"Herunterladen"}>
           <Link
-            href={`/workspace/view_media?filename=${media.localPath}`}
-            download={media.localPath}
+            href={`/workspace/view_media?filename=${localPath}`}
+            download={localPath}
           >
             <IconButton
+              aria-label={"Bild herunterladen"}
               size={"sm"}
-              variant={"ghost"}
-              icon={<IconDownload size={19} />}
-              aria-label="donwload image from gallery"
+              icon={<IconDownload size={16} />}
+              bg={"blackAlpha.600"}
+              color={"whiteAlpha.900"}
+              _hover={{ bg: "blackAlpha.800", color: "white" }}
             />
           </Link>
         </Tooltip>
-        <Tooltip label="Remove image from gallery">
+        <Tooltip label={"Aus Galerie entfernen"}>
           <IconButton
+            aria-label={"Bild aus Galerie entfernen"}
             size={"sm"}
-            variant={"ghost"}
-            icon={<IconTrash size={19} />}
-            aria-label="remove image from gallery"
-            colorScheme="red"
-            onClick={async () => {
-              const res = confirm(
-                "Are you sure to remove this image from gallery? (won't delete image on your disk)",
-              );
-              if (!res) return;
-              await mediaTable?.delete(media.id);
-              onDeleted?.();
-            }}
+            icon={<IconTrash size={16} />}
+            bg={"rgba(245, 101, 101, 0.5)"}
+            color={"white"}
+            _hover={{ bg: "rgba(245, 101, 101, 0.85)" }}
+            onClick={onDelete}
           />
         </Tooltip>
       </HStack>
-    </Stack>
-  );
-};
 
-export default GalleryMediaItem;
+      {/* Dateiname + „Laden" unten, auf Hover */}
+      <Flex
+        position={"absolute"}
+        bottom={0}
+        left={0}
+        right={0}
+        direction={"column"}
+        gap={1}
+        p={2}
+        bgGradient={"linear(to-t, blackAlpha.800, transparent)"}
+        opacity={0}
+        _groupHover={{ opacity: 1 }}
+        transition={"opacity 0.12s"}
+      >
+        <Tooltip label={localPath}>
+          <Text color={"white"} fontSize={"xs"} noOfLines={1}>
+            {localPath}
+          </Text>
+        </Tooltip>
+        <Button
+          alignSelf={"flex-start"}
+          size={"xs"}
+          colorScheme={"blue"}
+          onClick={(e) => {
+            e.stopPropagation();
+            onLoad();
+          }}
+        >
+          Laden
+        </Button>
+      </Flex>
+    </Box>
+  );
+}
