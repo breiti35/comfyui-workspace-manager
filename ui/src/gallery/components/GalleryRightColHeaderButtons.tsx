@@ -20,6 +20,7 @@ import { useContext, useEffect, useState } from "react";
 import { GalleryContext } from "../GalleryContext.ts";
 import { WorkspaceContext } from "../../WorkspaceContext.ts";
 import { useDialog } from "../../components/AlertDialogProvider.tsx";
+import { useT } from "../../i18n/LanguageContext";
 
 export type MediaWithMetaData = Media & {
   metaData?: MetaData;
@@ -29,6 +30,7 @@ export const GalleryRightColHeaderButtons = ({
 }: {
   media?: MediaWithMetaData;
 }) => {
+  const { t } = useT();
   const [isCover, setIsCover] = useState(false);
   const { removeMedia } = useContext(GalleryContext);
   const { loadFilePath } = useContext(WorkspaceContext);
@@ -47,7 +49,7 @@ export const GalleryRightColHeaderButtons = ({
         {media.localPath && (
           <>
             <Text noOfLines={1}>{media?.localPath}</Text>
-            <Tooltip label="Herunterladen">
+            <Tooltip label={t("gallery.download")}>
               <Link
                 href={`/workspace/view_media?filename=${media?.localPath}`}
                 download={media?.localPath}
@@ -68,7 +70,7 @@ export const GalleryRightColHeaderButtons = ({
         )}
       </Flex>
 
-      <Tooltip label="Aus Galerie entfernen">
+      <Tooltip label={t("gallery.removeFromGallery")}>
         <IconButton
           size={"sm"}
           variant={"ghost"}
@@ -76,24 +78,21 @@ export const GalleryRightColHeaderButtons = ({
           aria-label="Bild aus Galerie entfernen"
           colorScheme="red"
           onClick={() =>
-            showDialog(
-              "Dieses Bild aus der Galerie entfernen? (Die Datei auf der Festplatte bleibt erhalten.)",
-              [
-                {
-                  label: "Entfernen",
-                  colorScheme: "red",
-                  onClick: async () => {
-                    await mediaTable?.delete(media.id);
-                    removeMedia(media.id);
-                  },
+            showDialog(t("gallery.removeMediaDialog.text"), [
+              {
+                label: t("gallery.removeMediaDialog.confirm"),
+                colorScheme: "red",
+                onClick: async () => {
+                  await mediaTable?.delete(media.id);
+                  removeMedia(media.id);
                 },
-              ],
-            )
+              },
+            ])
           }
         />
       </Tooltip>
       {workflowsTable?.curWorkflow?.id && (
-        <Tooltip label="Als Titelbild setzen">
+        <Tooltip label={t("gallery.setCover")}>
           <IconButton
             size={"sm"}
             variant={"ghost"}
@@ -113,16 +112,16 @@ export const GalleryRightColHeaderButtons = ({
       )}
       <Button
         onClick={() =>
-          showDialog("Wie möchtest du diesen Workflow laden?", [
+          showDialog(t("gallery.loadWorkflowDialog.title"), [
             {
-              label: "In neuem Workflow laden",
+              label: t("gallery.loadWorkflowDialog.newWorkflow"),
               onClick: () => {
                 loadFilePath(media.localPath);
               },
               colorScheme: "teal",
             },
             {
-              label: "Aktuellen Workflow überschreiben",
+              label: t("gallery.loadWorkflowDialog.overwrite"),
               onClick: () => loadFilePath(media.localPath, true),
               colorScheme: "red",
             },
@@ -130,7 +129,7 @@ export const GalleryRightColHeaderButtons = ({
         }
         size={"sm"}
       >
-        Laden
+        {t("gallery.load")}
       </Button>
     </Flex>
   );

@@ -1,4 +1,5 @@
 import { Button, Flex, Input } from "@chakra-ui/react";
+import { useT } from "../../i18n/LanguageContext";
 
 export default function InstallModelSearchBar({
   searchQuery,
@@ -9,12 +10,13 @@ export default function InstallModelSearchBar({
   setSearchQuery: (query: string) => void;
   onSearch: () => void;
 }) {
+  const { t } = useT();
   return (
     <Flex gap={2} alignItems={"center"} grow={1}>
       <Input
         size={"sm"}
         borderRadius={"md"}
-        placeholder="Search models in CivitAI"
+        placeholder={t("install.searchBar.placeholder")}
         width={"60%"}
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
@@ -23,7 +25,7 @@ export default function InstallModelSearchBar({
         }}
       />
       <Button size={"sm"} onClick={() => onSearch()} colorScheme="blue">
-        Search
+        {t("install.searchBar.searchButton")}
       </Button>
     </Flex>
   );

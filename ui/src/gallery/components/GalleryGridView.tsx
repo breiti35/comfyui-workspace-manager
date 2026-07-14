@@ -4,8 +4,10 @@ import { Flex, Grid, Text } from "@chakra-ui/react";
 import { IconPhotoOff } from "@tabler/icons-react";
 import type { Media } from "../../types/dbTypes";
 import { GalleryContext } from "../GalleryContext";
+import { useT } from "../../i18n/LanguageContext";
 
 export default function GalleryGridView({ medias }: { medias: Media[] }) {
+  const { t } = useT();
   const { openDetail, removeMedia } = useContext(GalleryContext);
 
   if (medias.length === 0) {
@@ -19,7 +21,7 @@ export default function GalleryGridView({ medias }: { medias: Media[] }) {
         color={"gray.500"}
       >
         <IconPhotoOff size={44} stroke={1.2} />
-        <Text>Keine Bilder gefunden</Text>
+        <Text>{t("gallery.emptyState")}</Text>
       </Flex>
     );
   }

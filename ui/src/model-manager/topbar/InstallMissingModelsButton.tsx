@@ -7,6 +7,7 @@ import MissingModelsListDrawer, {
 } from "../missing-models-drawer/MissingModelsListDrawer";
 import { COMFYSPACE_TRACKING_FIELD_NAME } from "../../const";
 import { app } from "../../utils/comfyapp";
+import { useT } from "../../i18n/LanguageContext";
 interface Props {}
 
 interface NodeError {
@@ -25,6 +26,7 @@ interface NodeError {
 }
 
 export default function InstallMissingModelsButton({}: Props) {
+  const { t } = useT();
   const [showMyModels, setShowMyModels] = useState(false);
   const [missingModels, setMissingModels] = useState<MissingModel[]>([]);
   useEffect(() => {
@@ -66,12 +68,12 @@ export default function InstallMissingModelsButton({}: Props) {
     <>
       <Button
         size={"sm"}
-        aria-label="missing models"
+        aria-label={t("models.installMissing.aria")}
         px={2}
         onClick={() => setShowMyModels(true)}
         colorScheme="teal"
       >
-        Install Missing ({missingModels.length})
+        {t("models.installMissing.button")} ({missingModels.length})
       </Button>
       {showMyModels && (
         <MissingModelsListDrawer

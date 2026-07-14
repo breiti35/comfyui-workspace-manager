@@ -40,6 +40,7 @@ import {
   nsfwLevelNum,
   SectionLabel,
 } from "../components/CivitDetailShared";
+import { useT } from "../../i18n/LanguageContext";
 
 interface InstallDetailViewProps {
   model: CivitiModel;
@@ -56,6 +57,7 @@ export default function InstallDetailView({
   onInstallVersion,
   onBack,
 }: InstallDetailViewProps) {
+  const { t } = useT();
   const versions = useMemo(() => model.modelVersions ?? [], [model]);
   const [selectedVersionId, setSelectedVersionId] = useState<number | undefined>(
     versions[0]?.id,
@@ -116,7 +118,11 @@ export default function InstallDetailView({
 
   const copy = (text: string, label: string) => {
     navigator.clipboard?.writeText(text);
-    toast({ title: `${label} kopiert`, status: "success", duration: 1400 });
+    toast({
+      title: `${label} ${t("install.detail.copiedSuffix")}`,
+      status: "success",
+      duration: 1400,
+    });
   };
 
   const openCivit = async () => {
@@ -153,7 +159,7 @@ export default function InstallDetailView({
         borderBottom={"1px solid"}
         borderColor={"rowBorderColor"}
       >
-        <Tooltip label={"Zurück zur Übersicht"}>
+        <Tooltip label={t("install.detail.backTooltip")}>
           <IconButton
             size={"sm"}
             variant={"ghost"}
@@ -172,7 +178,7 @@ export default function InstallDetailView({
           onClick={openCivit}
           flexShrink={0}
         >
-          Auf Civitai öffnen
+          {t("install.detail.openOnCivitai")}
         </Button>
       </Flex>
 
@@ -199,7 +205,7 @@ export default function InstallDetailView({
             </Text>
             {selectedVersion?.trainedWords?.length ? (
               <Box mt={3}>
-                <SectionLabel>Trigger-Wörter</SectionLabel>
+                <SectionLabel>{t("install.detail.triggerWords")}</SectionLabel>
                 <Wrap>
                   {selectedVersion.trainedWords.map((w, i) => (
                     <WrapItem key={i}>
@@ -207,7 +213,9 @@ export default function InstallDetailView({
                         size={"md"}
                         borderRadius={"full"}
                         cursor={"pointer"}
-                        onClick={() => copy(w, "Trigger-Wort")}
+                        onClick={() =>
+                          copy(w, t("install.detail.triggerWordLabel"))
+                        }
                         gap={1}
                       >
                         {w}
@@ -223,7 +231,8 @@ export default function InstallDetailView({
           {/* Rechts: Versionsliste mit Install je Version */}
           <Box flex={1} minW={"300px"}>
             <SectionLabel>
-              Versionen{versions.length ? ` (${versions.length})` : ""}
+              {t("install.detail.versionsLabel")}
+              {versions.length ? ` (${versions.length})` : ""}
             </SectionLabel>
             <Box
               maxH={"360px"}
@@ -284,7 +293,7 @@ export default function InstallDetailView({
                           borderRadius={"full"}
                           flexShrink={0}
                         >
-                          installiert
+                          {t("install.detail.versionInstalled")}
                         </Badge>
                       ) : (
                         <Button
@@ -298,7 +307,7 @@ export default function InstallDetailView({
                             onInstallVersion(v, model);
                           }}
                         >
-                          Installieren
+                          {t("install.installButton")}
                         </Button>
                       )}
                     </Flex>
@@ -312,7 +321,7 @@ export default function InstallDetailView({
         {/* Beschreibung */}
         {descriptionText && (
           <Box mt={5}>
-            <SectionLabel>Beschreibung</SectionLabel>
+            <SectionLabel>{t("install.detail.descriptionLabel")}</SectionLabel>
             <Box
               maxH={"460px"}
               overflowY={"auto"}
@@ -331,7 +340,7 @@ export default function InstallDetailView({
 
         {/* Beispielbilder mit Prompts */}
         <Box mt={5}>
-          <SectionLabel>Beispielbilder – zum Prompt anklicken</SectionLabel>
+          <SectionLabel>{t("install.detail.exampleImagesLabel")}</SectionLabel>
           {imagesLoading ? (
             <Flex py={8} justify={"center"}>
               <Spinner size={"sm"} />
@@ -363,7 +372,7 @@ export default function InstallDetailView({
             </Flex>
           ) : (
             <Text fontSize={"sm"} color={"gray.500"}>
-              Keine Beispielbilder verfügbar.
+              {t("install.detail.noExampleImages")}
             </Text>
           )}
         </Box>

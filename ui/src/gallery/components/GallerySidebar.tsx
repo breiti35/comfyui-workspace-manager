@@ -1,6 +1,7 @@
 import { Badge, Box, Flex, Text, VStack, keyframes } from "@chakra-ui/react";
 import { IconPhotoScan, IconLayoutGrid, IconPhoto } from "@tabler/icons-react";
 import type { GallerySection } from "../GalleryContext.ts";
+import { useT } from "../../i18n/LanguageContext";
 
 const pulse = keyframes`
   0% { transform: scale(1); opacity: 1; }
@@ -17,14 +18,15 @@ interface Props {
   isGenerating: boolean;
 }
 
+// Labels for "workflow" and "all" are translated at render time; "preview"
+// keeps the literal ComfyUI node name ("Preview Image") untranslated.
 const ITEMS: {
   key: GallerySection;
-  label: string;
   icon: typeof IconPhoto;
 }[] = [
-  { key: "workflow", label: "Dieser Workflow", icon: IconPhoto },
-  { key: "all", label: "Alle Bilder", icon: IconLayoutGrid },
-  { key: "preview", label: "Preview Image", icon: IconPhotoScan },
+  { key: "workflow", icon: IconPhoto },
+  { key: "all", icon: IconLayoutGrid },
+  { key: "preview", icon: IconPhotoScan },
 ];
 
 export function GallerySidebar({
@@ -35,6 +37,7 @@ export function GallerySidebar({
   previewCount,
   isGenerating,
 }: Props) {
+  const { t } = useT();
   return (
     <VStack
       align={"stretch"}
@@ -57,7 +60,7 @@ export function GallerySidebar({
         letterSpacing={"wider"}
         color={"gray.500"}
       >
-        Galerie
+        {t("gallery.sidebar.title")}
       </Text>
       {ITEMS.map((item) => {
         const Icon = item.icon;
@@ -68,6 +71,12 @@ export function GallerySidebar({
             : item.key === "all"
               ? allCount
               : previewCount;
+        const label =
+          item.key === "workflow"
+            ? t("gallery.sidebar.thisWorkflow")
+            : item.key === "all"
+              ? t("gallery.sidebar.allImages")
+              : "Preview Image";
         return (
           <Flex
             as={"button"}
@@ -87,7 +96,7 @@ export function GallerySidebar({
           >
             <Icon size={18} />
             <Text flex={1} fontSize={"sm"} fontWeight={active ? 600 : 400}>
-              {item.label}
+              {label}
             </Text>
             {item.key === "preview" && isGenerating ? (
               <Box

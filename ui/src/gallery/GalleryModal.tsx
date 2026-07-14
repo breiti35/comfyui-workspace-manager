@@ -25,8 +25,10 @@ import { GalleryContext, GallerySection } from "./GalleryContext.ts";
 import { GallerySidebar } from "./components/GallerySidebar.tsx";
 import { GalleryPreviewImage } from "./components/GalleryPreviewImage.tsx";
 import { usePreviewImage } from "./usePreviewImage.ts";
+import { useT } from "../i18n/LanguageContext";
 
 export default function GalleryModal({ onclose }: { onclose: () => void }) {
+  const { t } = useT();
   const { curFlowID } = useContext(WorkspaceContext);
   const [workflowName, setWorkflowName] = useState("");
   const [section, setSection] = useState<GallerySection>("workflow");
@@ -106,9 +108,9 @@ export default function GalleryModal({ onclose }: { onclose: () => void }) {
 
   const sectionTitle =
     section === "workflow"
-      ? workflowName || "Dieser Workflow"
+      ? workflowName || t("gallery.sidebar.thisWorkflow")
       : section === "all"
-        ? "Alle Bilder"
+        ? t("gallery.sidebar.allImages")
         : "Preview Image";
 
   return (
@@ -155,7 +157,7 @@ export default function GalleryModal({ onclose }: { onclose: () => void }) {
               >
                 <HStack gap={2} minW={0}>
                   {detailOpen && (
-                    <Tooltip label={"Zurück zur Übersicht"}>
+                    <Tooltip label={t("gallery.backToOverview")}>
                       <IconButton
                         size={"sm"}
                         variant={"ghost"}
@@ -183,7 +185,7 @@ export default function GalleryModal({ onclose }: { onclose: () => void }) {
                   <SearchInput
                     searchValue={searchValue}
                     onUpdateSearchValue={setSearchValue}
-                    placeholder="Prompt, Modellname … durchsuchen"
+                    placeholder={t("gallery.searchPlaceholder")}
                     variant={"filled"}
                     borderRadius={"full"}
                     mb={0}

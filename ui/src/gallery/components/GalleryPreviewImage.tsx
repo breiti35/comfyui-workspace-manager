@@ -2,6 +2,7 @@ import { Badge, Box, Flex, Image, Spinner, Text, Wrap } from "@chakra-ui/react";
 import { IconPhoto } from "@tabler/icons-react";
 import type { PreviewImageFrame } from "../GalleryContext.ts";
 import MetadataForm from "./MetaBox/MetadataForm.tsx";
+import { useT } from "../../i18n/LanguageContext";
 
 interface Props {
   frames: PreviewImageFrame[];
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export function GalleryPreviewImage({ frames, isGenerating }: Props) {
+  const { t } = useT();
   const hasFrames = frames.length > 0;
 
   return (
@@ -52,7 +54,9 @@ export function GalleryPreviewImage({ frames, isGenerating }: Props) {
                   borderRadius={"full"}
                   px={2}
                 >
-                  {isGenerating ? "läuft …" : "Preview"}
+                  {isGenerating
+                    ? t("gallery.badge.running")
+                    : t("gallery.badge.preview")}
                 </Badge>
               </Box>
             ))}
@@ -67,7 +71,7 @@ export function GalleryPreviewImage({ frames, isGenerating }: Props) {
           >
             <Spinner />
             <Text fontSize={"md"} fontWeight={500}>
-              Generiere … warte auf Vorschaubild
+              {t("gallery.generatingWait")}
             </Text>
           </Flex>
         ) : (
@@ -81,12 +85,10 @@ export function GalleryPreviewImage({ frames, isGenerating }: Props) {
           >
             <IconPhoto size={48} stroke={1.2} />
             <Text fontSize={"md"} fontWeight={500}>
-              Noch kein Vorschaubild
+              {t("gallery.noPreviewYet")}
             </Text>
             <Text fontSize={"sm"} maxW={"440px"}>
-              Sobald ein „Preview Image"-Node ausgeführt wird, erscheint hier
-              das fertige Vorschaubild – so wie im ComfyUI-Node. Es wird nicht
-              gespeichert und legt keinen Galerie-Eintrag an.
+              {t("gallery.noPreviewYet.description")}
             </Text>
           </Flex>
         )}
@@ -110,7 +112,7 @@ export function GalleryPreviewImage({ frames, isGenerating }: Props) {
           color={"gray.500"}
           mb={3}
         >
-          Erstellungsdaten
+          {t("gallery.creationData")}
         </Text>
         <MetadataForm key={isGenerating ? "running" : "idle"} media={null} />
       </Box>

@@ -14,6 +14,7 @@ import {
 } from "@chakra-ui/react";
 import { IconCheck, IconCopy } from "@tabler/icons-react";
 import { PromptNodeInputItem } from "./MetaBox/utils.ts";
+import { useT } from "../../i18n/LanguageContext";
 
 const fmt = (v: any): string =>
   Array.isArray(v) ? v.join(", ") : v == null ? "" : String(v);
@@ -29,10 +30,11 @@ function pick(
 }
 
 function CopyButton({ value }: { value: string }) {
+  const { t } = useT();
   const [done, setDone] = useState(false);
   if (!value) return null;
   return (
-    <Tooltip label={done ? "Kopiert" : "Kopieren"}>
+    <Tooltip label={done ? t("gallery.copied") : t("gallery.copy")}>
       <IconButton
         aria-label={"Kopieren"}
         size={"xs"}
@@ -140,6 +142,7 @@ export default function GalleryParams({
 }: {
   inputList: PromptNodeInputItem[];
 }) {
+  const { t } = useT();
   const essentials = useMemo(() => {
     const model = pick(inputList, /checkpoint|unet|diffusionmodel/i, [
       "ckpt_name",
@@ -225,7 +228,7 @@ export default function GalleryParams({
   if (inputList.length === 0) {
     return (
       <Text fontSize={"sm"} color={"gray.500"}>
-        Keine Metadaten gefunden.
+        {t("gallery.noMetadata")}
       </Text>
     );
   }
@@ -238,7 +241,7 @@ export default function GalleryParams({
   return (
     <Flex direction={"column"} gap={3}>
       {essentials.model && (
-        <Section title={"Modell"}>
+        <Section title={t("gallery.section.model")}>
           <Text fontSize={"sm"} fontFamily={"mono"} wordBreak={"break-word"}>
             {fmt(essentials.model)}
           </Text>
@@ -246,17 +249,27 @@ export default function GalleryParams({
       )}
 
       {hasPrompt && (
-        <Section title={"Prompt"}>
+        <Section title={t("gallery.section.prompt")}>
           <Flex direction={"column"} gap={3}>
             {essentials.generic.length > 0 ? (
-              essentials.generic.map((t, i) => (
-                <PromptBlock key={i} label={`Prompt ${i + 1}`} text={t} />
+              essentials.generic.map((text, i) => (
+                <PromptBlock
+                  key={i}
+                  label={`${t("gallery.section.prompt")} ${i + 1}`}
+                  text={text}
+                />
               ))
             ) : (
               <>
-                <PromptBlock label={"Positiv"} text={essentials.positive} />
+                <PromptBlock
+                  label={t("gallery.positive")}
+                  text={essentials.positive}
+                />
                 {essentials.negative !== "" && (
-                  <PromptBlock label={"Negativ"} text={essentials.negative} />
+                  <PromptBlock
+                    label={t("gallery.negative")}
+                    text={essentials.negative}
+                  />
                 )}
               </>
             )}
@@ -265,7 +278,7 @@ export default function GalleryParams({
       )}
 
       {essentials.hasSampling && (
-        <Section title={"Sampling"}>
+        <Section title={t("gallery.section.sampling")}>
           <KV label={"Seed"} value={fmt(essentials.seed)} copy />
           <KV label={"Steps"} value={fmt(essentials.steps)} />
           <KV label={"CFG"} value={fmt(essentials.cfg)} />
@@ -273,7 +286,7 @@ export default function GalleryParams({
           <KV label={"Scheduler"} value={fmt(essentials.scheduler)} />
           <KV label={"Denoise"} value={fmt(essentials.denoise)} />
           <KV
-            label={"Größe"}
+            label={t("gallery.size")}
             value={
               essentials.width && essentials.height
                 ? `${fmt(essentials.width)} × ${fmt(essentials.height)}`
@@ -284,7 +297,7 @@ export default function GalleryParams({
       )}
 
       {essentials.loras.length > 0 && (
-        <Section title={"LoRAs"}>
+        <Section title={t("gallery.section.loras")}>
           <Flex direction={"column"} gap={1}>
             {essentials.loras.map((l, i) => (
               <Text key={i} fontSize={"xs"} fontFamily={"mono"}>
@@ -303,7 +316,7 @@ export default function GalleryParams({
           color={"gray.500"}
           mb={2}
         >
-          Alle Nodes
+          {t("gallery.section.allNodes")}
         </Text>
         <Accordion allowMultiple>
           {nodeGroups.map((g) => (

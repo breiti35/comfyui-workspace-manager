@@ -20,11 +20,13 @@ import CategoryTabs from "../components/CategoryTabs";
 import NsfwToggleButton from "../models-list-drawer/NsfwToggleButton";
 import AddApiKeyPopover from "./AddApiKeyPopover";
 import { ALL_MODEL_TYPES, type MODEL_TYPE } from "./util/modelTypes";
+import { useT } from "../../i18n/LanguageContext";
+import type { TransKey } from "../../i18n/translations";
 
-export const SORT_OPTIONS: { key: string; label: string }[] = [
-  { key: "Most Downloaded", label: "Meiste Downloads" },
-  { key: "Highest Rated", label: "Beste Bewertung" },
-  { key: "Newest", label: "Neueste" },
+export const SORT_OPTIONS: { key: string; labelKey: TransKey }[] = [
+  { key: "Most Downloaded", labelKey: "install.sort.mostDownloaded" },
+  { key: "Highest Rated", labelKey: "install.sort.highestRated" },
+  { key: "Newest", labelKey: "install.sort.newest" },
 ];
 
 // Civitai `limit` accepts up to 100; we offer a small, sensible set. Standard 25.
@@ -107,11 +109,16 @@ export default function InstallToolbar({
   resultCount,
   loading,
 }: InstallToolbarProps) {
-  const sortLabel =
-    SORT_OPTIONS.find((o) => o.key === sortBy)?.label ?? SORT_OPTIONS[0].label;
+  const { t } = useT();
+  const sortLabel = t(
+    SORT_OPTIONS.find((o) => o.key === sortBy)?.labelKey ??
+      SORT_OPTIONS[0].labelKey,
+  );
   const baseLabel =
-    BASE_MODEL_OPTIONS.find((o) => o.key === baseModel)?.label ??
-    BASE_MODEL_OPTIONS[0].label;
+    baseModel === ""
+      ? t("install.baseModel.all")
+      : (BASE_MODEL_OPTIONS.find((o) => o.key === baseModel)?.label ??
+        t("install.baseModel.all"));
 
   return (
     <Box flexShrink={0}>
@@ -127,14 +134,14 @@ export default function InstallToolbar({
         borderColor={"rowBorderColor"}
       >
         <Text fontWeight={700} fontSize={"lg"} flexShrink={0}>
-          Install Models
+          {t("install.title")}
         </Text>
         <Box flex={1} maxW={"640px"}>
           <SearchInput
             searchValue={searchQuery}
             onUpdateSearchValue={setSearchQuery}
             onEnter={onSearch}
-            placeholder={"Modelle in Civitai suchen…"}
+            placeholder={t("install.search.placeholder")}
             variant={"filled"}
             borderRadius={"full"}
             mb={0}
@@ -147,7 +154,7 @@ export default function InstallToolbar({
           leftIcon={<IconLink size={16} />}
           onClick={onCustomUrlInstall}
         >
-          Custom URL
+          {t("install.customUrl.button")}
         </Button>
         <NsfwToggleButton />
         {/* ⋯: vorerst nur der API-Key - der zieht später in die (dann
@@ -172,8 +179,8 @@ export default function InstallToolbar({
       <Box bg={"galleryActiveBg"} px={2}>
         <CategoryTabs
           items={[
-            { key: "", label: "All" },
-            ...ALL_MODEL_TYPES.map((t) => ({ key: t, label: t })),
+            { key: "", label: t("install.categoryAll") },
+            ...ALL_MODEL_TYPES.map((mt) => ({ key: mt, label: mt })),
           ]}
           value={modelType ?? ""}
           onChange={(key) =>
@@ -203,14 +210,16 @@ export default function InstallToolbar({
             _hover={{ bg: "rowHoverBg" }}
           >
             <HStack gap={1}>
-              <Text fontSize={"sm"}>Sortierung: {sortLabel}</Text>
+              <Text fontSize={"sm"}>
+                {t("install.sort.label")} {sortLabel}
+              </Text>
               <IconChevronDown size={14} />
             </HStack>
           </MenuButton>
           <MenuList>
             {SORT_OPTIONS.map((o) => (
               <MenuItem key={o.key} onClick={() => setSortBy(o.key)}>
-                {o.label}
+                {t(o.labelKey)}
               </MenuItem>
             ))}
           </MenuList>
@@ -236,7 +245,7 @@ export default function InstallToolbar({
           <MenuList>
             {BASE_MODEL_OPTIONS.map((o) => (
               <MenuItem key={o.key} onClick={() => setBaseModel(o.key)}>
-                {o.label}
+                {o.key === "" ? t("install.baseModel.all") : o.label}
               </MenuItem>
             ))}
           </MenuList>
@@ -254,14 +263,16 @@ export default function InstallToolbar({
             _hover={{ bg: "rowHoverBg" }}
           >
             <HStack gap={1}>
-              <Text fontSize={"sm"}>Anzeigen: {pageSize}</Text>
+              <Text fontSize={"sm"}>
+                {t("install.pageSize.label")} {pageSize}
+              </Text>
               <IconChevronDown size={14} />
             </HStack>
           </MenuButton>
           <MenuList>
             {PAGE_SIZE_OPTIONS.map((n) => (
               <MenuItem key={n} onClick={() => setPageSize(n)}>
-                {n} pro Seite
+                {n} {t("install.pageSize.perPage")}
               </MenuItem>
             ))}
           </MenuList>
@@ -269,7 +280,9 @@ export default function InstallToolbar({
 
         <Box flex={1} />
         <Text fontSize={"sm"} color={"gray.500"}>
-          {loading ? "Lädt…" : `${resultCount} auf dieser Seite`}
+          {loading
+            ? t("install.loading")
+            : `${resultCount} ${t("install.results.onThisPage")}`}
         </Text>
       </Flex>
     </Box>

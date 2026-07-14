@@ -41,6 +41,7 @@ import {
   nsfwLevelNum,
   SectionLabel,
 } from "../components/CivitDetailShared";
+import { useT } from "../../i18n/LanguageContext";
 
 interface Props {
   data: ModelsListRespItem;
@@ -48,6 +49,7 @@ interface Props {
 }
 
 export default function ModelDetailView({ data, onBack }: Props) {
+  const { t } = useT();
   const [loading, setLoading] = useState(true);
   const [dbModel, setDbModel] = useState<Model>();
   const [detail, setDetail] = useState<CivitiModel | null>(null);
@@ -148,7 +150,11 @@ export default function ModelDetailView({ data, onBack }: Props) {
 
   const copy = (text: string, label: string) => {
     navigator.clipboard?.writeText(text);
-    toast({ title: `${label} kopiert`, status: "success", duration: 1400 });
+    toast({
+      title: `${label} ${t("models.copiedSuffix")}`,
+      status: "success",
+      duration: 1400,
+    });
   };
 
   const openCivit = async () => {
@@ -185,12 +191,12 @@ export default function ModelDetailView({ data, onBack }: Props) {
         borderBottom={"1px solid"}
         borderColor={"rowBorderColor"}
       >
-        <Tooltip label={"Zurück zur Übersicht"}>
+        <Tooltip label={t("models.detail.backTooltip")}>
           <IconButton
             size={"sm"}
             variant={"ghost"}
             icon={<IconArrowLeft size={19} />}
-            aria-label={"back to models"}
+            aria-label={t("models.detail.backAria")}
             onClick={onBack}
           />
         </Tooltip>
@@ -205,7 +211,7 @@ export default function ModelDetailView({ data, onBack }: Props) {
             onClick={openCivit}
             flexShrink={0}
           >
-            Auf Civitai öffnen
+            {t("models.openOnCivitai")}
           </Button>
         )}
       </Flex>
@@ -230,7 +236,7 @@ export default function ModelDetailView({ data, onBack }: Props) {
                   objectFit={"cover"}
                   maxH={"320px"}
                   filter={isBlur(cover.nsfw) ? NSFW_BLUR_FILTER : undefined}
-                  alt={"model cover"}
+                  alt={t("models.detail.coverAlt")}
                 />
               )}
               <Text fontSize={"sm"} color={"gray.500"} mt={3}>
@@ -240,7 +246,7 @@ export default function ModelDetailView({ data, onBack }: Props) {
               </Text>
               {selectedVersion?.trainedWords?.length ? (
                 <Box mt={3}>
-                  <SectionLabel>Trigger-Wörter</SectionLabel>
+                  <SectionLabel>{t("models.detail.triggerWords")}</SectionLabel>
                   <Wrap>
                     {selectedVersion.trainedWords.map((w, i) => (
                       <WrapItem key={i}>
@@ -248,7 +254,9 @@ export default function ModelDetailView({ data, onBack }: Props) {
                           size={"md"}
                           borderRadius={"full"}
                           cursor={"pointer"}
-                          onClick={() => copy(w, "Trigger-Wort")}
+                          onClick={() =>
+                            copy(w, t("models.detail.triggerWordSingular"))
+                          }
                           gap={1}
                         >
                           {w}
@@ -264,7 +272,8 @@ export default function ModelDetailView({ data, onBack }: Props) {
             {/* Versions - compact, self-scrolling so a long list stays small. */}
             <Box flex={1} minW={"280px"}>
               <SectionLabel>
-                Versionen{versions.length ? ` (${versions.length})` : ""}
+                {t("models.detail.versions")}
+                {versions.length ? ` (${versions.length})` : ""}
               </SectionLabel>
               <Box
                 maxH={"320px"}
@@ -310,7 +319,7 @@ export default function ModelDetailView({ data, onBack }: Props) {
                               borderRadius={"full"}
                               flexShrink={0}
                             >
-                              installiert
+                              {t("models.detail.installedBadge")}
                             </Badge>
                           )}
                         </HStack>
@@ -334,7 +343,7 @@ export default function ModelDetailView({ data, onBack }: Props) {
           {/* Description - its own contained, self-scrolling section. */}
           {descriptionText && (
             <Box mt={5}>
-              <SectionLabel>Beschreibung</SectionLabel>
+              <SectionLabel>{t("models.detail.description")}</SectionLabel>
               <Box
                 maxH={"460px"}
                 overflowY={"auto"}
@@ -354,7 +363,7 @@ export default function ModelDetailView({ data, onBack }: Props) {
           {/* Example images with generation meta (prompt on click). A single
               loading state avoids rendering one set and swapping to another. */}
           <Box mt={5}>
-            <SectionLabel>Beispielbilder – zum Prompt anklicken</SectionLabel>
+            <SectionLabel>{t("models.detail.exampleImages")}</SectionLabel>
             {imagesLoading ? (
               <Flex py={8} justify={"center"}>
                 <Spinner size={"sm"} />
@@ -377,7 +386,7 @@ export default function ModelDetailView({ data, onBack }: Props) {
                           isBlur(img.nsfwLevel) ? NSFW_BLUR_FILTER : undefined
                         }
                         onClick={() => setOpenMetaIdx(open ? undefined : idx)}
-                        alt={"example"}
+                        alt={t("models.detail.exampleImageAlt")}
                       />
                       {open && <ImageMeta meta={img.meta} onCopy={copy} />}
                     </Box>
@@ -386,7 +395,7 @@ export default function ModelDetailView({ data, onBack }: Props) {
               </Flex>
             ) : (
               <Text fontSize={"sm"} color={"gray.500"}>
-                Keine Beispielbilder verfügbar.
+                {t("models.detail.noExampleImages")}
               </Text>
             )}
           </Box>
@@ -397,6 +406,7 @@ export default function ModelDetailView({ data, onBack }: Props) {
 }
 
 function FallbackLocalInfo({ data }: { data: ModelsListRespItem }) {
+  const { t } = useT();
   return (
     <Box flex={1} minH={0} overflowY={"auto"} p={4}>
       <Flex gap={4} align={"flex-start"} wrap={"wrap"}>
@@ -406,22 +416,24 @@ function FallbackLocalInfo({ data }: { data: ModelsListRespItem }) {
             w={"220px"}
             borderRadius={"md"}
             objectFit={"cover"}
-            alt={"preview"}
+            alt={t("models.detail.previewAlt")}
           />
         )}
         <Box>
           <Text fontSize={"sm"} color={"gray.500"} mb={3}>
-            Nicht auf Civitai gefunden – nur lokale Infos verfügbar.
+            {t("models.detail.notFoundOnCivitai")}
           </Text>
           <Stack spacing={1} fontSize={"sm"}>
             <Text>
-              <b>Datei:</b> {data.model_name + data.model_extension}
+              <b>{t("models.detail.fileLabel")}</b>{" "}
+              {data.model_name + data.model_extension}
             </Text>
             <Text>
-              <b>Typ:</b> {data.model_type}
+              <b>{t("models.detail.typeLabel")}</b> {data.model_type}
             </Text>
             <Text>
-              <b>Geändert:</b> {data.date.toLocaleDateString()}
+              <b>{t("models.detail.modifiedLabel")}</b>{" "}
+              {data.date.toLocaleDateString()}
             </Text>
           </Stack>
         </Box>

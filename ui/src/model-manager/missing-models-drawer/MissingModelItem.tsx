@@ -19,6 +19,7 @@ import type {
 import { indexdb } from "../../db-tables/indexdb";
 import { app } from "../../utils/comfyapp";
 import { getCivitBaseUrl } from "../../utils/civitUtils";
+import { useT } from "../../i18n/LanguageContext";
 
 const HF_LOGO =
   "https://huggingface.co/datasets/huggingface/brand-assets/resolve/main/hf-logo.png";
@@ -46,6 +47,7 @@ export default function MissingModelItem({
   foldersList,
   setFoldersList,
 }: Props) {
+  const { t } = useT();
   const [suggestedModel, setSuggestedModel] = useState<
     ModelDep | { existingModel: string }
   >();
@@ -92,7 +94,7 @@ export default function MissingModelItem({
         </HStack>
         {suggestedModel && isExistingModel(suggestedModel) && (
           <Text>
-            This model is already installed as{" "}
+            {t("models.missing.alreadyInstalled")}{" "}
             <Text as="span" color="blue.400" fontWeight={600}>
               {suggestedModel.existingModel}
             </Text>
@@ -148,7 +150,9 @@ export default function MissingModelItem({
                 </Tooltip>
               </HStack>
               <Stack>
-                <Text width={"fit-content"}>Install path:</Text>
+                <Text width={"fit-content"}>
+                  {t("models.missing.installPath")}
+                </Text>
                 {foldersList[suggestedModel.fileFolder]?.length && (
                   <Select
                     value={foldersList[suggestedModel.fileFolder].at(0)}
@@ -189,7 +193,7 @@ export default function MissingModelItem({
               }
             }}
           >
-            Search in CivitAI
+            {t("models.missing.searchCivitai")}
           </Button>
         )}
       </Stack>

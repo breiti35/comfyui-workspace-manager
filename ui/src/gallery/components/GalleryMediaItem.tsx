@@ -15,6 +15,7 @@ import { mediaTable } from "../../db-tables/WorkspaceDB";
 import { WorkspaceContext } from "../../WorkspaceContext";
 import { useDialog } from "../../components/AlertDialogProvider";
 import MediaPreview from "../../components/MediaPreview";
+import { useT } from "../../i18n/LanguageContext";
 
 interface GalleryMediaItemProps {
   media: Media;
@@ -30,6 +31,7 @@ export default function GalleryMediaItem({
   onClickMedia,
   onDeleted,
 }: GalleryMediaItemProps) {
+  const { t } = useT();
   const { curFlowID, loadFilePath } = useContext(WorkspaceContext);
   const { showDialog } = useDialog();
   if (media.localPath == null || curFlowID == null) {
@@ -39,33 +41,30 @@ export default function GalleryMediaItem({
   const localPath = media.localPath;
 
   const onLoad = () =>
-    showDialog("Wie möchtest du diesen Workflow laden?", [
+    showDialog(t("gallery.loadWorkflowDialog.title"), [
       {
-        label: "In neuem Workflow laden",
+        label: t("gallery.loadWorkflowDialog.newWorkflow"),
         onClick: () => loadFilePath(localPath),
         colorScheme: "teal",
       },
       {
-        label: "Aktuellen Workflow überschreiben",
+        label: t("gallery.loadWorkflowDialog.overwrite"),
         onClick: () => loadFilePath(localPath, true),
         colorScheme: "red",
       },
     ]);
 
   const onDelete = () =>
-    showDialog(
-      "Dieses Bild aus der Galerie entfernen? (Die Datei auf der Festplatte bleibt erhalten.)",
-      [
-        {
-          label: "Entfernen",
-          colorScheme: "red",
-          onClick: async () => {
-            await mediaTable?.delete(media.id);
-            onDeleted?.();
-          },
+    showDialog(t("gallery.removeMediaDialog.text"), [
+      {
+        label: t("gallery.removeMediaDialog.confirm"),
+        colorScheme: "red",
+        onClick: async () => {
+          await mediaTable?.delete(media.id);
+          onDeleted?.();
         },
-      ],
-    );
+      },
+    ]);
 
   return (
     <Box
@@ -102,7 +101,7 @@ export default function GalleryMediaItem({
         transition={"opacity 0.12s"}
         onClick={(e) => e.stopPropagation()}
       >
-        <Tooltip label={"Herunterladen"}>
+        <Tooltip label={t("gallery.download")}>
           <Link
             href={`/workspace/view_media?filename=${localPath}`}
             download={localPath}
@@ -117,7 +116,7 @@ export default function GalleryMediaItem({
             />
           </Link>
         </Tooltip>
-        <Tooltip label={"Aus Galerie entfernen"}>
+        <Tooltip label={t("gallery.removeFromGallery")}>
           <IconButton
             aria-label={"Bild aus Galerie entfernen"}
             size={"sm"}
@@ -158,7 +157,7 @@ export default function GalleryMediaItem({
             onLoad();
           }}
         >
-          Laden
+          {t("gallery.load")}
         </Button>
       </Flex>
     </Box>

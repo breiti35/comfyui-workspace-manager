@@ -36,6 +36,7 @@ import { indexdb } from "../../db-tables/indexdb";
 import { hideScrollbarSx } from "../utils";
 import { api } from "../../utils/comfyapp";
 import type { CivitiModel, CivitiModelVersion } from "../types";
+import { useT } from "../../i18n/LanguageContext";
 
 interface Props {
   onclose: () => void;
@@ -52,6 +53,7 @@ export default function InstallModelsModal({
   searchQuery: searchQueryProp = "",
   modelType: modelTypeProp,
 }: Props) {
+  const { t } = useT();
   const [models, setModels] = useState<CivitiModel[]>([]);
   const [loading, setLoading] = useState(false);
   const [modelType, setModelType] = useState<MODEL_TYPE | undefined>(
@@ -204,7 +206,7 @@ export default function InstallModelsModal({
     };
     const onError = (e: { detail: string }) => {
       toast({
-        title: "Download-Fehler",
+        title: t("install.toast.downloadError.title"),
         description: e.detail,
         status: "error",
         duration: 5000,
@@ -403,10 +405,10 @@ export default function InstallModelsModal({
                     isDisabled={pageNumber <= 1 || loading}
                     onClick={goPrev}
                   >
-                    Zurück
+                    {t("install.pagination.prev")}
                   </Button>
                   <Text fontSize={"sm"} color={"gray.400"} minW={"64px"} textAlign={"center"}>
-                    Seite {pageNumber}
+                    {t("install.pagination.page")} {pageNumber}
                   </Text>
                   <Button
                     size={"sm"}
@@ -415,7 +417,7 @@ export default function InstallModelsModal({
                     isDisabled={!nextCursor || loading}
                     onClick={goNext}
                   >
-                    Weiter
+                    {t("install.pagination.next")}
                   </Button>
                 </Flex>
               </>

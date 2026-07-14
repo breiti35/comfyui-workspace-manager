@@ -18,6 +18,7 @@ import { installModelsApi } from "../api/modelsApi";
 import { getCivitApiKey } from "../../utils/civitUtils";
 import { WorkspaceContext } from "../../WorkspaceContext";
 import { app } from "../../utils/comfyapp";
+import { useT } from "../../i18n/LanguageContext";
 
 export interface MissingModel {
   class_type: string;
@@ -34,6 +35,7 @@ export default function MissingModelsListDrawer({
   onClose,
   missingModels,
 }: Props) {
+  const { t } = useT();
   useEffect(() => {
     app.canvasEl.addEventListener("click", onClose);
     return () => {
@@ -58,10 +60,10 @@ export default function MissingModelsListDrawer({
       let url = model.downloadUrl;
       if (!url || !model.fileFolder || !foldersList[model.fileFolder][0]) {
         toast({
-          title: "Error",
+          title: t("models.missing.toastErrorTitle"),
           description: !url
-            ? "Download URL is missing"
-            : "Model install folder path is missing",
+            ? t("models.missing.toastNoUrl")
+            : t("models.missing.toastNoFolder"),
           status: "error",
           duration: 4000,
           isClosable: true,
@@ -84,8 +86,7 @@ export default function MissingModelsListDrawer({
       });
     });
     toast({
-      title:
-        "Installing...Please open Install Models modal or python terminal to view progress.",
+      title: t("models.missing.toastInstalling"),
       description: selectedModelDeps.map((model) => model.filename).join(", "),
       status: "info",
       duration: 4000,
@@ -112,7 +113,7 @@ export default function MissingModelsListDrawer({
           <CardHeader>
             <Flex justifyContent={"space-between"} alignContent={"center"}>
               <Heading size={"md"} mr={2}>
-                Missing Models
+                {t("models.missing.title")}
               </Heading>
               {/* <InstallModelsButton /> */}
             </Flex>
@@ -139,7 +140,7 @@ export default function MissingModelsListDrawer({
             size={"sm"}
             onClick={onClickInstallModels}
           >
-            Install Selected ({selectedModelDeps.length})
+            {t("models.missing.installSelected")} ({selectedModelDeps.length})
           </Button>
           <Grid templateColumns="1" gap={1} marginTop={2} width={"100%"}>
             {missingModels.map((model) => (

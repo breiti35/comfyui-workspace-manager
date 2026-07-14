@@ -25,6 +25,8 @@ import {
 import CategoryTabs from "../components/CategoryTabs";
 import SearchInput from "../../components/SearchInput";
 import NsfwToggleButton from "./NsfwToggleButton";
+import { useT } from "../../i18n/LanguageContext";
+import type { TransKey } from "../../i18n/translations";
 
 interface Props {
   categories: string[];
@@ -41,12 +43,24 @@ interface Props {
   resultCount: number;
 }
 
-const SORT_OPTIONS: { value: string; label: string; short: string }[] = [
-  { value: "az", label: "Name A–Z", short: "A–Z" },
-  { value: "za", label: "Name Z–A", short: "Z–A" },
-  { value: "newest", label: "Neueste zuerst", short: "Neu" },
-  { value: "oldest", label: "Älteste zuerst", short: "Alt" },
-];
+function getSortOptions(
+  t: (key: TransKey) => string,
+): { value: string; label: string; short: string }[] {
+  return [
+    { value: "az", label: t("models.toolbar.sortAZ"), short: "A–Z" },
+    { value: "za", label: t("models.toolbar.sortZA"), short: "Z–A" },
+    {
+      value: "newest",
+      label: t("models.toolbar.sortNewest"),
+      short: t("models.toolbar.sortShortNewest"),
+    },
+    {
+      value: "oldest",
+      label: t("models.toolbar.sortOldest"),
+      short: t("models.toolbar.sortShortOldest"),
+    },
+  ];
+}
 
 const CATEGORY_LABELS: Record<string, string> = {
   checkpoints: "Checkpoints",
@@ -80,6 +94,8 @@ export default function ModelsPanelToolbar({
   onInstall,
   resultCount,
 }: Props) {
+  const { t } = useT();
+  const SORT_OPTIONS = getSortOptions(t);
   const sortShort =
     SORT_OPTIONS.find((o) => o.value === sortBy)?.short ?? "A–Z";
 
@@ -97,14 +113,14 @@ export default function ModelsPanelToolbar({
       >
         <HStack gap={2} flexShrink={0}>
           <IconStack2 size={20} />
-          <Heading size={"sm"}>Models</Heading>
+          <Heading size={"sm"}>{t("models.toolbar.title")}</Heading>
         </HStack>
         <Box flex={1} />
         <HStack gap={2} flexShrink={0} pr={12}>
           <SearchInput
             searchValue={searchQuery}
             onUpdateSearchValue={setSearchQuery}
-            placeholder="Modelle durchsuchen…"
+            placeholder={t("models.toolbar.searchPlaceholder")}
             style={{ width: "300px" }}
             variant={"filled"}
             borderRadius={"full"}
@@ -118,7 +134,7 @@ export default function ModelsPanelToolbar({
             onClick={onInstall}
             flexShrink={0}
           >
-            Install Models
+            {t("models.toolbar.installButton")}
           </Button>
         </HStack>
       </Flex>
@@ -147,7 +163,7 @@ export default function ModelsPanelToolbar({
           <IconHome size={15} />
           <Text fontSize={"sm"} noOfLines={1}>
             {searchQuery.trim()
-              ? `Suche: „${searchQuery.trim()}“`
+              ? `${t("models.toolbar.searchPrefix")} „${searchQuery.trim()}“`
               : prettyCategory(selectedModel)}
           </Text>
           <Badge borderRadius={"full"} px={2} flexShrink={0}>
@@ -157,7 +173,7 @@ export default function ModelsPanelToolbar({
 
         <HStack gap={1} flexShrink={0}>
           <Menu closeOnSelect={true}>
-            <Tooltip label={"Sortierung"}>
+            <Tooltip label={t("models.toolbar.sortTooltip")}>
               <MenuButton
                 as={Button}
                 size={"xs"}
@@ -182,20 +198,22 @@ export default function ModelsPanelToolbar({
             </MenuList>
           </Menu>
 
-          <Tooltip label={"Modell-Liste neu einlesen"}>
+          <Tooltip label={t("models.toolbar.refreshTooltip")}>
             <Button
               size={"xs"}
               variant={"ghost"}
               leftIcon={<IconRefresh size={15} />}
               onClick={onRefresh}
             >
-              Aktualisieren
+              {t("models.toolbar.refreshButton")}
             </Button>
           </Tooltip>
 
           <Tooltip
             label={
-              favoritesOnly ? "Alle Modelle zeigen" : "Nur Favoriten zeigen"
+              favoritesOnly
+                ? t("models.toolbar.showAllTooltip")
+                : t("models.toolbar.showFavoritesOnlyTooltip")
             }
           >
             <Button
@@ -217,7 +235,7 @@ export default function ModelsPanelToolbar({
               }
               onClick={() => setFavoritesOnly(!favoritesOnly)}
             >
-              Favoriten
+              {t("models.toolbar.favoritesButton")}
             </Button>
           </Tooltip>
         </HStack>

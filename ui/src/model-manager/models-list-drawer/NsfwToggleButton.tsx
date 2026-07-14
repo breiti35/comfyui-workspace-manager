@@ -2,6 +2,7 @@ import { Button, Tooltip } from "@chakra-ui/react";
 import { IconEye, IconEyeOff } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { userSettingsTable } from "../../db-tables/WorkspaceDB";
+import { useT } from "../../i18n/LanguageContext";
 
 /**
  * On-the-spot NSFW preview toggle. One click flips ONLY
@@ -12,6 +13,7 @@ import { userSettingsTable } from "../../db-tables/WorkspaceDB";
  * separate, set-once preference owned by the Settings panel.
  */
 export default function NsfwToggleButton() {
+  const { t } = useT();
   // checked = NSFW previews shown (unblurred). Off = blurred.
   const [checked, setChecked] = useState(false);
 
@@ -42,8 +44,8 @@ export default function NsfwToggleButton() {
     <Tooltip
       label={
         checked
-          ? "NSFW-Vorschau verblurren"
-          : "NSFW-Vorschau anzeigen"
+          ? t("models.nsfw.blurTooltip")
+          : t("models.nsfw.showTooltip")
       }
     >
       <Button

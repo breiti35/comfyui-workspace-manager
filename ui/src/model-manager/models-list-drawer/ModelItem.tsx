@@ -30,6 +30,7 @@ import {
 import { userSettingsTable } from "../../db-tables/WorkspaceDB";
 import { useInView } from "../hooks/useInView";
 import { isModelFavorite, toggleModelFavorite } from "./modelFavorites";
+import { useT } from "../../i18n/LanguageContext";
 
 const NSFW_BLUR_FILTER = "blur(20px)";
 
@@ -76,6 +77,7 @@ function baseModelAbbr(b?: string): string | undefined {
 }
 
 export function ModelItem({ data, onOpenDetail }: Props) {
+  const { t } = useT();
   const { ref, inView } = useInView<HTMLDivElement>("400px");
   const [url, setUrl] = useState<string>();
   const [isNsfw, setIsNsfw] = useState(false);
@@ -176,7 +178,11 @@ export function ModelItem({ data, onOpenDetail }: Props) {
   const copyName = (e: ReactMouseEvent) => {
     e.stopPropagation();
     navigator.clipboard?.writeText(data.model_name + data.model_extension);
-    toast({ title: "Dateiname kopiert", status: "success", duration: 1400 });
+    toast({
+      title: `${t("models.item.filenameLabel")} ${t("models.copiedSuffix")}`,
+      status: "success",
+      duration: 1400,
+    });
   };
 
   const toggleFav = (e: ReactMouseEvent) => {
@@ -280,9 +286,15 @@ export function ModelItem({ data, onOpenDetail }: Props) {
           transition="opacity 0.12s ease"
           pointerEvents="auto"
         >
-          <Tooltip label={isFav ? "Favorit entfernen" : "Favorit"}>
+          <Tooltip
+            label={
+              isFav
+                ? t("models.item.favoriteTooltipOn")
+                : t("models.item.favoriteTooltipOff")
+            }
+          >
             <IconButton
-              aria-label="favorite"
+              aria-label={t("models.item.favoriteAria")}
               icon={
                 isFav ? (
                   <IconStarFilled size={13} />
@@ -296,18 +308,18 @@ export function ModelItem({ data, onOpenDetail }: Props) {
             />
           </Tooltip>
           {model?.civitModelID && (
-            <Tooltip label="Auf Civitai öffnen">
+            <Tooltip label={t("models.openOnCivitai")}>
               <IconButton
-                aria-label="open civitai"
+                aria-label={t("models.item.openCivitaiAria")}
                 icon={<IconWorld size={13} />}
                 onClick={openCivit}
                 {...actionBtnProps}
               />
             </Tooltip>
           )}
-          <Tooltip label="Dateiname kopieren">
+          <Tooltip label={t("models.item.copyFilenameTooltip")}>
             <IconButton
-              aria-label="copy filename"
+              aria-label={t("models.item.copyFilenameAria")}
               icon={<IconCopy size={13} />}
               onClick={copyName}
               {...actionBtnProps}
@@ -328,7 +340,7 @@ export function ModelItem({ data, onOpenDetail }: Props) {
           bg="blackAlpha.400"
         >
           <Text color="white" fontSize="xs" fontWeight={600}>
-            R-bewerteter Inhalt
+            {t("models.item.nsfwLabel")}
           </Text>
           <Button
             size="xs"
@@ -338,7 +350,7 @@ export function ModelItem({ data, onOpenDetail }: Props) {
               setRevealed(true);
             }}
           >
-            Anzeigen
+            {t("models.item.reveal")}
           </Button>
         </Flex>
       )}

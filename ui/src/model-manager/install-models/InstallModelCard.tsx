@@ -18,6 +18,7 @@ import { userSettingsTable } from "../../db-tables/WorkspaceDB";
 import { useInView } from "../hooks/useInView";
 import { formatCount } from "../utils";
 import { NSFW_BLUR_FILTER } from "../components/CivitDetailShared";
+import { useT } from "../../i18n/LanguageContext";
 
 interface InstallModelCardProps {
   model: CivitiModel;
@@ -36,6 +37,7 @@ export default function InstallModelCard({
   onQuickInstall,
   onOpenDetail,
 }: InstallModelCardProps) {
+  const { t } = useT();
   const { ref, inView } = useInView<HTMLDivElement>("400px");
   const [showNsfw, setShowNsfw] = useState(false);
   const [revealed, setRevealed] = useState(false);
@@ -154,7 +156,7 @@ export default function InstallModelCard({
             setRevealed(true);
           }}
         >
-          Anzeigen
+          {t("install.reveal.button")}
         </Button>
       )}
 
@@ -183,7 +185,7 @@ export default function InstallModelCard({
             gap={1}
             px={2}
           >
-            <IconCheck size={12} /> Installiert
+            <IconCheck size={12} /> {t("install.installedBadge")}
           </Badge>
         ) : (
           <Button
@@ -200,7 +202,7 @@ export default function InstallModelCard({
               onQuickInstall(model);
             }}
           >
-            Installieren
+            {t("install.installButton")}
           </Button>
         )}
       </Flex>

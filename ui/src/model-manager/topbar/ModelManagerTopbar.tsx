@@ -17,8 +17,10 @@ import type { ModelsListRespItemFromApi } from "../types";
 import InatallModelsModal from "../install-models/InstallModelsModal";
 import { TOPBAR_BUTTON_HEIGHT } from "../../const";
 import ErrorBoundary from "../../components/ErrorBoundary";
+import { useT } from "../../i18n/LanguageContext";
 
 export default function ModelManagerTopbar() {
+  const { t } = useT();
   const { setRoute, route } = useContext(WorkspaceContext);
 
   useEffect(() => {
@@ -77,19 +79,19 @@ export default function ModelManagerTopbar() {
         variant={"ghost"}
         color={"white"}
         colorScheme="blue"
-        aria-label="My models"
+        aria-label={t("models.topbar.myModelsAria")}
         onClick={() => setRoute("modelList")}
         px={1}
         height={TOPBAR_BUTTON_HEIGHT + "px"}
       >
-        Models
+        {t("models.topbar.button")}
       </Button>
       {/* A crash inside a drawer/modal must never take the whole plugin UI
           (incl. this topbar) down - contain it here. key={route} gives each
           route a fresh boundary so a caught error resets on navigation. */}
       <ErrorBoundary
         key={route}
-        label={"Der Model-Manager ist auf einen Fehler gestoßen."}
+        label={t("models.topbar.errorBoundary")}
       >
         {route === "modelList" && (
           <ModelsListDrawer onClose={() => setRoute("root")} />

@@ -13,6 +13,7 @@ import {
 } from "@chakra-ui/react";
 import { useEffect, useRef, useState } from "react";
 import { getAllFoldersList } from "../../Api";
+import { useT } from "../../i18n/LanguageContext";
 
 interface ChooseFolderProps {
   isOpen: boolean;
@@ -26,6 +27,7 @@ export default function ChooseFolder({
   onClose,
   selectFolder,
 }: ChooseFolderProps) {
+  const { t } = useT();
   const [folderPath, setFolderPath] = useState("");
   const [foldersList, setFoldersList] = useState<string[]>([]);
   const [url, setUrl] = useState<string>("");
@@ -54,14 +56,14 @@ export default function ChooseFolder({
       <AlertDialogOverlay>
         <AlertDialogContent>
           <AlertDialogHeader fontSize="lg" fontWeight="bold">
-            Choose Folder
+            {t("install.chooseFolder.title")}
           </AlertDialogHeader>
 
           <AlertDialogBody>
             <Stack spacing={4}>
               {!fileSelected && (
                 <>
-                  <Text>Model download url</Text>
+                  <Text>{t("install.chooseFolder.urlLabel")}</Text>
                   <Input
                     placeholder="https://civitai.com/api/download/models/311399"
                     onChange={(e) => setUrl(e.target.value)}
@@ -69,9 +71,9 @@ export default function ChooseFolder({
                   />
                 </>
               )}
-              <Text>Choose model install folder</Text>
+              <Text>{t("install.chooseFolder.folderLabel")}</Text>
               <Select
-                placeholder="Select option"
+                placeholder={t("install.chooseFolder.selectPlaceholder")}
                 value={folderPath}
                 onChange={(e) => setFolderPath(e.target.value)}
               >
@@ -86,7 +88,7 @@ export default function ChooseFolder({
 
           <AlertDialogFooter>
             <Button ref={cancelRef} onClick={onClose}>
-              Cancel
+              {t("install.action.cancel")}
             </Button>
             <Button
               onClick={() => selectFolder(folderPath, url)}
@@ -97,7 +99,7 @@ export default function ChooseFolder({
               // must not block Confirm.
               isDisabled={folderPath.length === 0 || (!fileSelected && url.length === 0)}
             >
-              Confirm
+              {t("install.action.confirm")}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

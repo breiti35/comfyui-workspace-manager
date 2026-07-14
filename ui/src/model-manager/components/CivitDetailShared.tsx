@@ -9,6 +9,7 @@ import {
 import { IconCopy } from "@tabler/icons-react";
 import type { ReactNode } from "react";
 import type { CivitImageWithMeta } from "../api/civitDetailApi";
+import { useT } from "../../i18n/LanguageContext";
 
 export const NSFW_BLUR_FILTER = "blur(20px)";
 
@@ -47,10 +48,11 @@ export function ImageMeta({
   meta?: CivitImageWithMeta["meta"];
   onCopy: (text: string, label: string) => void;
 }) {
+  const { t } = useT();
   if (!meta || (!meta.prompt && !meta.sampler && meta.seed == null)) {
     return (
       <Text fontSize={"xs"} color={"gray.500"} mt={1}>
-        Keine Prompt-Daten hinterlegt.
+        {t("models.civitDetail.noPromptData")}
       </Text>
     );
   }
@@ -70,7 +72,7 @@ export function ImageMeta({
             <IconButton
               size={"xs"}
               variant={"ghost"}
-              aria-label={"copy prompt"}
+              aria-label={t("models.civitDetail.copyPromptAria")}
               icon={<IconCopy size={13} />}
               onClick={() => onCopy(meta.prompt ?? "", "Prompt")}
             />

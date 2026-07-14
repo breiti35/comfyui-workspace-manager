@@ -12,8 +12,10 @@ import {
 } from "@chakra-ui/react";
 import { useState } from "react";
 import { setCivitApiKey } from "../../utils/civitUtils";
+import { useT } from "../../i18n/LanguageContext";
 
 export default function AddApiKeyPopover() {
+  const { t } = useT();
   const [apiKeyInput, setApiKeyInput] = useState("");
   const { onOpen, onClose, isOpen } = useDisclosure();
 
@@ -32,24 +34,21 @@ export default function AddApiKeyPopover() {
     >
       <PopoverTrigger>
         <Button size={"sm"} py={1} mr={8}>
-          Set Civitai API Key
+          {t("install.apiKey.button")}
         </Button>
       </PopoverTrigger>
       <PopoverContent p={5} onKeyDown={(e) => e.stopPropagation()}>
         <PopoverArrow />
         <PopoverCloseButton />
         <Stack spacing={4}>
-          <Text fontSize={14}>
-            Some Civitai models require user login to download, you will
-            need a Civitai API key to download in that case
-          </Text>
+          <Text fontSize={14}>{t("install.apiKey.description")}</Text>
           <Input
             value={apiKeyInput}
             onChange={(e) => setApiKeyInput(e.target.value)}
-            placeholder="API Key"
+            placeholder={t("install.apiKey.inputPlaceholder")}
           />
           <Button size={"sm"} py={1} mr={8} onClick={saveApiKey}>
-            Save
+            {t("install.apiKey.save")}
           </Button>
         </Stack>
       </PopoverContent>

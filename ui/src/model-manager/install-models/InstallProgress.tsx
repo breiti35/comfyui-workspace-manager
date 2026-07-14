@@ -11,10 +11,12 @@ import {
 import { useState, useEffect } from "react";
 import { cancelDownload } from "../../Api";
 import { api } from "../../utils/comfyapp";
+import { useT } from "../../i18n/LanguageContext";
 
 type Queue = { save_path: string; progress: number };
 
 export default function InstallProgress() {
+  const { t } = useT();
   const { colorMode } = useColorMode();
   const toast = useToast();
   const [queue, setQueue] = useState<Queue[]>([]);
@@ -25,7 +27,7 @@ export default function InstallProgress() {
     });
     api.addEventListener("download_error", (e: { detail: string }) => {
       toast({
-        title: "Download Error",
+        title: t("install.toast.downloadError.title"),
         description: e.detail,
         status: "error",
         duration: 4000,
@@ -66,7 +68,7 @@ export default function InstallProgress() {
             colorScheme="red"
             onClick={() => cancelDownload(save_path)}
           >
-            Cancel
+            {t("install.action.cancel")}
           </Button>
         </HStack>
       ))}

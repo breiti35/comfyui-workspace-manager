@@ -1,8 +1,10 @@
 import { useContext } from "react";
 import { Button } from "@chakra-ui/react";
 import { WorkspaceContext } from "../../WorkspaceContext";
+import { useT } from "../../i18n/LanguageContext";
 
 export default function InstallModelsButton() {
+  const { t } = useT();
   const { setRoute } = useContext(WorkspaceContext);
   return (
     <>
@@ -11,7 +13,7 @@ export default function InstallModelsButton() {
         colorScheme="blue"
         onClick={() => setRoute("installModels")}
       >
-        Install Models
+        {t("install.title")}
       </Button>
     </>
   );
