@@ -11,8 +11,10 @@ import {
 import { IconEye, IconEyeOff } from "@tabler/icons-react";
 import { useState } from "react";
 import { getCivitApiKey, setCivitApiKey } from "../utils/civitUtils";
+import { useT } from "../i18n/LanguageContext";
 
 export default function CivitaiApiKeySetting() {
+  const { t } = useT();
   const [value, setValue] = useState(getCivitApiKey() ?? "");
   const [hasKey, setHasKey] = useState(!!getCivitApiKey());
   const [show, setShow] = useState(false);
@@ -33,10 +35,10 @@ export default function CivitaiApiKeySetting() {
   return (
     <Box>
       <Text fontWeight={500} fontSize={"sm"}>
-        Civitai API-Key
+        {t("apikey.title")}
       </Text>
       <Text fontSize={"xs"} color={"gray.500"} mt={0.5} mb={2}>
-        Manche Civitai-Modelle erfordern zum Download einen API-Key (Login).
+        {t("apikey.help")}
       </Text>
       <Flex gap={2} align={"center"} wrap={"wrap"}>
         <InputGroup size={"sm"} maxW={"420px"}>
@@ -44,7 +46,7 @@ export default function CivitaiApiKeySetting() {
             type={show ? "text" : "password"}
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            placeholder={"API-Key einfügen"}
+            placeholder={t("apikey.placeholder")}
             borderRadius={"md"}
           />
           <InputRightElement>
@@ -63,11 +65,11 @@ export default function CivitaiApiKeySetting() {
           onClick={save}
           isDisabled={!value.trim()}
         >
-          {saved ? "Gespeichert ✓" : "Speichern"}
+          {saved ? t("apikey.saved") : t("apikey.save")}
         </Button>
         {hasKey && (
           <Button size={"sm"} variant={"ghost"} onClick={clear}>
-            Löschen
+            {t("apikey.delete")}
           </Button>
         )}
       </Flex>

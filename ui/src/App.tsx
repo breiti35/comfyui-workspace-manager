@@ -34,6 +34,7 @@ import { api, app } from "./utils/comfyapp";
 import { fetchApi } from "./Api";
 import { serverInfo } from "./utils/OsPathUtils";
 import { startPreviewImageCapture } from "./gallery/previewImageStore";
+import { LanguageProvider } from "./i18n/LanguageContext";
 
 export default function App() {
   const [curFlowName, setCurFlowName] = useState<string | null>(null);
@@ -385,6 +386,7 @@ export default function App() {
   }
 
   return (
+    <LanguageProvider>
     <WorkspaceContext.Provider
       value={{
         curFlowID: flowID,
@@ -436,5 +438,6 @@ export default function App() {
         </Portal>
       </div>
     </WorkspaceContext.Provider>
+    </LanguageProvider>
   );
 }

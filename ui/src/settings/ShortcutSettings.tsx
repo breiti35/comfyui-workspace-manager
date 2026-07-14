@@ -9,20 +9,23 @@ import {
 import { useState, useEffect, useRef } from "react";
 import { userSettingsTable } from "../db-tables/WorkspaceDB";
 import { EShortcutKeys } from "../types/dbTypes";
+import { useT } from "../i18n/LanguageContext";
+import type { TransKey } from "../i18n/translations";
 
 export function ShortcutSettings() {
+  const { t } = useT();
   const toast = useToast();
-  const configList = useRef<Array<{ title: string; key: EShortcutKeys }>>([
+  const configList = useRef<Array<{ titleKey: TransKey; key: EShortcutKeys }>>([
     {
-      title: "Save current workflow",
+      titleKey: "shortcuts.save",
       key: EShortcutKeys.SAVE,
     },
     {
-      title: "Save as current workflow",
+      titleKey: "shortcuts.saveAs",
       key: EShortcutKeys.SAVE_AS,
     },
     {
-      title: "Open spotlight search",
+      titleKey: "shortcuts.spotlight",
       key: EShortcutKeys.openSpotlightSearch,
     },
   ]);
@@ -86,14 +89,14 @@ export function ShortcutSettings() {
 
   return (
     <Stack>
-      <Text>Keyboard Shortcut</Text>
+      <Text>{t("shortcuts.header")}</Text>
       {configList.current.map((config) => (
         <HStack key={config.key}>
           <Text fontSize="sm" w={170}>
-            {config.title}
+            {t(config.titleKey)}
           </Text>
           <Tooltip
-            label="Press shortcut key combinations to setup"
+            label={t("shortcuts.hint")}
             placement="bottom"
             hasArrow
             isOpen={focusedKey === config.key}
@@ -109,7 +112,7 @@ export function ShortcutSettings() {
               onBlur={() => {
                 setFocusedKey(undefined);
               }}
-              placeholder="Press a key combination"
+              placeholder={t("shortcuts.placeholder")}
               readOnly
               width="auto"
               flex={1}

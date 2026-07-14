@@ -22,14 +22,17 @@ import CivitaiApiKeySetting from "../settings/CivitaiApiKeySetting";
 import SelectMyWorkflowsDir from "../settings/SelectMyWorkflowsDir";
 import { CommonNumberSetting } from "../settings/CommonNumberSetting";
 import SettingsSection from "../settings/SettingsSection";
+import LanguageSetting from "../settings/LanguageSetting";
 import { hideScrollbarSx } from "../model-manager/utils";
 import { userSettingsTable } from "../db-tables/WorkspaceDB";
+import { useT } from "../i18n/LanguageContext";
 
 export default function WorkspaceSettingsModal({
   onClose,
 }: {
   onClose: () => void;
 }) {
+  const { t } = useT();
   // Adult host state drives whether the NSFW-blur toggle is meaningful.
   const [adultOn, setAdultOn] = useState(false);
   useEffect(() => {
@@ -52,7 +55,7 @@ export default function WorkspaceSettingsModal({
           borderColor={"rowBorderColor"}
           borderTopRadius={"md"}
         >
-          <Heading size={"md"}>Einstellungen</Heading>
+          <Heading size={"md"}>{t("settings.title")}</Heading>
         </Flex>
         <ModalCloseButton
           top={3}
@@ -68,13 +71,15 @@ export default function WorkspaceSettingsModal({
         />
         <ModalBody py={5} sx={hideScrollbarSx}>
           <VStack spacing={4} align={"stretch"}>
-            <SettingsSection title={"Civitai"}>
+            <SettingsSection title={t("settings.language")}>
+              <LanguageSetting />
+            </SettingsSection>
+
+            <SettingsSection title={t("settings.group.civitai")}>
               <CommonToggleSetting
                 settingKey={"civitaiIncludeAdultContent"}
-                label={"Adult-Inhalte (18+) anzeigen"}
-                helpText={
-                  "Nutzt civitai.red statt civitai.com für Suche, Hash-Lookup, Downloads und Links, sodass NSFW-Modelle gefunden und installiert werden können."
-                }
+                label={t("settings.adult.label")}
+                helpText={t("settings.adult.help")}
                 onAfterChange={(v) => {
                   setAdultOn(v);
                   window.dispatchEvent(new Event("civitaiIncludeAdultContent"));
@@ -82,10 +87,8 @@ export default function WorkspaceSettingsModal({
               />
               <CommonToggleSetting
                 settingKey={"showNsfwModelThumbnail"}
-                label={"NSFW-Vorschau anzeigen"}
-                helpText={
-                  "Aus = NSFW-Vorschaubilder werden verblurrt (per Klick aufdecken). Nur wirksam, wenn Adult-Inhalte an sind."
-                }
+                label={t("settings.nsfwPreview.label")}
+                helpText={t("settings.nsfwPreview.help")}
                 isDisabled={!adultOn}
                 onAfterChange={() =>
                   window.dispatchEvent(new Event("showNsfwModelThumbnail"))
@@ -94,36 +97,34 @@ export default function WorkspaceSettingsModal({
               <CivitaiApiKeySetting />
             </SettingsSection>
 
-            <SettingsSection title={"Speicher & Sync"}>
+            <SettingsSection title={t("settings.group.storage")}>
               <SelectMyWorkflowsDir />
             </SettingsSection>
 
-            <SettingsSection title={"Anzeige"}>
+            <SettingsSection title={t("settings.group.display")}>
               <CommonToggleSetting
                 settingKey={"foldersOnTop"}
-                label={"Ordner immer oben"}
+                label={t("settings.foldersOnTop")}
               />
               <CommonToggleSetting
                 settingKey={"hideCoverImage"}
-                label={"Thumbnails in der Workflow-Liste ausblenden"}
+                label={t("settings.hideThumbnails")}
               />
             </SettingsSection>
 
-            <SettingsSection title={"Speichern"}>
+            <SettingsSection title={t("settings.group.saving")}>
               <CommonNumberSetting
-                label={"Max. gespeicherte Änderungs-Historie"}
+                label={t("settings.maxChangelog")}
                 settingKey={"maximumChangelogNumber"}
               />
               <CommonToggleSetting
                 settingKey={"disableUnsavedWarning"}
-                label={"‚Speichern/Verwerfen'-Warnung deaktivieren"}
-                warning={
-                  "Vorsicht: Ohne diese Warnung gehen ungespeicherte Änderungen beim Schließen eines Workflows verloren."
-                }
+                label={t("settings.disableUnsavedWarning")}
+                warning={t("settings.disableUnsavedWarning.warning")}
               />
             </SettingsSection>
 
-            <SettingsSection title={"Tastenkürzel"}>
+            <SettingsSection title={t("settings.group.shortcuts")}>
               <ShortcutSettings />
             </SettingsSection>
 
@@ -142,7 +143,7 @@ export default function WorkspaceSettingsModal({
                     letterSpacing={"wider"}
                     color={"gray.500"}
                   >
-                    Erweitert
+                    {t("settings.group.advanced")}
                   </Box>
                   <AccordionIcon />
                 </AccordionButton>

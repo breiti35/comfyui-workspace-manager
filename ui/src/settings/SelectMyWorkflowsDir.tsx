@@ -27,8 +27,10 @@ import {
 } from "../Api";
 import { userSettingsTable } from "../db-tables/WorkspaceDB";
 import { useDialog } from "../components/AlertDialogProvider";
+import { useT } from "../i18n/LanguageContext";
 
 export default function SelectMyWorkflowsDir() {
+  const { t } = useT();
   const [isManualEntry, setIsManualEntry] = useState(false);
   const [isEditDirectory, setIsEditDirectory] = useState(false);
   const [subdirectoryList, setSubdirectoryList] = useState<string[]>([]);
@@ -192,16 +194,14 @@ export default function SelectMyWorkflowsDir() {
     <>
       <Box mb={4}>
         <Text mb={2} fontWeight={500}>
-          My Workflows Save Directory
+          {t("workflowsDir.label")}
         </Text>
         {!isEditDirectory ? (
           <Flex>
             <Tag overflowWrap="anywhere">{currentDirectory}</Tag>
             <Tooltip
               label={
-                twoWaySync
-                  ? "Choose folder"
-                  : "Enable two way sync to link local folder"
+                twoWaySync ? t("workflowsDir.choose") : t("workflowsDir.needSync")
               }
             >
               <IconButton
@@ -225,8 +225,8 @@ export default function SelectMyWorkflowsDir() {
             <Tooltip
               label={
                 twoWaySync
-                  ? "Input absolute path"
-                  : "Enable two way sync to link local folder"
+                  ? t("workflowsDir.enterPath")
+                  : t("workflowsDir.needSync")
               }
             >
               <IconButton

@@ -116,6 +116,8 @@ export type UserSettings = {
   maximumChangelogNumber: number;
   hideCoverImage: boolean;
   disableUnsavedWarning: boolean;
+  // UI language. Defaults to English when unset.
+  language?: "de" | "en";
 };
 
 export interface PanelPosition {
