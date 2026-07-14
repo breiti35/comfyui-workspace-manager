@@ -41,7 +41,13 @@ dann Mittelgroßes, zuletzt der große Brocken. Nummerierung = geplante Reihenfo
 9. **Workflow-Liste (RecentFilesDrawer) aufs reiche Karten-Muster heben**
    - Reichere Vorschau-Karten, bessere Ordner/Interaktion.
 
-10. **Recipe-System** *(groß, zuletzt)*
+10. **CivArchive-Fallback für gelöschte Modelle** *(vom User gewünscht, klein)*
+    - Wo Civitai nichts (mehr) findet (404 bei Hash-Lookup/Detail): Button
+      „Auf CivArchive suchen" → öffnet `civitaiarchive.com/sha256/<SHA256>`
+      im Browser. Kein API nötig. (Weitergehend später: HuggingFace-Direktlinks
+      in „Eigene URL" einspeisen; Metadaten-Import via Backend.)
+
+11. **Recipe-System** *(groß, zuletzt)*
     - Aus einem Civitai-Bild alle LoRAs + Gewichte ziehen und als wiederverwendbares
       Rezept speichern/anwenden.
 
