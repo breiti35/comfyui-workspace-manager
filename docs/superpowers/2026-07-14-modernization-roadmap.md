@@ -9,12 +9,12 @@ dann Mittelgroßes, zuletzt der große Brocken. Nummerierung = geplante Reihenfo
    - `* text=auto eol=lf` → beendet die CRLF-Warnungen bei jedem Commit. Zuerst,
      damit alle folgenden Commits sauber sind.
 
-2. **Deutsch-/Konsistenz-Politur** *(schnell, macht das Tool „fertig")*
-   - Restliche englische Strings/Tooltips: Topbar („Save workflow", „Save as new
-     workflow"), RecentFilesDrawer-Menüs („Delete all files", „Delete selected"),
-     `ShortcutSettings`-Titel, Install-Suchplatzhalter („Search models in CivitAI"),
-     Save/Discard-Dialog in `App.tsx`.
-   - Letzten `confirm()` (`App.tsx` `discardUnsavedChanges`) → Hausstil-Dialog.
+2. **Sprach-Wechselschalter DE/EN (i18n)** — *statt reinem Eindeutschen; Default EN.*
+   - ✅ Fundament (`ui/src/i18n/`), Schalter im Settings-Panel, live per Event.
+   - ✅ Abgedeckt: Settings, Gallery, Install, Models (~150 Keys, DE+EN).
+   - 🔜 Offen: Plugin-Topbar (`ui/src/topbar/`), RecentFilesDrawer, tiefe Dialoge
+     (Ordner-Picker-Modal, TwoWaySyncSettings, `App.tsx` Save/Discard) → dabei
+     auch den letzten `confirm()` (`App.tsx`) auf den Hausstil-Dialog heben.
    - Nebenbei: kosmetischer Ein-Frame-Flash im Settings-Panel (`adultOn` async).
 
 3. **Trigger-Words auf der Modell-Detailseite** *(Flagship, hoher Nutzen)*
