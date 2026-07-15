@@ -194,6 +194,126 @@ const en = {
   "models.topbar.errorBoundary": "The Model Manager ran into an error.",
   "models.installMissing.aria": "missing models",
   "models.installMissing.button": "Install Missing",
+
+  // --- Plugin topbar ---
+  "topbar.recentFilesTooltip": "Recent files & folders",
+  "topbar.workspaceFolderAria": "workspace folder",
+  "topbar.workflowLockedTooltip":
+    "This workflow is locked - autosave and sync won't overwrite it",
+  "topbar.openGalleryTooltip": "Open gallery",
+  "topbar.openGalleryAria": "open gallery",
+  "topbar.saveWorkflowTooltip": "Save workflow",
+  "topbar.saveWorkspaceAria": "save workspace",
+  "topbar.settingsTooltip": "Settings",
+  "topbar.settingsAria": "settings",
+  "topbar.dragToolbarTooltip": "Drag to move toolbar",
+  "topbar.newWorkflow.saveAsLabel": "Save as new workflow",
+  "topbar.newWorkflow.aria": "new workflow",
+  "topbar.newWorkflow.defaultName": "Untitled",
+  "topbar.newWorkflow.nameRequired": "Workflow name is required",
+  "topbar.newWorkflow.nameLabel": "Workflow name",
+  "topbar.newWorkflow.save": "Save",
+  "topbar.newWorkflow.cancel": "Cancel",
+
+  // --- Workflow list drawer ---
+  "drawer.title": "Workspace",
+  "drawer.openSaveDir": "Open workspace save directory",
+  "drawer.newWorkflow": "New workflow",
+  "drawer.newFolder": "New folder",
+  "drawer.newFolderName": "New Folder",
+  "drawer.newFile": "New file",
+  "drawer.sort.newest": "newest",
+  "drawer.sort.oldest": "oldest",
+  "drawer.sort.az": "name A-Z",
+  "drawer.sort.za": "name Z-A",
+  "drawer.menu.optionsAria": "Options",
+  "drawer.menu.darkMode": "Dark Mode",
+  "drawer.menu.lightMode": "Light Mode",
+  "drawer.untitledWorkflow": "untitled",
+  "drawer.deleteWorkflowConfirm":
+    "Are you sure you want to delete this workflow?",
+  "drawer.deleteFolderConfirmPrefix": "Do you want to delete the ",
+  "drawer.deleteFolderConfirmSuffix": " files inside the folder too?",
+  "drawer.deleteAllFiles": "Delete all files",
+  "drawer.rename": "Rename",
+  "drawer.delete": "Delete",
+  "drawer.lockedSuccess": "Locked successfully",
+  "drawer.unlockedSuccess": "Unlocked successfully",
+  "drawer.duplicate": "Duplicate",
+  "drawer.openInNewTab": "Open in new tab",
+  "drawer.unlockTooltip": "Unlock workflow, allow modifying",
+  "drawer.lockTooltip": "Lock workflow, prevent modifying",
+  "drawer.unlock": "Unlock",
+  "drawer.lock": "Lock",
+  "drawer.uploadThumbnail": "Upload Thumbnail Image",
+  "drawer.downloadZip": "Download Zip",
+  "drawer.batchExportAria": "Batch export",
+  "drawer.batchDeleteTooltip": "Batch deletion",
+  "drawer.batchDeleteConfirmPrefix":
+    "Are you sure you want to delete these ",
+  "drawer.batchDeleteConfirmSuffix": " checked workflows?",
+  "drawer.deleteSelected": "Delete selected",
+  "drawer.selectedCountPrefix": "Selected ",
+  "drawer.exitMultiSelect": "Exit multi-select",
+  "drawer.closeMultiSelectAria": "Close multi-select operation",
+  "drawer.selectMultiple": "Select multiple",
+  "drawer.startMultiSelectAria": "Start multi-select operation",
+  "drawer.tags.notLoadedError": "Error: TagsTable is not loaded",
+  "drawer.tags.add": "Add Tag",
+  "drawer.tags.selectPlaceholder": "Select tags",
+  "drawer.tags.newTagNamePlaceholder": "New tag name",
+  "drawer.tags.newTagButton": "New Tag",
+  "drawer.tags.manage": "My Tags",
+  "drawer.tags.deleteAria": "Delete tag",
+  "drawer.tags.closeFilterAria": "Close",
+  "drawer.tags.showAllAria": "Show all tags",
+  "drawer.menu.import": "Import workflows",
+  "drawer.menu.importWorkflows": "Import Workflows",
+  "drawer.menu.importFolder": "Import Folder",
+
+  // --- App-level dialogs ---
+  "app.discardConfirm.text":
+    "Are you sure you want to discard unsaved changes? This will revert current workflow to your last saved version. You will lose all changes made since your last save.",
+  "app.discardConfirm.confirm": "Discard changes",
+  "app.discardConfirm.noSavedVersion": "Error: No last saved version found",
+
+  // --- Two-way sync ---
+  "sync.description":
+    'Keeps your workflows saved as real files in the folder above (see "Storage Location"), so they also show up in File Explorer / Finder. New installs enable this automatically; this toggle is only here for older installs that haven\'t switched over yet.',
+  "sync.warning":
+    "⛔️ Once this is on, leave it on - turning it back off can make workflows that only exist on disk disappear from your list.",
+  "sync.enableLabel": "Enable two way sync",
+  "sync.confirmButton": "I have downloaded all my workflows and ready to enable",
+  "sync.confirmDialog.heading": "🦄 Upgrade to 2.0 - enable two way sync!",
+  "sync.confirmDialog.pathIntro": "Your workflows will be synced to and from path:",
+  "sync.confirmDialog.pathInstructions":
+    "You can manually put workflow files into this folder using File Explorer to sync them with your workspace. You can change this path anytime in Settings > Workspace Save Directory",
+  "sync.confirmDialog.backupWarning":
+    "Please download all your workflows before enabling two way sync as a backup!",
+  "sync.confirmDialog.backupNote":
+    "So you can manually import some workflows into your workspace in case something unexpected happens.",
+  "sync.confirmDialog.downloadButton": "👉 Download All My Workflows",
+
+  // --- Workflows dir (folder picker) ---
+  "workflowsDir.toast.saved":
+    "Directory saved successfully. Please refresh the page.",
+  "workflowsDir.toast.invalidPath":
+    "The directory address you entered is invalid, please re-enter it.",
+  "workflowsDir.manualPathPlaceholder":
+    "Please enter the absolute path directory address",
+  "workflowsDir.save": "Save",
+  "workflowsDir.selectFolderAria": "Select folder",
+  "workflowsDir.enterPathAria": "Enter folder address",
+  "workflowsDir.reset": "Reset",
+  "workflowsDir.cancel": "Cancel",
+  "workflowsDir.noPermission.title": "Kind tips",
+  "workflowsDir.noPermission.macIntro":
+    "There is no permission to access the folder. You need to grant full disk access permission to the terminal that starts the ComfyUI program. For details, refer to the",
+  "workflowsDir.noPermission.documentLink": "Document",
+  "workflowsDir.noPermission.macOutro":
+    ", or you can manually enter the absolute path of the folder in the input box below to save.",
+  "workflowsDir.noPermission.otherText":
+    "You do not have permission to access the folder. It is recommended that you manually enter the absolute path address of the required folder.",
 } as const;
 
 export type TransKey = keyof typeof en;
@@ -391,6 +511,130 @@ const de: Record<TransKey, string> = {
   "models.topbar.errorBoundary": "Der Model-Manager ist auf einen Fehler gestoßen.",
   "models.installMissing.aria": "fehlende Modelle",
   "models.installMissing.button": "Fehlende installieren",
+
+  // --- Plugin topbar ---
+  "topbar.recentFilesTooltip": "Zuletzt verwendete Dateien & Ordner",
+  "topbar.workspaceFolderAria": "Arbeitsbereich-Ordner",
+  "topbar.workflowLockedTooltip":
+    "Dieser Workflow ist gesperrt – automatisches Speichern und Synchronisierung überschreiben ihn nicht",
+  "topbar.openGalleryTooltip": "Galerie öffnen",
+  "topbar.openGalleryAria": "Galerie öffnen",
+  "topbar.saveWorkflowTooltip": "Workflow speichern",
+  "topbar.saveWorkspaceAria": "Arbeitsbereich speichern",
+  "topbar.settingsTooltip": "Einstellungen",
+  "topbar.settingsAria": "Einstellungen",
+  "topbar.dragToolbarTooltip": "Ziehen, um die Werkzeugleiste zu verschieben",
+  "topbar.newWorkflow.saveAsLabel": "Als neuen Workflow speichern",
+  "topbar.newWorkflow.aria": "Neuer Workflow",
+  "topbar.newWorkflow.defaultName": "Unbenannt",
+  "topbar.newWorkflow.nameRequired": "Workflow-Name ist erforderlich",
+  "topbar.newWorkflow.nameLabel": "Workflow-Name",
+  "topbar.newWorkflow.save": "Speichern",
+  "topbar.newWorkflow.cancel": "Abbrechen",
+
+  // --- Workflow list drawer ---
+  "drawer.title": "Arbeitsbereich",
+  "drawer.openSaveDir": "Speicherordner des Arbeitsbereichs öffnen",
+  "drawer.newWorkflow": "Neuer Workflow",
+  "drawer.newFolder": "Neuer Ordner",
+  "drawer.newFolderName": "Neuer Ordner",
+  "drawer.newFile": "Neue Datei",
+  "drawer.sort.newest": "neueste",
+  "drawer.sort.oldest": "älteste",
+  "drawer.sort.az": "Name A-Z",
+  "drawer.sort.za": "Name Z-A",
+  "drawer.menu.optionsAria": "Optionen",
+  "drawer.menu.darkMode": "Dunkler Modus",
+  "drawer.menu.lightMode": "Heller Modus",
+  "drawer.untitledWorkflow": "unbenannt",
+  "drawer.deleteWorkflowConfirm":
+    "Möchtest du diesen Workflow wirklich löschen?",
+  "drawer.deleteFolderConfirmPrefix": "Möchtest du die ",
+  "drawer.deleteFolderConfirmSuffix":
+    " Dateien im Ordner ebenfalls löschen?",
+  "drawer.deleteAllFiles": "Alle Dateien löschen",
+  "drawer.rename": "Umbenennen",
+  "drawer.delete": "Löschen",
+  "drawer.lockedSuccess": "Erfolgreich gesperrt",
+  "drawer.unlockedSuccess": "Erfolgreich entsperrt",
+  "drawer.duplicate": "Duplizieren",
+  "drawer.openInNewTab": "In neuem Tab öffnen",
+  "drawer.unlockTooltip": "Workflow entsperren, Bearbeitung erlauben",
+  "drawer.lockTooltip": "Workflow sperren, Bearbeitung verhindern",
+  "drawer.unlock": "Entsperren",
+  "drawer.lock": "Sperren",
+  "drawer.uploadThumbnail": "Vorschaubild hochladen",
+  "drawer.downloadZip": "Als ZIP herunterladen",
+  "drawer.batchExportAria": "Massenexport",
+  "drawer.batchDeleteTooltip": "Massenlöschung",
+  "drawer.batchDeleteConfirmPrefix": "Möchtest du diese ",
+  "drawer.batchDeleteConfirmSuffix":
+    " ausgewählten Workflows wirklich löschen?",
+  "drawer.deleteSelected": "Auswahl löschen",
+  "drawer.selectedCountPrefix": "Ausgewählt: ",
+  "drawer.exitMultiSelect": "Mehrfachauswahl beenden",
+  "drawer.closeMultiSelectAria": "Mehrfachauswahl schließen",
+  "drawer.selectMultiple": "Mehrfachauswahl",
+  "drawer.startMultiSelectAria": "Mehrfachauswahl starten",
+  "drawer.tags.notLoadedError": "Fehler: TagsTable ist nicht geladen",
+  "drawer.tags.add": "Tag hinzufügen",
+  "drawer.tags.selectPlaceholder": "Tags auswählen",
+  "drawer.tags.newTagNamePlaceholder": "Neuer Tag-Name",
+  "drawer.tags.newTagButton": "Neuer Tag",
+  "drawer.tags.manage": "Meine Tags",
+  "drawer.tags.deleteAria": "Tag löschen",
+  "drawer.tags.closeFilterAria": "Schließen",
+  "drawer.tags.showAllAria": "Alle Tags anzeigen",
+  "drawer.menu.import": "Workflows importieren",
+  "drawer.menu.importWorkflows": "Workflows importieren",
+  "drawer.menu.importFolder": "Ordner importieren",
+
+  // --- App-level dialogs ---
+  "app.discardConfirm.text":
+    "Möchtest du die ungespeicherten Änderungen wirklich verwerfen? Dadurch wird der aktuelle Workflow auf deinen zuletzt gespeicherten Stand zurückgesetzt. Alle Änderungen seit deinem letzten Speichern gehen verloren.",
+  "app.discardConfirm.confirm": "Änderungen verwerfen",
+  "app.discardConfirm.noSavedVersion":
+    "Fehler: Kein zuletzt gespeicherter Stand gefunden",
+
+  // --- Two-way sync ---
+  "sync.description":
+    "Speichert deine Workflows als echte Dateien im Ordner oben (siehe „Speicherort\"), sodass sie auch im Datei-Explorer / Finder erscheinen. Neuinstallationen aktivieren dies automatisch; dieser Schalter ist nur für ältere Installationen gedacht, die noch nicht darauf umgestellt haben.",
+  "sync.warning":
+    "⛔️ Ist dies einmal aktiviert, lass es an – wird es wieder ausgeschaltet, können Workflows, die nur auf der Festplatte existieren, aus deiner Liste verschwinden.",
+  "sync.enableLabel": "Zwei-Wege-Sync aktivieren",
+  "sync.confirmButton":
+    "Ich habe alle meine Workflows heruntergeladen und bin bereit zu aktivieren",
+  "sync.confirmDialog.heading": "🦄 Upgrade auf 2.0 - Zwei-Wege-Sync aktivieren!",
+  "sync.confirmDialog.pathIntro":
+    "Deine Workflows werden mit folgendem Pfad synchronisiert:",
+  "sync.confirmDialog.pathInstructions":
+    "Du kannst Workflow-Dateien manuell über den Datei-Explorer in diesen Ordner legen, um sie mit deinem Arbeitsbereich zu synchronisieren. Du kannst diesen Pfad jederzeit unter Einstellungen > Workspace-Speicherordner ändern",
+  "sync.confirmDialog.backupWarning":
+    "Bitte lade alle deine Workflows als Sicherung herunter, bevor du den Zwei-Wege-Sync aktivierst!",
+  "sync.confirmDialog.backupNote":
+    "So kannst du bei Bedarf einzelne Workflows manuell wieder in deinen Arbeitsbereich importieren, falls etwas Unerwartetes passiert.",
+  "sync.confirmDialog.downloadButton": "👉 Alle meine Workflows herunterladen",
+
+  // --- Workflows dir (folder picker) ---
+  "workflowsDir.toast.saved":
+    "Ordner erfolgreich gespeichert. Bitte lade die Seite neu.",
+  "workflowsDir.toast.invalidPath":
+    "Die eingegebene Ordneradresse ist ungültig, bitte gib sie erneut ein.",
+  "workflowsDir.manualPathPlaceholder":
+    "Bitte gib den absoluten Pfad des Ordners ein",
+  "workflowsDir.save": "Speichern",
+  "workflowsDir.selectFolderAria": "Ordner auswählen",
+  "workflowsDir.enterPathAria": "Ordneradresse eingeben",
+  "workflowsDir.reset": "Zurücksetzen",
+  "workflowsDir.cancel": "Abbrechen",
+  "workflowsDir.noPermission.title": "Freundlicher Hinweis",
+  "workflowsDir.noPermission.macIntro":
+    "Es besteht keine Berechtigung für den Zugriff auf den Ordner. Du musst dem Terminal, das das ComfyUI-Programm startet, vollen Festplattenzugriff gewähren. Details findest du in der",
+  "workflowsDir.noPermission.documentLink": "Dokumentation",
+  "workflowsDir.noPermission.macOutro":
+    ", oder du gibst den absoluten Pfad des Ordners manuell im Eingabefeld unten ein, um zu speichern.",
+  "workflowsDir.noPermission.otherText":
+    "Du hast keine Berechtigung für den Zugriff auf den Ordner. Es wird empfohlen, den absoluten Pfad des gewünschten Ordners manuell einzugeben.",
 };
 
 export const translations: Record<Lang, Record<TransKey, string>> = { en, de };

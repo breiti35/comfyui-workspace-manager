@@ -26,11 +26,13 @@ import {
 import { WorkspaceContext } from "../WorkspaceContext";
 import { openWorkflowInNewTab } from "../utils";
 import { fetchApi } from "../Api";
+import { useT } from "../i18n/LanguageContext";
 
 type Props = {
   workflow: Workflow;
 };
 export default function MoreActionMenu({ workflow }: Props) {
+  const { t } = useT();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const toast = useToast();
   const { onDuplicateWorkflow } = useContext(WorkspaceContext);
@@ -44,7 +46,9 @@ export default function MoreActionMenu({ workflow }: Props) {
       saveLock: newLocked,
     });
     toast({
-      title: `${newLocked ? "Locked" : "Unlocked"} successfully`,
+      title: newLocked
+        ? t("drawer.lockedSuccess")
+        : t("drawer.unlockedSuccess"),
       status: "success",
       duration: 2000,
     });
@@ -82,7 +86,7 @@ export default function MoreActionMenu({ workflow }: Props) {
         <MenuButton
           border={0}
           as={IconButton}
-          aria-label="Options"
+          aria-label={t("drawer.menu.optionsAria")}
           icon={<IconDotsVertical size={20} />}
           size={"sm"}
           variant="outline"
@@ -94,21 +98,19 @@ export default function MoreActionMenu({ workflow }: Props) {
               onDuplicateWorkflow && onDuplicateWorkflow(workflow.id)
             }
           >
-            Duplicate
+            {t("drawer.duplicate")}
           </MenuItem>
           <MenuItem
             icon={<IconExternalLink size={20} />}
             onClick={() => openWorkflowInNewTab(workflow.id)}
           >
-            Open in new tab
+            {t("drawer.openInNewTab")}
           </MenuItem>
           {/* <AddTagToWorkflowPopover workflow={workflow} /> */}
           <Tooltip
             hasArrow
             label={
-              isLocked
-                ? "Unlock workflow, allow modifying"
-                : "Lock workflow, prevent modifying"
+              isLocked ? t("drawer.unlockTooltip") : t("drawer.lockTooltip")
             }
             placement="bottom"
           >
@@ -116,7 +118,7 @@ export default function MoreActionMenu({ workflow }: Props) {
               icon={isLocked ? <IconLock /> : <IconLockOpen />}
               onClick={onLockChange}
             >
-              {isLocked ? "Unlock" : "Lock"}
+              {isLocked ? t("drawer.unlock") : t("drawer.lock")}
             </MenuItem>
           </Tooltip>
           <MenuItem
@@ -125,7 +127,7 @@ export default function MoreActionMenu({ workflow }: Props) {
               fileInputRef.current?.click();
             }}
           >
-            Upload Thumbnail Image
+            {t("drawer.uploadThumbnail")}
           </MenuItem>
         </MenuList>
       </Menu>

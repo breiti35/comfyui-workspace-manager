@@ -26,6 +26,7 @@ import VersionNameTopbar from "./VersionNameTopbar";
 import { userSettingsTable, workflowsTable } from "../db-tables/WorkspaceDB";
 import { TOPBAR_BUTTON_HEIGHT } from "../const";
 import TopbarNewWorkflowButton from "./TopbarNewWorkflowButton";
+import { useT } from "../i18n/LanguageContext";
 const AppIsDirtyEventListener = lazy(() => import("./AppIsDirtyEventListener"));
 const ModelManagerTopbar = lazy(
   () => import("../model-manager/topbar/ModelManagerTopbar"),
@@ -40,6 +41,7 @@ interface Props {
   setCurFlowName: (newName: string) => void;
 }
 export function Topbar({ curFlowName, setCurFlowName }: Props) {
+  const { t } = useT();
   const { isDirty, saveCurWorkflow, setRoute, curFlowID, route } =
     useContext(WorkspaceContext);
   const [positionStyle, setPositionStyle] = useState<PanelPosition>();
@@ -99,11 +101,11 @@ export function Topbar({ curFlowName, setCurFlowName }: Props) {
         id="workspaceManagerPanel"
         className="workspaceManagerPanel"
       >
-        <Tooltip label="Recent files & folders">
+        <Tooltip label={t("topbar.recentFilesTooltip")}>
           <Button
             size={"sm"}
             variant={"ghost"}
-            aria-label="workspace folder"
+            aria-label={t("topbar.workspaceFolderAria")}
             height={TOPBAR_BUTTON_HEIGHT + "px"}
             onClick={() => setRoute("recentFlows")}
             px={2}
@@ -129,18 +131,18 @@ export function Topbar({ curFlowName, setCurFlowName }: Props) {
           }}
         />
         {workflowsTable?.curWorkflow?.saveLock && (
-          <Tooltip label="This workflow is locked - autosave and sync won't overwrite it">
+          <Tooltip label={t("topbar.workflowLockedTooltip")}>
             <IconLock color="white" size={20} />
           </Tooltip>
         )}
         {curFlowID && (
           <HStack gap={"4px"}>
-            <Tooltip label="Open gallery">
+            <Tooltip label={t("topbar.openGalleryTooltip")}>
               <IconButton
                 onClick={() => setRoute("gallery")}
                 icon={<IconPhoto size={22} color="white" />}
                 size={"sm"}
-                aria-label="open gallery"
+                aria-label={t("topbar.openGalleryAria")}
                 variant={"ghost"}
               />
             </Tooltip>
@@ -148,13 +150,13 @@ export function Topbar({ curFlowName, setCurFlowName }: Props) {
           </HStack>
         )}
         {curFlowID && isDirty ? (
-          <Tooltip label="Save workflow">
+          <Tooltip label={t("topbar.saveWorkflowTooltip")}>
             <IconButton
               onClick={() => saveCurWorkflow()}
               icon={<IconDeviceFloppy size={23} color="white" />}
               size={"xs"}
               paddingY={4}
-              aria-label="save workspace"
+              aria-label={t("topbar.saveWorkspaceAria")}
               variant={"ghost"}
             />
           </Tooltip>
@@ -163,16 +165,16 @@ export function Topbar({ curFlowName, setCurFlowName }: Props) {
         )}
         <VersionNameTopbar />
         <AppIsDirtyEventListener />
-        <Tooltip label="Settings">
+        <Tooltip label={t("topbar.settingsTooltip")}>
           <IconButton
             onClick={() => setRoute("settings")}
             icon={<IconSettings size={20} color="white" />}
             size={"sm"}
-            aria-label="settings"
+            aria-label={t("topbar.settingsAria")}
             variant={"ghost"}
           />
         </Tooltip>
-        <Tooltip label="Drag to move toolbar">
+        <Tooltip label={t("topbar.dragToolbarTooltip")}>
           <IconGripVertical
             id="dragPanelIcon"
             className="dragPanelIcon"

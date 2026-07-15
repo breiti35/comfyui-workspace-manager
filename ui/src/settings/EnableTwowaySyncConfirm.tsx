@@ -1,31 +1,25 @@
 import { Button, Heading, Stack } from "@chakra-ui/react";
 import { downloadWorkflowsZip } from "../utils/downloadWorkflowsZip";
 import { workflowsTable } from "../db-tables/WorkspaceDB";
+import { useT } from "../i18n/LanguageContext";
 
 export default function EnableTwoWaySyncConfirm({
   myWorkflowsDir,
 }: {
   myWorkflowsDir: string;
 }) {
+  const { t } = useT();
   return (
     <Stack gap={3}>
-      <Heading size={"md"}>🦄 Upgrade to 2.0 - enable two way sync!</Heading>
-      <p>Your workflows will be synced to and from path:</p>
+      <Heading size={"md"}>{t("sync.confirmDialog.heading")}</Heading>
+      <p>{t("sync.confirmDialog.pathIntro")}</p>
       <p>
         <b>{myWorkflowsDir}</b>
       </p>
+      <p>{t("sync.confirmDialog.pathInstructions")}</p>
       <p>
-        You can manually put workflow files into this folder using File Explorer
-        to sync them with your workspace. You can change this path anytime in
-        Settings {">"} Workspace Save Directory
-      </p>
-      <p>
-        <b>
-          Please download all your workflows before enabling two way sync as a
-          backup!
-        </b>{" "}
-        So you can manually import some workflows into your workspace in case
-        something unexpected happens.
+        <b>{t("sync.confirmDialog.backupWarning")}</b>{" "}
+        {t("sync.confirmDialog.backupNote")}
       </p>
       <Button
         colorScheme="teal"
@@ -36,7 +30,7 @@ export default function EnableTwoWaySyncConfirm({
           downloadWorkflowsZip(workflows ?? []);
         }}
       >
-        👉 Download All My Workflows
+        {t("sync.confirmDialog.downloadButton")}
       </Button>
     </Stack>
   );

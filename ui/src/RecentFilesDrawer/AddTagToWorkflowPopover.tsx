@@ -17,11 +17,13 @@ import { IconPlus, IconTag } from "@tabler/icons-react";
 import { MultiValue, Select } from "chakra-react-select";
 import { RecentFilesContext } from "../WorkspaceContext";
 import { Tag, Workflow } from "../types/dbTypes";
+import { useT } from "../i18n/LanguageContext";
 
 type Props = {
   workflow: Workflow;
 };
 export default function AddTagToWorkflowPopover({ workflow }: Props) {
+  const { t } = useT();
   const { onRefreshFilesList } = useContext(RecentFilesContext);
   const [allTags, setAllTags] = useState<Tag[]>([]);
   const [newTagName, setNewTagName] = useState("");
@@ -50,7 +52,7 @@ export default function AddTagToWorkflowPopover({ workflow }: Props) {
   };
 
   if (tagsTable == null) {
-    alert("Error: TagsTable is not loaded");
+    alert(t("drawer.tags.notLoadedError"));
     return null;
   }
   const tagOptions = allTags.map((t) => ({
@@ -62,7 +64,7 @@ export default function AddTagToWorkflowPopover({ workflow }: Props) {
   return (
     <Popover isLazy={true} onOpen={onOpen} closeOnBlur={false} placement="auto">
       <PopoverTrigger>
-        <MenuItem icon={<IconTag />}>Add Tag</MenuItem>
+        <MenuItem icon={<IconTag />}>{t("drawer.tags.add")}</MenuItem>
       </PopoverTrigger>
       <PopoverContent>
         <PopoverArrow />
@@ -96,7 +98,7 @@ export default function AddTagToWorkflowPopover({ workflow }: Props) {
                 pt: 0,
               }),
             }}
-            placeholder="Select tags"
+            placeholder={t("drawer.tags.selectPlaceholder")}
             closeMenuOnSelect={false}
             maxMenuHeight={maxTagMenuHeight}
           />
@@ -105,7 +107,7 @@ export default function AddTagToWorkflowPopover({ workflow }: Props) {
             mt={Math.min(maxTagMenuHeight, Math.max(allTags.length, 3) * 37)}
           >
             <Input
-              placeholder="New tag name"
+              placeholder={t("drawer.tags.newTagNamePlaceholder")}
               size="sm"
               mt={6}
               mb={6}
@@ -125,7 +127,7 @@ export default function AddTagToWorkflowPopover({ workflow }: Props) {
               isDisabled={newTagName.length === 0}
               onClick={addTag}
             >
-              New Tag
+              {t("drawer.tags.newTagButton")}
             </Button>
           </HStack>
         </PopoverBody>

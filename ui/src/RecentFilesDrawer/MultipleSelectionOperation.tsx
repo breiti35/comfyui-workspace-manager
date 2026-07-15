@@ -4,6 +4,7 @@ import DeleteConfirm from "../components/DeleteConfirm";
 import { ChangeEvent } from "react";
 import { workflowsTable } from "../db-tables/WorkspaceDB";
 import { downloadWorkflowsZip } from "../utils/downloadWorkflowsZip";
+import { useT } from "../i18n/LanguageContext";
 
 type Props = {
   multipleState: boolean;
@@ -14,6 +15,7 @@ type Props = {
 };
 
 export default function MultipleSelectionOperation(props: Props) {
+  const { t } = useT();
   const {
     multipleState,
     changeMultipleState,
@@ -39,21 +41,21 @@ export default function MultipleSelectionOperation(props: Props) {
               batchOperationCallback("selectAll", e.target.checked);
             }}
           />
-          <Tooltip hasArrow label="Download Zip" placement="bottom">
+          <Tooltip hasArrow label={t("drawer.downloadZip")} placement="bottom">
             <IconButton
               isDisabled={notChecked}
-              aria-label="Batch export"
+              aria-label={t("drawer.batchExportAria")}
               size={"sm"}
               icon={<IconDownload size={21} />}
               onClick={batchExport}
             />
           </Tooltip>
-          <Tooltip hasArrow label="Batch deletion">
+          <Tooltip hasArrow label={t("drawer.batchDeleteTooltip")}>
             <DeleteConfirm
               isDisabled={notChecked}
               variant="solid"
-              promptMessage={`Are you sure you want to delete these ${selectedKeys.length} checked workflows?`}
-              tooltipText="Delete selected"
+              promptMessage={`${t("drawer.batchDeleteConfirmPrefix")}${selectedKeys.length}${t("drawer.batchDeleteConfirmSuffix")}`}
+              tooltipText={t("drawer.deleteSelected")}
               onDelete={async () => {
                 await workflowsTable?.batchDeleteFlow(selectedKeys);
                 batchOperationCallback("batchDelete");
@@ -62,11 +64,13 @@ export default function MultipleSelectionOperation(props: Props) {
           </Tooltip>
 
           {selectedKeys.length > 0 && (
-            <Text fontWeight={600}>{`Selected ${selectedKeys.length}`}</Text>
+            <Text
+              fontWeight={600}
+            >{`${t("drawer.selectedCountPrefix")}${selectedKeys.length}`}</Text>
           )}
-          <Tooltip hasArrow label="Exit multi-select">
+          <Tooltip hasArrow label={t("drawer.exitMultiSelect")}>
             <IconButton
-              aria-label="Close multi-select operation"
+              aria-label={t("drawer.closeMultiSelectAria")}
               size={"sm"}
               icon={<IconX />}
               onClick={() => {
@@ -76,9 +80,13 @@ export default function MultipleSelectionOperation(props: Props) {
           </Tooltip>
         </>
       ) : (
-        <Tooltip hasArrow label="Select multiple" placement="bottom-start">
+        <Tooltip
+          hasArrow
+          label={t("drawer.selectMultiple")}
+          placement="bottom-start"
+        >
           <IconButton
-            aria-label="Start multi-select operation"
+            aria-label={t("drawer.startMultiSelectAria")}
             size={"sm"}
             variant={"outline"}
             icon={<IconListCheck size={21} />}

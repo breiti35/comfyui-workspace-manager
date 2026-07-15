@@ -20,11 +20,15 @@ import { COMFYSPACE_TRACKING_FIELD_NAME, TOPBAR_BUTTON_HEIGHT } from "../const";
 import { app } from "../utils/comfyapp";
 import { workflowsTable } from "../db-tables/WorkspaceDB";
 import { nanoid } from "nanoid";
+import { useT } from "../i18n/LanguageContext";
 
 export default function TopbarNewWorkflowButton() {
+  const { t } = useT();
   const { setCurFlowIDAndName, curFlowID } = useContext(WorkspaceContext);
   const [isOpen, setIsOpen] = useState(false);
-  const [workflowName, setWorkflowName] = useState("Untitled");
+  const [workflowName, setWorkflowName] = useState(
+    t("topbar.newWorkflow.defaultName"),
+  );
   const [submitError, setSubmitError] = useState("");
 
   const onClose = () => {
@@ -34,7 +38,7 @@ export default function TopbarNewWorkflowButton() {
 
   const saveNewWorkflow = async () => {
     if (!workflowName.trim()) {
-      setSubmitError("Workflow name is required");
+      setSubmitError(t("topbar.newWorkflow.nameRequired"));
       return;
     }
     const id = nanoid();
@@ -59,15 +63,15 @@ export default function TopbarNewWorkflowButton() {
   }
   return (
     <>
-      <Tooltip label={"Save as new workflow"}>
+      <Tooltip label={t("topbar.newWorkflow.saveAsLabel")}>
         <Button
           size={"sm"}
           variant={"outline"}
           colorScheme="teal"
-          aria-label="new workflow"
+          aria-label={t("topbar.newWorkflow.aria")}
           height={TOPBAR_BUTTON_HEIGHT + "px"}
           onClick={() => {
-            setWorkflowName("Untitled");
+            setWorkflowName(t("topbar.newWorkflow.defaultName"));
             setIsOpen(true);
           }}
           px={1}
@@ -78,11 +82,11 @@ export default function TopbarNewWorkflowButton() {
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Save as new workflow</ModalHeader>
+          <ModalHeader>{t("topbar.newWorkflow.saveAsLabel")}</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <FormControl isInvalid={!!submitError}>
-              <FormLabel>Workflow name</FormLabel>
+              <FormLabel>{t("topbar.newWorkflow.nameLabel")}</FormLabel>
               <Input
                 value={workflowName}
                 onChange={(e) => {
@@ -106,9 +110,9 @@ export default function TopbarNewWorkflowButton() {
               onClick={saveNewWorkflow}
               isDisabled={!workflowName.trim()}
             >
-              Save
+              {t("topbar.newWorkflow.save")}
             </Button>
-            <Button onClick={onClose}>Cancel</Button>
+            <Button onClick={onClose}>{t("topbar.newWorkflow.cancel")}</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>

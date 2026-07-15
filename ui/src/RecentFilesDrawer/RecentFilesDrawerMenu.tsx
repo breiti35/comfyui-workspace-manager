@@ -14,11 +14,13 @@ import {
 } from "@tabler/icons-react";
 import { useState } from "react";
 import WorkspaceSettingsModal from "./WorkspaceSettingsModal";
+import { useT } from "../i18n/LanguageContext";
 const ICON_SIZE = 16;
 type Props = {
   //   onclose: () => void;
 };
 export default function RecentFilesDrawerMenu({}: Props) {
+  const { t } = useT();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { colorMode, toggleColorMode } = useColorMode();
 
@@ -27,7 +29,7 @@ export default function RecentFilesDrawerMenu({}: Props) {
       <Menu isLazy>
         <MenuButton
           as={IconButton}
-          aria-label="Options"
+          aria-label={t("drawer.menu.optionsAria")}
           icon={<IconMenu2 size={18} />}
           size={"sm"}
           variant="ghost"
@@ -38,7 +40,7 @@ export default function RecentFilesDrawerMenu({}: Props) {
             icon={<IconSettings size={16} />}
             fontSize={16}
           >
-            Settings
+            {t("settings.title")}
           </MenuItem>
           <MenuItem
             onClick={toggleColorMode}
@@ -51,7 +53,9 @@ export default function RecentFilesDrawerMenu({}: Props) {
             }
             fontSize={16}
           >
-            {colorMode === "light" ? "Dark" : "Light"} Mode
+            {colorMode === "light"
+              ? t("drawer.menu.darkMode")
+              : t("drawer.menu.lightMode")}
           </MenuItem>
         </MenuList>
       </Menu>

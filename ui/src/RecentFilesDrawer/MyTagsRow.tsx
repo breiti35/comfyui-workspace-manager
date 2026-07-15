@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Tag } from "../types/dbTypes";
 import { tagsTable } from "../db-tables/WorkspaceDB";
 import { IconChevronDown, IconChevronUp, IconX } from "@tabler/icons-react";
+import { useT } from "../i18n/LanguageContext";
 const MAX_TAGS_TO_SHOW = 6;
 
 interface Props {
@@ -10,6 +11,7 @@ interface Props {
   setSelectedTag: (tag?: string) => void;
 }
 export default function MyTagsRow({ setSelectedTag, selectedTag }: Props) {
+  const { t } = useT();
   const [showAllTags, setShowAllTags] = useState(false);
 
   const [tags, setTags] = useState<Tag[]>([]);
@@ -22,7 +24,7 @@ export default function MyTagsRow({ setSelectedTag, selectedTag }: Props) {
     <HStack spacing={2} wrap={"wrap"} mb={0}>
       {selectedTag != null && (
         <IconButton
-          aria-label="Close"
+          aria-label={t("drawer.tags.closeFilterAria")}
           size={"sm"}
           icon={<IconX />}
           onClick={() => {
@@ -49,7 +51,7 @@ export default function MyTagsRow({ setSelectedTag, selectedTag }: Props) {
       ))}
       {(tags.length ?? 0) > MAX_TAGS_TO_SHOW && (
         <IconButton
-          aria-label="Show-all-tags"
+          aria-label={t("drawer.tags.showAllAria")}
           size={"sm"}
           icon={showAllTags ? <IconChevronUp /> : <IconChevronDown />}
           onClick={() => setShowAllTags(!showAllTags)}

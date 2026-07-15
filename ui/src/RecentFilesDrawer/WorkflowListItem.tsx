@@ -7,11 +7,13 @@ import { Workflow } from "../types/dbTypes";
 import MediaPreview from "../components/MediaPreview";
 import WorkflowListItemActionButtons from "./WorkflowListItemActionButtons";
 import { userSettingsTable } from "../db-tables/WorkspaceDB";
+import { useT } from "../i18n/LanguageContext";
 
 type Props = {
   workflow: Workflow;
 };
 export default memo(function WorkflowListItem({ workflow }: Props) {
+  const { t } = useT();
   const {
     setDraggingFile,
     isMultiSelecting,
@@ -60,7 +62,7 @@ export default memo(function WorkflowListItem({ workflow }: Props) {
             noOfLines={1}
             wordBreak={"break-all"}
           >
-            {workflow.name ?? "untitled"}
+            {workflow.name ?? t("drawer.untitledWorkflow")}
           </Text>
           {workflow.saveLock && (
             <IconLock size={14} style={{ flexShrink: 0 }} />

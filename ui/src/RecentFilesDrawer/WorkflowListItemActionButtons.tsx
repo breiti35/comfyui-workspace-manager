@@ -4,17 +4,19 @@ import MoreActionMenu from "./MoreActionMenu";
 import { useContext } from "react";
 import { RecentFilesContext } from "../WorkspaceContext";
 import { Workflow } from "../types/dbTypes";
+import { useT } from "../i18n/LanguageContext";
 
 export default function WorkflowListItemActionButtons({
   workflow,
 }: {
   workflow: Workflow;
 }) {
+  const { t } = useT();
   const { onDeleteFlow } = useContext(RecentFilesContext);
   return (
     <Flex justifyContent={"flex-end"}>
       <DeleteConfirm
-        promptMessage="Are you sure you want to delete this workflow?"
+        promptMessage={t("drawer.deleteWorkflowConfirm")}
         onDelete={() => {
           onDeleteFlow && onDeleteFlow(workflow.id);
         }}

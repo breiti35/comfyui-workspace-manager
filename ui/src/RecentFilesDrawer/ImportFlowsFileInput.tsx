@@ -12,6 +12,7 @@ import { workflowsTable, foldersTable } from "../db-tables/WorkspaceDB";
 import { RecentFilesContext } from "../WorkspaceContext";
 import { getPngMetadata } from "../utils/mediaMetadataUtils";
 import { ImportWorkflow, importMenuItemList } from "./types";
+import { useT } from "../i18n/LanguageContext";
 
 interface WorkflowFile {
   name: string;
@@ -37,6 +38,7 @@ export default function ImportFlowsFileInput({
   parentFolderID,
   onlyImportFile = false,
 }: Props) {
+  const { t } = useT();
   const { onRefreshFilesList } = useContext(RecentFilesContext);
   const [importType, setImportType] = useState("file"); // file/folder
   const fileInputRef = useRef<HTMLInputDirectoryElement>(null);
@@ -192,6 +194,11 @@ export default function ImportFlowsFileInput({
     }
   };
 
+  const importMenuItemLabel = (type: string) =>
+    type === "folder"
+      ? t("drawer.menu.importFolder")
+      : t("drawer.menu.importWorkflows");
+
   return (
     <>
       {onlyImportFile ? (
@@ -202,14 +209,14 @@ export default function ImportFlowsFileInput({
           }}
           icon={<IconFileImport size={19} />}
         >
-          Import workflows
+          {t("drawer.menu.import")}
         </MenuItem>
       ) : (
         <Menu closeOnSelect={true}>
-          <Tooltip label="Import workflows">
+          <Tooltip label={t("drawer.menu.import")}>
             <MenuButton
               as={IconButton}
-              aria-label="Import workflows"
+              aria-label={t("drawer.menu.import")}
               icon={<IconFileImport size={18} />}
               variant="ghost"
               size={"sm"}
@@ -231,7 +238,7 @@ export default function ImportFlowsFileInput({
                   )
                 }
               >
-                {item.title}
+                {importMenuItemLabel(item.type)}
               </MenuItem>
             ))}
           </MenuList>

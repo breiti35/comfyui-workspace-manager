@@ -9,13 +9,16 @@ dann Mittelgroßes, zuletzt der große Brocken. Nummerierung = geplante Reihenfo
    - `* text=auto eol=lf` → beendet die CRLF-Warnungen bei jedem Commit. Zuerst,
      damit alle folgenden Commits sauber sind.
 
-2. **Sprach-Wechselschalter DE/EN (i18n)** — *statt reinem Eindeutschen; Default EN.*
+2. **Sprach-Wechselschalter DE/EN (i18n)** — *statt reinem Eindeutschen; Default EN.* ✅ **fertig**
    - ✅ Fundament (`ui/src/i18n/`), Schalter im Settings-Panel, live per Event.
    - ✅ Abgedeckt: Settings, Gallery, Install, Models (~150 Keys, DE+EN).
-   - 🔜 Offen: Plugin-Topbar (`ui/src/topbar/`), RecentFilesDrawer, tiefe Dialoge
-     (Ordner-Picker-Modal, TwoWaySyncSettings, `App.tsx` Save/Discard) → dabei
-     auch den letzten `confirm()` (`App.tsx`) auf den Hausstil-Dialog heben.
-   - Nebenbei: kosmetischer Ein-Frame-Flash im Settings-Panel (`adultOn` async).
+   - ✅ Plugin-Topbar, RecentFilesDrawer (Liste/Menüs/Tags/Mehrfachauswahl),
+     tiefe Dialoge (Ordner-Picker, TwoWaySync, `App.tsx` Discard) — +72 Keys.
+   - ✅ Letzten `confirm()` (`App.tsx` Discard) auf Hausstil-Dialog gehoben.
+   - ✅ Architektur-Fix: `LanguageProvider` in `main.tsx` hochgezogen (über
+     `AlertDialogProvider`), damit App-Ebene + Portal-Dialoge die Sprache lesen.
+   - Rest-Notiz (offen, klein): kosmetischer Ein-Frame-Flash im Settings-Panel
+     (`adultOn` async); reine `.ts`-Dateien ohne Hook-Zugriff bleiben englisch.
 
 3. **Trigger-Words auf der Modell-Detailseite** *(Flagship, hoher Nutzen)*
    - Civitai `trainedWords` am Modell (Models/Install-Detail) anzeigen +

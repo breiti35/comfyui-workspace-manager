@@ -111,7 +111,7 @@ export default function SelectMyWorkflowsDir() {
     isManualEntry && setNoPermission(false);
     onCloseEditDirectory();
     toast({
-      title: "Directory saved successfully. Please refresh the page.",
+      title: t("workflowsDir.toast.saved"),
       status: "success",
       duration: 4000,
       position: "top",
@@ -124,8 +124,7 @@ export default function SelectMyWorkflowsDir() {
       const { error = "" } = await getSystemDir(manualEntry);
       if (error.includes("Not a directory")) {
         toast({
-          title:
-            "The directory address you entered is invalid, please re-enter it.",
+          title: t("workflowsDir.toast.invalidPath"),
           status: "warning",
           duration: 5000,
           position: "top",
@@ -167,7 +166,7 @@ export default function SelectMyWorkflowsDir() {
   const enterFolderAddressComp = (
     <Box textAlign="end" mb={4}>
       <Input
-        placeholder="Please enter the absolute path directory address"
+        placeholder={t("workflowsDir.manualPathPlaceholder")}
         ref={manualEntryRef}
         mt={2}
         mb={2}
@@ -181,7 +180,7 @@ export default function SelectMyWorkflowsDir() {
             onSubmit(manualEntryRef?.current?.value);
         }}
       >
-        Save
+        {t("workflowsDir.save")}
       </Button>
     </Box>
   );
@@ -205,7 +204,7 @@ export default function SelectMyWorkflowsDir() {
               }
             >
               <IconButton
-                aria-label="Select folder"
+                aria-label={t("workflowsDir.selectFolderAria")}
                 size={"sm"}
                 ml={2}
                 isDisabled={!twoWaySync}
@@ -231,7 +230,7 @@ export default function SelectMyWorkflowsDir() {
             >
               <IconButton
                 isDisabled={!twoWaySync}
-                aria-label="Enter folder address"
+                aria-label={t("workflowsDir.enterPathAria")}
                 size={"sm"}
                 ml={2}
                 icon={<IconEdit size={19} />}
@@ -300,13 +299,13 @@ export default function SelectMyWorkflowsDir() {
                   onSubmit();
                 }}
               >
-                Save
+                {t("workflowsDir.save")}
               </Button>
               <Button size="sm" onClick={onReset} mr={2} ml={2}>
-                Reset
+                {t("workflowsDir.reset")}
               </Button>
               <Button size="sm" onClick={onCloseEditDirectory}>
-                Cancel
+                {t("workflowsDir.cancel")}
               </Button>
             </Box>
           </VStack>
@@ -319,15 +318,13 @@ export default function SelectMyWorkflowsDir() {
       >
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Kind tips</ModalHeader>
+          <ModalHeader>{t("workflowsDir.noPermission.title")}</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
             <Box>
               {navigator.userAgent.indexOf("Mac OS X") !== -1 ? (
                 <Text fontWeight={500}>
-                  There is no permission to access the folder. You need to grant
-                  full disk access permission to the terminal that starts the
-                  ComfyUI program. For details, refer to the
+                  {t("workflowsDir.noPermission.macIntro")}
                   <Button
                     colorScheme="teal"
                     variant="link"
@@ -337,16 +334,13 @@ export default function SelectMyWorkflowsDir() {
                     href="https://stackoverflow.com/questions/58479686/permissionerror-errno-1-operation-not-permitted-after-macos
                 -catalina-update"
                   >
-                    Document
+                    {t("workflowsDir.noPermission.documentLink")}
                   </Button>
-                  , or you can manually enter the absolute path of the folder in
-                  the input box below to save.
+                  {t("workflowsDir.noPermission.macOutro")}
                 </Text>
               ) : (
                 <Text fontWeight={500}>
-                  You do not have permission to access the folder. It is
-                  recommended that you manually enter the absolute path address
-                  of the required folder.
+                  {t("workflowsDir.noPermission.otherText")}
                 </Text>
               )}
               {enterFolderAddressComp}

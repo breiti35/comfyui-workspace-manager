@@ -14,6 +14,7 @@ import ImportFlowsFileInput from "./ImportFlowsFileInput";
 import { defaultGraph } from "../defaultGraph";
 import { useDialog } from "../components/AlertDialogProvider";
 import { getFileCountInFolder } from "../db-tables/DiskFileUtils";
+import { useT } from "../i18n/LanguageContext";
 
 type Props = {
   menuPosition: { x: number; y: number };
@@ -27,6 +28,7 @@ export default function FilesListFolderItemRightClickMenu({
   folder,
   onClose,
 }: Props) {
+  const { t } = useT();
   const [isRenameOpen, setIsRenameOpen] = useState(false);
   const { onRefreshFilesList } = useContext(RecentFilesContext);
   const { showDialog } = useDialog();
@@ -34,7 +36,7 @@ export default function FilesListFolderItemRightClickMenu({
   const onClickNewFolder = async (e: MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     await foldersTable?.create({
-      name: "New Folder",
+      name: t("drawer.newFolderName"),
       parentFolderID: folder.id,
     });
     onRefreshFilesList && onRefreshFilesList();
@@ -52,7 +54,7 @@ export default function FilesListFolderItemRightClickMenu({
     e.stopPropagation();
     const fileCount = await getFileCountInFolder(folder.id);
     showDialog(
-      `Do you want to delete the ${fileCount} files inside the folder too?`,
+      `${t("drawer.deleteFolderConfirmPrefix")}${fileCount}${t("drawer.deleteFolderConfirmSuffix")}`,
       [
         // {
         //   label: "Keep and move to root directory",
@@ -62,7 +64,7 @@ export default function FilesListFolderItemRightClickMenu({
         //   },
         // },
         {
-          label: "Delete all files",
+          label: t("drawer.deleteAllFiles"),
           colorScheme: "red",
           onClick: () => {
             onDelete(EFlowOperationType.DELETE);
@@ -96,22 +98,22 @@ export default function FilesListFolderItemRightClickMenu({
                 setIsRenameOpen(true);
               }}
             >
-              Rename
+              {t("drawer.rename")}
             </MenuItem>
             <MenuItem
               icon={<IconTrash size={19} />}
               onClick={openDeleteConfirm}
             >
-              Delete
+              {t("drawer.delete")}
             </MenuItem>
             <MenuItem
               onClick={onClickNewFolder}
               icon={<IconFolderPlus size={19} />}
             >
-              New folder
+              {t("drawer.newFolder")}
             </MenuItem>
             <MenuItem onClick={onClickNewFile} icon={<IconPlus size={19} />}>
-              New file
+              {t("drawer.newFile")}
             </MenuItem>
             <ImportFlowsFileInput
               parentFolderID={folder.id}

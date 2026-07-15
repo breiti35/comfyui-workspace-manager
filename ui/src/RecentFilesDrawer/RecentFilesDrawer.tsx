@@ -40,6 +40,7 @@ import ImportFlowsFileInput from "./ImportFlowsFileInput";
 import ItemsList from "./ItemsList";
 import { DRAWER_Z_INDEX } from "../const";
 import { app } from "../utils/comfyapp";
+import { useT } from "../i18n/LanguageContext";
 
 type Props = {
   onClose: () => void;
@@ -47,6 +48,7 @@ type Props = {
 };
 
 export default function RecentFilesDrawer({ onClose, onClickNewFlow }: Props) {
+  const { t } = useT();
   const [currentRenderingData, setCurrentRenderingData] = useState<
     Array<Folder | Workflow>
   >([]);
@@ -67,6 +69,21 @@ export default function RecentFilesDrawer({ onClose, onClickNewFlow }: Props) {
       ESortTypes.RECENTLY_MODIFIED,
   );
   const isFilter = !!selectedTag || !!debounceSearchValue.length;
+
+  const sortTypeLabel = (type: ESortTypes) => {
+    switch (type) {
+      case ESortTypes.RECENTLY_MODIFIED:
+        return t("drawer.sort.newest");
+      case ESortTypes.OLDEST_MODIFIED:
+        return t("drawer.sort.oldest");
+      case ESortTypes.AZ:
+        return t("drawer.sort.az");
+      case ESortTypes.ZA:
+        return t("drawer.sort.za");
+      default:
+        return type;
+    }
+  };
 
   const loadLatestWorkflows = async () => {
     const curFolderContent = (await workflowsTable?.listFolderContent()) ?? [];
@@ -227,22 +244,22 @@ export default function RecentFilesDrawer({ onClose, onClickNewFlow }: Props) {
               gap={1.5}
               noOfLines={1}
             >
-              <span>🦄</span> Workspace
+              <span>🦄</span> {t("drawer.title")}
             </Heading>
             <HStack gap={1} flexShrink={0}>
               <ImportFlowsFileInput />
-              <Tooltip label="Open workspace save directory">
+              <Tooltip label={t("drawer.openSaveDir")}>
                 <IconButton
-                  aria-label="Open workspace save directory"
+                  aria-label={t("drawer.openSaveDir")}
                   size={"sm"}
                   icon={<IconFolder size={18} />}
                   variant={"ghost"}
                   onClick={() => openWorkflowsFolder()}
                 />
               </Tooltip>
-              <Tooltip label="New workflow">
+              <Tooltip label={t("drawer.newWorkflow")}>
                 <IconButton
-                  aria-label="New workflow"
+                  aria-label={t("drawer.newWorkflow")}
                   size={"sm"}
                   icon={<IconPlus size={18} />}
                   variant={"ghost"}
@@ -276,18 +293,22 @@ export default function RecentFilesDrawer({ onClose, onClickNewFlow }: Props) {
                   batchOperationCallback={batchOperationCallback}
                 />
                 {!multipleState && (
-                  <Tooltip hasArrow label="New folder" placement="bottom-start">
+                  <Tooltip
+                    hasArrow
+                    label={t("drawer.newFolder")}
+                    placement="bottom-start"
+                  >
                     <IconButton
                       size={"sm"}
                       variant={"ghost"}
                       icon={<IconFolderPlus size={18} />}
                       onClick={async () => {
                         await foldersTable?.create({
-                          name: "New Folder",
+                          name: t("drawer.newFolderName"),
                         });
                         loadLatestWorkflows();
                       }}
-                      aria-label="new folder button"
+                      aria-label={t("drawer.newFolder")}
                     />
                   </Tooltip>
                 )}
@@ -301,7 +322,7 @@ export default function RecentFilesDrawer({ onClose, onClickNewFlow }: Props) {
                   fontWeight={500}
                   rightIcon={<IconChevronDown size="14" />}
                 >
-                  {sortTypeRef.current}
+                  {sortTypeLabel(sortTypeRef.current)}
                 </MenuButton>
                 <MenuList>
                   <MenuOptionGroup
@@ -316,7 +337,7 @@ export default function RecentFilesDrawer({ onClose, onClickNewFlow }: Props) {
                       ESortTypes.ZA,
                     ].map((sortType, index) => (
                       <MenuItemOption key={index} value={sortType}>
-                        {sortType}
+                        {sortTypeLabel(sortType)}
                       </MenuItemOption>
                     ))}
                   </MenuOptionGroup>

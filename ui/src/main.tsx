@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { ColorModeScript, type StyleFunctionProps } from "@chakra-ui/react";
 import { ChakraProvider, extendTheme } from "@chakra-ui/react";
 import { AlertDialogProvider } from "./components/AlertDialogProvider.tsx";
+import { LanguageProvider } from "./i18n/LanguageContext.tsx";
 import CSSReset from "./MyCSSReset.tsx";
 import { waitForApp } from "./utils/comfyapp.ts";
 
@@ -130,11 +131,13 @@ waitForDocumentBody()
         >
           <CSSReset scope=".workspace_manager" />
           <ColorModeScript initialColorMode="dark" />
-          <AlertDialogProvider>
-            <Suspense>
-              <App />
-            </Suspense>
-          </AlertDialogProvider>
+          <LanguageProvider>
+            <AlertDialogProvider>
+              <Suspense>
+                <App />
+              </Suspense>
+            </AlertDialogProvider>
+          </LanguageProvider>
         </ChakraProvider>
       </React.StrictMode>,
     );

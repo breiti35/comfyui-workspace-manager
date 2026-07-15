@@ -3,11 +3,13 @@ import { useState, useEffect } from "react";
 import { userSettingsTable } from "../db-tables/WorkspaceDB";
 import { useDialog } from "../components/AlertDialogProvider";
 import EnableTwowaySyncConfirm from "./EnableTwowaySyncConfirm";
+import { useT } from "../i18n/LanguageContext";
 
 export default function TwoWaySyncSettings() {
   const [checked, setChecked] = useState(false);
   const [savingDir, setSavingDir] = useState("");
   const { showDialog } = useDialog();
+  const { t } = useT();
   const getTwoWaySync = () => {
     userSettingsTable?.getSetting("myWorkflowsDir").then((res) => {
       setSavingDir(res ?? "undefined");
@@ -35,7 +37,7 @@ export default function TwoWaySyncSettings() {
       />,
       [
         {
-          label: "I have downloaded all my workflows and ready to enable",
+          label: t("sync.confirmButton"),
           onClick: async () => {
             await userSettingsTable?.upsert({ twoWaySync: true });
             getTwoWaySync();
@@ -49,16 +51,12 @@ export default function TwoWaySyncSettings() {
   return (
     <Stack>
       <Text fontSize="sm" color="gray.400">
-        Keeps your workflows saved as real files in the folder above (see
-        "Storage Location"), so they also show up in File Explorer / Finder.
-        New installs enable this automatically; this toggle is only here for
-        older installs that haven't switched over yet.
+        {t("sync.description")}
         <br />
-        ⛔️ Once this is on, leave it on - turning it back off can make
-        workflows that only exist on disk disappear from your list.
+        {t("sync.warning")}
       </Text>
       <Checkbox isChecked={checked} onChange={onTwoWaySyncChange}>
-        Enable two way sync
+        {t("sync.enableLabel")}
       </Checkbox>
     </Stack>
   );

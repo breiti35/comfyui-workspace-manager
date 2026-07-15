@@ -34,7 +34,7 @@ import { api, app } from "./utils/comfyapp";
 import { fetchApi } from "./Api";
 import { serverInfo } from "./utils/OsPathUtils";
 import { startPreviewImageCapture } from "./gallery/previewImageStore";
-import { LanguageProvider } from "./i18n/LanguageContext";
+import { useT } from "./i18n/LanguageContext";
 
 export default function App() {
   const [curFlowName, setCurFlowName] = useState<string | null>(null);
@@ -48,6 +48,7 @@ export default function App() {
   const [loadChild, setLoadChild] = useState(false);
   const developmentEnvLoadFirst = useRef(false);
   const toast = useToast();
+  const { t } = useT();
   const [curVersion, setCurVersion] = useStateRef<WorkflowVersion | null>(null);
   const saveCurWorkflow = useCallback(async (force = false) => {
     const curWorkflow = workflowsTable?.curWorkflow;
@@ -76,26 +77,31 @@ export default function App() {
   }, []);
 
   const discardUnsavedChanges = async () => {
-    const userInput = confirm(
-      "Are you sure you want to discard unsaved changes? This will revert current workflow to your last saved version. You will lose all changes made since your last save.",
-    );
-
-    if (userInput) {
-      // User clicked OK
-      const curID = workflowsTable?.curWorkflow?.id;
-      if (curID == null) return;
-      const lastSavedJson = (await workflowsTable?.get(curID))?.json;
-      if (lastSavedJson) {
-        workflowsTable?.updateCurWorkflow({
-          ...workflowsTable.curWorkflow!,
-          json: lastSavedJson,
-        });
-        await app.loadGraphData(JSON.parse(lastSavedJson));
-        setIsDirty(false);
-      } else {
-        alert("Error: No last saved version found");
-      }
-    }
+    showDialog(t("app.discardConfirm.text"), [
+      {
+        label: t("app.discardConfirm.confirm"),
+        colorScheme: "red",
+        onClick: async () => {
+          const curID = workflowsTable?.curWorkflow?.id;
+          if (curID == null) return;
+          const lastSavedJson = (await workflowsTable?.get(curID))?.json;
+          if (lastSavedJson) {
+            workflowsTable?.updateCurWorkflow({
+              ...workflowsTable.curWorkflow!,
+              json: lastSavedJson,
+            });
+            await app.loadGraphData(JSON.parse(lastSavedJson));
+            setIsDirty(false);
+          } else {
+            toast({
+              title: t("app.discardConfirm.noSavedVersion"),
+              status: "error",
+              duration: 3000,
+            });
+          }
+        },
+      },
+    ]);
   };
 
   const setCurFlowIDAndName = (workflow: Workflow | null) => {
@@ -386,7 +392,6 @@ export default function App() {
   }
 
   return (
-    <LanguageProvider>
     <WorkspaceContext.Provider
       value={{
         curFlowID: flowID,
@@ -438,6 +443,5 @@ export default function App() {
         </Portal>
       </div>
     </WorkspaceContext.Provider>
-    </LanguageProvider>
   );
 }
