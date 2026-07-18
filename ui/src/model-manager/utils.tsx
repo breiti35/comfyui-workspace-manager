@@ -64,3 +64,22 @@ export function formatCount(n?: number): string {
   if (n >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, "") + "k";
   return String(n);
 }
+
+// Download throughput, e.g. 12_500_000 -> "11.9 MB/s".
+export function formatSpeed(bytesPerSec?: number): string {
+  if (!bytesPerSec || bytesPerSec <= 0) return "";
+  const mb = bytesPerSec / (1024 * 1024);
+  if (mb >= 1) return `${mb.toFixed(1)} MB/s`;
+  return `${(bytesPerSec / 1024).toFixed(0)} KB/s`;
+}
+
+// Remaining time, e.g. 95 -> "1:35", 3720 -> "1:02:00".
+export function formatEta(seconds?: number): string {
+  if (seconds == null || !isFinite(seconds) || seconds < 0) return "";
+  const s = Math.round(seconds);
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return h > 0 ? `${h}:${pad(m)}:${pad(sec)}` : `${m}:${pad(sec)}`;
+}

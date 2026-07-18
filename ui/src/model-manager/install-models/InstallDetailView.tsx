@@ -2,6 +2,7 @@ import {
   Badge,
   Box,
   Button,
+  CircularProgress,
   Flex,
   Heading,
   HStack,
@@ -32,7 +33,8 @@ import {
 } from "../api/civitDetailApi";
 import { getCivitModelPageUrl } from "../../utils/civitUtils";
 import { userSettingsTable } from "../../db-tables/WorkspaceDB";
-import { KBtoGB, hideScrollbarSx } from "../utils";
+import { KBtoGB, hideScrollbarSx, formatSpeed, formatEta } from "../utils";
+import type { DownloadStat } from "./InstallModelsModal";
 import { getFileEssential } from "./util/modelTypes";
 import {
   ImageMeta,
@@ -46,6 +48,7 @@ interface InstallDetailViewProps {
   model: CivitiModel;
   installedVersionIds: Set<string>;
   installingNames: string[];
+  statForName: (fileName?: string) => DownloadStat | undefined;
   onInstallVersion: (version: CivitiModelVersion, model: CivitiModel) => void;
   onBack: () => void;
 }
@@ -54,6 +57,7 @@ export default function InstallDetailView({
   model,
   installedVersionIds,
   installingNames,
+  statForName,
   onInstallVersion,
   onBack,
 }: InstallDetailViewProps) {
@@ -250,6 +254,8 @@ export default function InstallDetailView({
                   const busy = fileName
                     ? installingNames.includes(fileName)
                     : false;
+                  const stat = fileName ? statForName(fileName) : undefined;
+                  const progress = stat?.progress;
                   return (
                     <Flex
                       key={v.id}
@@ -295,13 +301,35 @@ export default function InstallDetailView({
                         >
                           {t("install.detail.versionInstalled")}
                         </Badge>
+                      ) : busy ? (
+                        <HStack gap={2} flexShrink={0}>
+                          <CircularProgress
+                            value={progress ?? 0}
+                            isIndeterminate={progress == null}
+                            size={"22px"}
+                            color={"blue.400"}
+                          />
+                          <Box minW={"96px"}>
+                            <Text fontSize={"xs"} color={"gray.300"}>
+                              {progress != null
+                                ? `${progress.toFixed(0)}%`
+                                : ""}
+                            </Text>
+                            {(stat?.speed || stat?.eta != null) && (
+                              <Text fontSize={"11px"} color={"gray.500"}>
+                                {[formatSpeed(stat?.speed), formatEta(stat?.eta)]
+                                  .filter(Boolean)
+                                  .join(" · ")}
+                              </Text>
+                            )}
+                          </Box>
+                        </HStack>
                       ) : (
                         <Button
                           size={"xs"}
                           colorScheme={"blue"}
                           leftIcon={<IconDownload size={14} />}
                           flexShrink={0}
-                          isDisabled={busy}
                           onClick={(e) => {
                             e.stopPropagation();
                             onInstallVersion(v, model);

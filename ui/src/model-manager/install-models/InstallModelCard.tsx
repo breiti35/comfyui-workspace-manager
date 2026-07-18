@@ -16,14 +16,15 @@ import { findImageFromModel } from "../../utils/findSfwImage";
 import { civitThumbUrl } from "../api/civitDetailApi";
 import { userSettingsTable } from "../../db-tables/WorkspaceDB";
 import { useInView } from "../hooks/useInView";
-import { formatCount } from "../utils";
+import { formatCount, formatSpeed, formatEta } from "../utils";
 import { NSFW_BLUR_FILTER } from "../components/CivitDetailShared";
+import type { DownloadStat } from "./InstallModelsModal";
 import { useT } from "../../i18n/LanguageContext";
 
 interface InstallModelCardProps {
   model: CivitiModel;
   installed: boolean;
-  progress?: number;
+  stat?: DownloadStat;
   installing: boolean;
   onQuickInstall: (model: CivitiModel) => void;
   onOpenDetail: (model: CivitiModel) => void;
@@ -32,7 +33,7 @@ interface InstallModelCardProps {
 export default function InstallModelCard({
   model,
   installed,
-  progress,
+  stat,
   installing,
   onQuickInstall,
   onOpenDetail,
@@ -45,7 +46,8 @@ export default function InstallModelCard({
   const picked = useMemo(() => findImageFromModel(model, 450), [model]);
   const baseModel = model.modelVersions?.[0]?.baseModel;
   const blurred = picked.isNsfw && !showNsfw && !revealed;
-  const downloading = progress != null || installing;
+  const progress = stat?.progress;
+  const downloading = stat != null || installing;
 
   useEffect(() => {
     const update = () => {
@@ -228,6 +230,13 @@ export default function InstallModelCard({
               <Text color={"white"} fontSize={"sm"}>
                 {progress.toFixed(0)}%
               </Text>
+              {(stat?.speed || stat?.eta != null) && (
+                <Text color={"whiteAlpha.800"} fontSize={"xs"}>
+                  {[formatSpeed(stat?.speed), formatEta(stat?.eta)]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </Text>
+              )}
             </>
           ) : (
             <Spinner color={"blue.400"} />

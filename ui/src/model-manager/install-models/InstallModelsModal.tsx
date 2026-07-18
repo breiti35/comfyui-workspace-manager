@@ -44,7 +44,21 @@ interface Props {
   modelType?: MODEL_TYPE;
 }
 
-type ProgressEntry = { save_path: string; progress: number };
+type ProgressEntry = {
+  save_path: string;
+  progress: number;
+  speed?: number;
+  downloaded?: number;
+  total?: number;
+};
+
+// What a download card/row needs to render: percent + (optional) live speed
+// and estimated time remaining.
+export type DownloadStat = {
+  progress: number;
+  speed?: number;
+  eta?: number;
+};
 
 const basename = (p: string) => p.replace(/^.*[\\/]/, "");
 
@@ -227,10 +241,15 @@ export default function InstallModelsModal({
     };
   }, []);
 
-  const progressForFile = (fileName?: string): number | undefined => {
+  const statForFile = (fileName?: string): DownloadStat | undefined => {
     if (!fileName) return undefined;
     const entry = progressQueue.find((q) => basename(q.save_path) === fileName);
-    return entry?.progress;
+    if (!entry) return undefined;
+    const eta =
+      entry.total && entry.speed && entry.speed > 0
+        ? (entry.total - (entry.downloaded ?? 0)) / entry.speed
+        : undefined;
+    return { progress: entry.progress, speed: entry.speed, eta };
   };
 
   const doDownload = async (
@@ -326,6 +345,7 @@ export default function InstallModelsModal({
                   model={detailItem}
                   installedVersionIds={installedVersionIds}
                   installingNames={installing}
+                  statForName={statForFile}
                   onInstallVersion={installVersion}
                   onBack={() => setDetailItem(null)}
                 />
@@ -371,7 +391,7 @@ export default function InstallModelsModal({
                           key={model.id}
                           model={model}
                           installed={installedModelIds.has(String(model.id))}
-                          progress={progressForFile(latestFile?.name)}
+                          stat={statForFile(latestFile?.name)}
                           installing={
                             latestFile?.name
                               ? installing.includes(latestFile.name)
