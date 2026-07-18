@@ -1,5 +1,6 @@
 import { userSettingsTable } from "../db-tables/WorkspaceDB";
 import { indexdb } from "../db-tables/indexdb";
+import { fetchApi } from "../Api";
 
 const CIVIT_API_KEY_STORAGE_KEY = "WORKSPACE_CIVIT_API_KEY_STORAGE_KEY";
 export function getCivitApiKey() {
@@ -189,6 +190,69 @@ export async function fetchCivitModelFromHashKey(
       data: result,
       timestamp: Date.now(),
       failed: result.civitModelID == null,
+    }),
+  });
+  return result;
+}
+
+/**
+ * CivArchive fallback: for a file hash Civitai doesn't know (deleted models,
+ * or models mirrored from another platform), our Python backend scrapes
+ * civitaiarchive.com/sha256/<hash> and returns a preview image + basic model
+ * info. Purely SHA256-based, so it works across every platform CivArchive
+ * indexes (CivitAI, HuggingFace, TensorArt, ...). Cached in indexdb (successes
+ * long, misses short) so a big grid doesn't re-hit the backend on every mount.
+ */
+export interface CivArchiveResult {
+  imageUrl?: string;
+  modelName?: string;
+  modelType?: string;
+  nsfwLevel?: number;
+  source?: string;
+  sourceModelId?: string;
+  sourceModelVersionId?: string;
+}
+
+const CIVARCHIVE_CACHE_PREFIX = "civarchive-hash-lookup:v1:";
+const CIVARCHIVE_SUCCESS_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const CIVARCHIVE_FAILURE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
+
+export async function fetchCivArchiveByHash(
+  filehash: string,
+): Promise<CivArchiveResult> {
+  const cacheKey = `${CIVARCHIVE_CACHE_PREFIX}${filehash}`;
+  const cached = await indexdb.cache?.get(cacheKey);
+  if (cached?.value != null) {
+    try {
+      const { data, timestamp, failed } = JSON.parse(cached.value);
+      const ttlMs = failed
+        ? CIVARCHIVE_FAILURE_TTL_MS
+        : CIVARCHIVE_SUCCESS_TTL_MS;
+      if (Date.now() - timestamp < ttlMs) {
+        return data as CivArchiveResult;
+      }
+    } catch (e) {
+      // fall through and re-fetch
+    }
+  }
+
+  let result: CivArchiveResult = {};
+  try {
+    const resp = await fetchApi(
+      `/model_manager/civarchive_by_hash?hash=${encodeURIComponent(filehash)}`,
+    );
+    if (resp.ok) {
+      result = (await resp.json()) as CivArchiveResult;
+    }
+  } catch (e) {
+    // network/backend error - cache as a short-TTL miss below.
+  }
+  await indexdb.cache?.put({
+    id: cacheKey,
+    value: JSON.stringify({
+      data: result,
+      timestamp: Date.now(),
+      failed: !result.imageUrl,
     }),
   });
   return result;

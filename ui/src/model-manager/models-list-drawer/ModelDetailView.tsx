@@ -32,7 +32,11 @@ import {
   getCivitVersionImages,
   type CivitImageWithMeta,
 } from "../api/civitDetailApi";
-import { getCivitModelPageUrl } from "../../utils/civitUtils";
+import {
+  fetchCivArchiveByHash,
+  getCivitModelPageUrl,
+  type CivArchiveResult,
+} from "../../utils/civitUtils";
 import { userSettingsTable } from "../../db-tables/WorkspaceDB";
 import { KBtoGB, hideScrollbarSx } from "../utils";
 import {
@@ -407,12 +411,29 @@ export default function ModelDetailView({ data, onBack }: Props) {
 
 function FallbackLocalInfo({ data }: { data: ModelsListRespItem }) {
   const { t } = useT();
+  const [archive, setArchive] = useState<CivArchiveResult>();
+
+  // Civitai has nothing for this file - see if CivArchive (SHA256 mirror,
+  // any platform) has a preview image and basic model info to show.
+  useEffect(() => {
+    let cancelled = false;
+    if (!data.file_hash) return;
+    fetchCivArchiveByHash(data.file_hash).then((res) => {
+      if (!cancelled) setArchive(res);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [data.file_hash]);
+
+  const coverUrl = data.preview ?? archive?.imageUrl;
+
   return (
     <Box flex={1} minH={0} overflowY={"auto"} p={4}>
       <Flex gap={4} align={"flex-start"} wrap={"wrap"}>
-        {data.preview && (
+        {coverUrl && (
           <Image
-            src={data.preview}
+            src={coverUrl}
             w={"220px"}
             borderRadius={"md"}
             objectFit={"cover"}
@@ -436,6 +457,42 @@ function FallbackLocalInfo({ data }: { data: ModelsListRespItem }) {
               {data.date.toLocaleDateString()}
             </Text>
           </Stack>
+          {archive?.imageUrl && (archive.modelName || archive.source) && (
+            <Text fontSize={"sm"} color={"gray.400"} mt={3}>
+              <b>{t("models.civArchive.foundAs")}</b>{" "}
+              {[
+                archive.modelName,
+                archive.source ? `(${archive.source})` : undefined,
+              ]
+                .filter(Boolean)
+                .join(" ")}
+            </Text>
+          )}
+          {/* CivArchive keeps a SHA256-based archive of models that were
+              removed from Civitai. When we have the file hash but Civitai
+              returned nothing, offer a one-click lookup there. */}
+          {data.file_hash && (
+            <Box mt={4}>
+              <Text fontSize={"xs"} color={"gray.500"} mb={2}>
+                {t("models.civArchive.help")}
+              </Text>
+              <Button
+                size={"sm"}
+                variant={"outline"}
+                colorScheme={"blue"}
+                leftIcon={<IconExternalLink size={15} />}
+                onClick={() =>
+                  window.open(
+                    `https://civitaiarchive.com/sha256/${data.file_hash}`,
+                    "_blank",
+                    "noopener,noreferrer",
+                  )
+                }
+              >
+                {t("models.civArchive.button")}
+              </Button>
+            </Box>
+          )}
         </Box>
       </Flex>
     </Box>

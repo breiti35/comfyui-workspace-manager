@@ -23,6 +23,7 @@ import {
   IconWorld,
 } from "@tabler/icons-react";
 import {
+  fetchCivArchiveByHash,
   fetchCivitModelFromHashKey,
   getCivitModelPageUrl,
   isNsfwBlurEligibleCategory,
@@ -116,19 +117,20 @@ export function ModelItem({ data, onOpenDetail }: Props) {
 
   const getThumbnail = async () => {
     const nsfwEligible = isNsfwBlurEligibleCategory(data.model_type);
+    let resolvedUrl: string | undefined;
     const m = await indexdb.models.get(
       data.model_name + "@" + data.model_type,
     );
     if (m != null) {
       setModel(m);
-      m.imageUrl?.length && setUrl(m.imageUrl);
+      if (m.imageUrl?.length) resolvedUrl = m.imageUrl;
       setIsNsfw(nsfwEligible && (m.imageIsNsfw ?? false));
     }
-    if (!m?.imageUrl && data.file_hash != null) {
+    if (!resolvedUrl && data.file_hash != null) {
       try {
         const json = await fetchCivitModelFromHashKey(data.file_hash);
         const image_url = json.imageUrl;
-        image_url && setUrl(image_url);
+        if (image_url) resolvedUrl = image_url;
         const imageIsNsfw = nsfwEligible && (json.imageIsNsfw ?? false);
         setIsNsfw(imageIsNsfw);
 
@@ -149,7 +151,17 @@ export function ModelItem({ data, onOpenDetail }: Props) {
         setModel(newModel);
       } catch (e) {}
     }
-    if (data.preview) setUrl(data.preview);
+    // A user's own local preview file beats a remote thumbnail.
+    if (data.preview) resolvedUrl = data.preview;
+    // Last resort: models Civitai doesn't know (deleted, or mirrored from
+    // another platform) - fill the card from CivArchive's SHA256 mirror.
+    if (!resolvedUrl && data.file_hash != null) {
+      try {
+        const arch = await fetchCivArchiveByHash(data.file_hash);
+        if (arch.imageUrl) resolvedUrl = arch.imageUrl;
+      } catch (e) {}
+    }
+    if (resolvedUrl) setUrl(resolvedUrl);
   };
 
   const handleDragStart = (e: DragEvent<HTMLDivElement>) => {

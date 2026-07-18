@@ -20,9 +20,11 @@ dann Mittelgroßes, zuletzt der große Brocken. Nummerierung = geplante Reihenfo
    - Rest-Notiz (offen, klein): kosmetischer Ein-Frame-Flash im Settings-Panel
      (`adultOn` async); reine `.ts`-Dateien ohne Hook-Zugriff bleiben englisch.
 
-3. **Trigger-Words auf der Modell-Detailseite** *(Flagship, hoher Nutzen)*
-   - Civitai `trainedWords` am Modell (Models/Install-Detail) anzeigen +
-     Ein-Klick-Kopieren/Einfügen. Killer-Feature des LoRA Managers.
+3. **Trigger-Words auf der Modell-Detailseite** *(Flagship, hoher Nutzen)* ✅ **fertig**
+   - Civitai `trainedWords` am Modell werden in BEIDEN Detailansichten
+     (`ModelDetailView.tsx` + `InstallDetailView.tsx`) als anklickbare Tags
+     mit Ein-Klick-Kopieren (`IconCopy` + Toast) angezeigt. War bereits beim
+     Bau der Panels miterledigt. Killer-Feature des LoRA Managers ✓.
 
 4. **Galerie-Suche über echte Metadaten + Favoriten/Bewertung**
    - Suche nach Prompt / Modell / LoRA (statt nur Dateiname + rohes JSON).
@@ -44,13 +46,25 @@ dann Mittelgroßes, zuletzt der große Brocken. Nummerierung = geplante Reihenfo
 9. **Workflow-Liste (RecentFilesDrawer) aufs reiche Karten-Muster heben**
    - Reichere Vorschau-Karten, bessere Ordner/Interaktion.
 
-10. **CivArchive-Fallback für gelöschte Modelle** *(vom User gewünscht, klein)*
-    - Wo Civitai nichts (mehr) findet (404 bei Hash-Lookup/Detail): Button
-      „Auf CivArchive suchen" → öffnet `civitaiarchive.com/sha256/<SHA256>`
-      im Browser. Kein API nötig. (Weitergehend später: HuggingFace-Direktlinks
-      in „Eigene URL" einspeisen; Metadaten-Import via Backend.)
+10. **CivArchive-Fallback für gelöschte Modelle** ✅ **fertig**
+    - Button „Auf CivArchive suchen" im „Nicht-auf-Civitai"-Fallback (öffnet
+      `civitaiarchive.com/sha256/<SHA256>`). **Plus:** leere Karten gelöschter
+      Modelle werden mit dem Archiv-Vorschaubild gefüllt — Backend-Route
+      `/model_manager/civarchive_by_hash` (`service/model_manager/civarchive.py`)
+      liest `meta.image` + Modellinfos aus CivArchives `__NEXT_DATA__`,
+      plattformübergreifend (CivitAI/HuggingFace/…), gecacht. Frontend:
+      `fetchCivArchiveByHash` in `civitUtils.ts`, genutzt in `ModelItem` +
+      `ModelDetailView`.
 
-11. **Recipe-System** *(groß, zuletzt)*
+11. **Download beschleunigen** ✅ **fertig** *(vom User gewünscht)*
+    - Segmentierter Multi-Connection-Download (6 Range-Segmente parallel, mit
+      Range-Erkennung + Einzel-Stream-Fallback), Chunk-Größe 1 KB → 1 MB.
+      Wichtig: finale URL OHNE Range auflösen (HF-CDN signiert sonst auf den
+      Range). Fortschritt zeigt jetzt Tempo (MB/s) + ETA, auch in der
+      Detailansicht. Alles in `service/model_manager/model_installer.py` +
+      Install-Frontend.
+
+12. **Recipe-System** *(groß, zuletzt)*
     - Aus einem Civitai-Bild alle LoRAs + Gewichte ziehen und als wiederverwendbares
       Rezept speichern/anwenden.
 

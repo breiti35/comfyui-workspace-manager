@@ -155,6 +155,10 @@ const en = {
   "models.detail.noExampleImages": "No example images available.",
   "models.detail.notFoundOnCivitai":
     "Not found on Civitai – only local info available.",
+  "models.civArchive.help":
+    "Removed from Civitai? CivArchive keeps a SHA256-based archive of deleted models.",
+  "models.civArchive.button": "Search on CivArchive",
+  "models.civArchive.foundAs": "Found on CivArchive:",
   "models.detail.fileLabel": "File:",
   "models.detail.typeLabel": "Type:",
   "models.detail.modifiedLabel": "Modified:",
@@ -472,6 +476,10 @@ const de: Record<TransKey, string> = {
   "models.detail.noExampleImages": "Keine Beispielbilder verfügbar.",
   "models.detail.notFoundOnCivitai":
     "Nicht auf Civitai gefunden – nur lokale Infos verfügbar.",
+  "models.civArchive.help":
+    "Nicht (mehr) auf Civitai? CivArchive führt ein SHA256-basiertes Archiv entfernter Modelle.",
+  "models.civArchive.button": "Auf CivArchive suchen",
+  "models.civArchive.foundAs": "Im CivArchive gefunden:",
   "models.detail.fileLabel": "Datei:",
   "models.detail.typeLabel": "Typ:",
   "models.detail.modifiedLabel": "Geändert:",
