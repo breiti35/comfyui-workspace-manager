@@ -6,14 +6,18 @@ import {
   AccordionItem,
   AccordionPanel,
   Box,
+  Button,
   Flex,
   HStack,
   IconButton,
   Text,
   Tooltip,
+  useToast,
 } from "@chakra-ui/react";
-import { IconCheck, IconCopy } from "@tabler/icons-react";
+import { IconBookmark, IconCheck, IconCopy } from "@tabler/icons-react";
 import { PromptNodeInputItem } from "./MetaBox/utils.ts";
+import { Media } from "../../types/dbTypes.ts";
+import { addPrompt, autoName } from "../../prompt-library/promptsStore";
 import { useT } from "../../i18n/LanguageContext";
 
 const fmt = (v: any): string =>
@@ -139,10 +143,14 @@ function PromptBlock({ label, text }: { label: string; text: string }) {
 // in a collapsed accordion - all display-only, no fake-editable controls.
 export default function GalleryParams({
   inputList,
+  media,
 }: {
   inputList: PromptNodeInputItem[];
+  media?: Media | null;
 }) {
   const { t } = useT();
+  const toast = useToast();
+  const [saved, setSaved] = useState(false);
   const essentials = useMemo(() => {
     const model = pick(inputList, /checkpoint|unet|diffusionmodel/i, [
       "ckpt_name",
@@ -238,8 +246,58 @@ export default function GalleryParams({
     essentials.negative !== "" ||
     essentials.generic.length > 0;
 
+  // One-click save into the prompt library. Auto-titled from the prompt so no
+  // dialog is needed - name and tags can be edited later in the library panel.
+  const saveToLibrary = async () => {
+    const positive = essentials.generic.length
+      ? essentials.generic.join("\n")
+      : essentials.positive;
+    const created = await addPrompt({
+      name: autoName(positive),
+      positive,
+      negative: essentials.negative,
+      model: essentials.model ? fmt(essentials.model) : undefined,
+      loras: essentials.loras,
+      sampler: essentials.sampler ? fmt(essentials.sampler) : undefined,
+      scheduler: essentials.scheduler ? fmt(essentials.scheduler) : undefined,
+      steps: essentials.steps != null ? fmt(essentials.steps) : undefined,
+      cfg: essentials.cfg != null ? fmt(essentials.cfg) : undefined,
+      seed: essentials.seed != null ? fmt(essentials.seed) : undefined,
+      size:
+        essentials.width && essentials.height
+          ? `${fmt(essentials.width)} × ${fmt(essentials.height)}`
+          : undefined,
+      tags: [],
+      thumbnail: media?.localPath,
+    });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 1600);
+    toast({
+      title: t("prompts.savedToast"),
+      description: created.name,
+      status: "success",
+      duration: 2200,
+    });
+  };
+
   return (
     <Flex direction={"column"} gap={3}>
+      {hasPrompt && (
+        <Flex justify={"flex-end"}>
+          <Button
+            size={"xs"}
+            variant={"outline"}
+            colorScheme={"blue"}
+            leftIcon={
+              saved ? <IconCheck size={14} /> : <IconBookmark size={14} />
+            }
+            onClick={saveToLibrary}
+          >
+            {saved ? t("prompts.saved") : t("prompts.saveToLibrary")}
+          </Button>
+        </Flex>
+      )}
+
       {essentials.model && (
         <Section title={t("gallery.section.model")}>
           <Text fontSize={"sm"} fontFamily={"mono"} wordBreak={"break-word"}>

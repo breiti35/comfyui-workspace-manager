@@ -64,9 +64,19 @@ dann Mittelgroßes, zuletzt der große Brocken. Nummerierung = geplante Reihenfo
       Detailansicht. Alles in `service/model_manager/model_installer.py` +
       Install-Frontend.
 
-12. **Recipe-System** *(groß, zuletzt)*
+12. **Prompt-Bibliothek** ✅ **fertig** *(vom User gewünscht)*
+    - Eigenes Topbar-Panel (`ui/src/prompt-library/`): Prompts als „Rezept"
+      speichern (Positiv/Negativ + Modell, LoRAs, Sampler/Steps/CFG/Seed/Größe),
+      mit Suche, Tags, Bearbeiten/Löschen. Gespeichert wird aus den
+      Erstellungsdaten eines Bildes/Previews (Button in `GalleryParams`) oder
+      manuell. Persistenz serverseitig als `db/prompts.json` über die
+      bestehenden `save_db`/`get_db`-Routen — **kein neuer Backend-Code**;
+      `db/` ist gitignoriert (reine Nutzerdaten).
+
+13. **Recipe-System** *(groß, zuletzt)*
     - Aus einem Civitai-Bild alle LoRAs + Gewichte ziehen und als wiederverwendbares
-      Rezept speichern/anwenden.
+      Rezept speichern/anwenden. Baut auf der Prompt-Bibliothek (12) auf, die das
+      Rezept-Datenmodell und die Panel-Fläche schon mitbringt.
 
 ## Hinweise
 - Vorbilder der Feature-Ideen: LoRA Manager (`willmiao/ComfyUI-Lora-Manager`),

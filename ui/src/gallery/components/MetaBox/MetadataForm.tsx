@@ -39,5 +39,5 @@ export default function MetadataForm({ media }: { media: Media | null }) {
     setCalcInputList(calcInputListRecursive(imagePrompt));
   }, [imagePrompt]);
 
-  return <GalleryParams inputList={calcInputList} />;
+  return <GalleryParams inputList={calcInputList} media={media} />;
 }

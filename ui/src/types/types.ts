@@ -10,4 +10,5 @@ export type WorkspaceRoute =
   | "downloadSpaceJson"
   | "installModels"
   | "share"
+  | "promptLibrary"
   | "settings";

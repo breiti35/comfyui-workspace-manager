@@ -1,6 +1,7 @@
 import { Button, HStack, IconButton, Tooltip } from "@chakra-ui/react";
 import Draggable from "../components/Draggable";
 import {
+  IconBook2,
   IconDeviceFloppy,
   IconFolder,
   IconGripVertical,
@@ -34,6 +35,9 @@ const ModelManagerTopbar = lazy(
 const SpotlightSearch = lazy(() => import("../components/SpotlightSearch"));
 const WorkspaceSettingsModal = lazy(
   () => import("../RecentFilesDrawer/WorkspaceSettingsModal"),
+);
+const PromptLibraryModal = lazy(
+  () => import("../prompt-library/PromptLibraryModal"),
 );
 
 interface Props {
@@ -165,6 +169,15 @@ export function Topbar({ curFlowName, setCurFlowName }: Props) {
         )}
         <VersionNameTopbar />
         <AppIsDirtyEventListener />
+        <Tooltip label={t("topbar.promptLibraryTooltip")}>
+          <IconButton
+            onClick={() => setRoute("promptLibrary")}
+            icon={<IconBook2 size={20} color="white" />}
+            size={"sm"}
+            aria-label={t("topbar.promptLibraryAria")}
+            variant={"ghost"}
+          />
+        </Tooltip>
         <Tooltip label={t("topbar.settingsTooltip")}>
           <IconButton
             onClick={() => setRoute("settings")}
@@ -187,6 +200,11 @@ export function Topbar({ curFlowName, setCurFlowName }: Props) {
         {route === "settings" && (
           <Suspense fallback={null}>
             <WorkspaceSettingsModal onClose={() => setRoute("root")} />
+          </Suspense>
+        )}
+        {route === "promptLibrary" && (
+          <Suspense fallback={null}>
+            <PromptLibraryModal onClose={() => setRoute("root")} />
           </Suspense>
         )}
       </HStack>
