@@ -9,8 +9,12 @@ import {
   Text,
 } from "@chakra-ui/react";
 import { IconEye, IconEyeOff } from "@tabler/icons-react";
-import { useState } from "react";
-import { getCivitApiKey, setCivitApiKey } from "../utils/civitUtils";
+import { useEffect, useState } from "react";
+import {
+  getCivitApiKey,
+  loadCivitApiKey,
+  setCivitApiKey,
+} from "../utils/civitUtils";
 import { useT } from "../i18n/LanguageContext";
 
 export default function CivitaiApiKeySetting() {
@@ -19,6 +23,16 @@ export default function CivitaiApiKeySetting() {
   const [hasKey, setHasKey] = useState(!!getCivitApiKey());
   const [show, setShow] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  // Make sure the field reflects the persisted (server-side) key, even if the
+  // panel is opened before the startup hydration ran.
+  useEffect(() => {
+    loadCivitApiKey().then(() => {
+      const key = getCivitApiKey();
+      setValue(key ?? "");
+      setHasKey(!!key);
+    });
+  }, []);
 
   const save = () => {
     setCivitApiKey(value.trim());

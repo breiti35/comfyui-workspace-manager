@@ -2,12 +2,49 @@ import { userSettingsTable } from "../db-tables/WorkspaceDB";
 import { indexdb } from "../db-tables/indexdb";
 import { fetchApi } from "../Api";
 
+// The Civitai API key is persisted server-side in db/settings.json (via
+// userSettings), like every other setting - so it survives ComfyUI restarts
+// and moves with the install. It used to live ONLY in browser localStorage,
+// which the ComfyUI desktop app / some browsers drop on restart, so the key
+// kept disappearing. We keep a synchronous in-memory cache (hydrated at startup
+// by loadCivitApiKey) so the existing synchronous getCivitApiKey() callers stay
+// unchanged, and still mirror to localStorage as a same-session fallback.
 const CIVIT_API_KEY_STORAGE_KEY = "WORKSPACE_CIVIT_API_KEY_STORAGE_KEY";
-export function getCivitApiKey() {
-  return localStorage.getItem(CIVIT_API_KEY_STORAGE_KEY);
+let apiKeyCache: string | null = null;
+
+/**
+ * Load the API key from the persistent server-side settings into the sync
+ * cache. Call once at startup (after userSettings is loaded). Also performs a
+ * one-time migration of any pre-existing localStorage key to server-side.
+ */
+export async function loadCivitApiKey(): Promise<void> {
+  try {
+    const fromSettings = await userSettingsTable?.getSetting("civitaiApiKey");
+    if (fromSettings) {
+      apiKeyCache = fromSettings;
+      return;
+    }
+    const legacy = localStorage.getItem(CIVIT_API_KEY_STORAGE_KEY);
+    if (legacy) {
+      apiKeyCache = legacy;
+      await userSettingsTable?.upsert({ civitaiApiKey: legacy });
+    }
+  } catch (e) {
+    // Settings unreachable - fall back to whatever localStorage still holds.
+    apiKeyCache = localStorage.getItem(CIVIT_API_KEY_STORAGE_KEY);
+  }
+}
+
+export function getCivitApiKey(): string | null {
+  // Prefer the hydrated server-side value; fall back to localStorage in case a
+  // read happens before loadCivitApiKey() finished.
+  return apiKeyCache ?? localStorage.getItem(CIVIT_API_KEY_STORAGE_KEY);
 }
 
 export function setCivitApiKey(apiKey: string) {
+  apiKeyCache = apiKey || null;
+  // Persist server-side (the durable store) and mirror to localStorage.
+  userSettingsTable?.upsert({ civitaiApiKey: apiKey });
   localStorage.setItem(CIVIT_API_KEY_STORAGE_KEY, apiKey);
 }
 

@@ -112,6 +112,10 @@ export type UserSettings = {
    * Civitai's April 2026 domain split). Defaults to SFW-only.
    */
   civitaiIncludeAdultContent?: boolean;
+  // Civitai API key (login token) for downloading gated models. Stored here
+  // (server-side, db/settings.json) rather than browser localStorage so it
+  // survives ComfyUI restarts and moves with the install.
+  civitaiApiKey?: string;
   defaultFolders: Record<MODEL_TYPE, string>;
   maximumChangelogNumber: number;
   hideCoverImage: boolean;

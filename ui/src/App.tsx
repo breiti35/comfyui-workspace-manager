@@ -31,6 +31,7 @@ import { useStateRef } from "./customHooks/useStateRef";
 import { indexdb } from "./db-tables/indexdb";
 import EnableTwowaySyncConfirm from "./settings/EnableTwowaySyncConfirm";
 import { api, app } from "./utils/comfyapp";
+import { loadCivitApiKey } from "./utils/civitUtils";
 import { fetchApi } from "./Api";
 import { serverInfo } from "./utils/OsPathUtils";
 import { startPreviewImageCapture } from "./gallery/previewImageStore";
@@ -135,6 +136,9 @@ export default function App() {
     localStorage.removeItem("comfyspace");
     try {
       await loadDBs();
+      // Hydrate the Civitai API key from server-side settings (and migrate any
+      // legacy localStorage key) now that userSettings is loaded.
+      await loadCivitApiKey();
     } catch (error) {
       console.error("🦄Workspace Manager - Error loading db", error);
     }
