@@ -45,7 +45,13 @@ export function setCivitApiKey(apiKey: string) {
   apiKeyCache = apiKey || null;
   // Persist server-side (the durable store) and mirror to localStorage.
   userSettingsTable?.upsert({ civitaiApiKey: apiKey });
-  localStorage.setItem(CIVIT_API_KEY_STORAGE_KEY, apiKey);
+  if (apiKey) {
+    localStorage.setItem(CIVIT_API_KEY_STORAGE_KEY, apiKey);
+  } else {
+    // Clear rather than storing "" - otherwise getCivitApiKey() would hand
+    // back an empty string instead of null after deleting the key.
+    localStorage.removeItem(CIVIT_API_KEY_STORAGE_KEY);
+  }
 }
 
 /**
