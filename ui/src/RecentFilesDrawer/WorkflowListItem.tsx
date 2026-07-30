@@ -51,7 +51,6 @@ export default memo(function WorkflowListItem({ workflow }: Props) {
           mediaLocalPath={workflow.coverMediaPath ?? workflow.latestImage ?? ""}
           size={40}
           hideBrokenImage
-          isPreview
         />
       )}
       <Box textAlign={"left"} flexGrow={1} minW={0}>

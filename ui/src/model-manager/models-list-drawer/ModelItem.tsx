@@ -29,7 +29,7 @@ import {
   isNsfwBlurEligibleCategory,
 } from "../../utils/civitUtils";
 import { userSettingsTable } from "../../db-tables/WorkspaceDB";
-import { useInView } from "../hooks/useInView";
+import { useInView } from "../../customHooks/useInView";
 import { isModelFavorite, toggleModelFavorite } from "./modelFavorites";
 import { useT } from "../../i18n/LanguageContext";
 

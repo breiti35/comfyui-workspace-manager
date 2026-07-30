@@ -73,6 +73,11 @@ def _install_comfy_stubs():
         fp.folder_names_and_paths = {}
         fp.get_folder_paths = lambda name: []
         fp.models_dir = str(REPO_ROOT / "tests" / "_fake_comfy" / "models")
+        # media_service braucht Output-/Input-Verzeichnis. Defaults zeigen ins
+        # Nirgendwo (_fake_comfy/{output,input} existiert nicht); Tests, die
+        # das brauchen, biegen per monkeypatch auf ein echtes tmp_path um.
+        fp.get_output_directory = lambda: str(REPO_ROOT / "tests" / "_fake_comfy" / "output")
+        fp.get_input_directory = lambda: str(REPO_ROOT / "tests" / "_fake_comfy" / "input")
         sys.modules["folder_paths"] = fp
 
 

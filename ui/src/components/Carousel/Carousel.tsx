@@ -35,6 +35,7 @@ const Carousel: React.FC<CarouselProps> = ({
     return <p>No images found, let's start generating 🪄</p>;
   const item = media.at(currentNum);
   if (!item) return null;
+  const isVideo = !isImageFormat(item.imageUrl);
   return (
     <Flex
       justifyContent="center"
@@ -48,15 +49,21 @@ const Carousel: React.FC<CarouselProps> = ({
         key={item.id}
         style={{
           position: "absolute",
-          cursor: "pointer",
+          // Videos are operated in place via their own controls, so only the
+          // image case behaves as "click to open full size".
+          cursor: isVideo ? "default" : "pointer",
           width: "100%",
           height: "100%",
         }}
-        onClick={() => {
-          window.open(item.imageUrl);
-        }}
+        onClick={
+          isVideo
+            ? undefined
+            : () => {
+                window.open(item.imageUrl);
+              }
+        }
       >
-        {isImageFormat(item.imageUrl) ? (
+        {!isVideo ? (
           <Image
             src={item.imageUrl}
             alt={`image-${item.id}`}
@@ -65,11 +72,15 @@ const Carousel: React.FC<CarouselProps> = ({
             objectFit="contain"
           />
         ) : (
+          // controls matter here: without them there is no way to pause or
+          // seek, and seeking is exactly what the media route's range support
+          // enables. Autoplay stays muted so browsers allow it.
           <video
             style={{ objectFit: "contain" }}
             width={"100%"}
             height={"100%"}
             src={item.imageUrl}
+            controls
             loop={true}
             autoPlay={true}
             muted={true}

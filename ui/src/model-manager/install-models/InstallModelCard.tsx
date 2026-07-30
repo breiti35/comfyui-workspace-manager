@@ -15,7 +15,7 @@ import type { CivitiModel } from "../types";
 import { findImageFromModel } from "../../utils/findSfwImage";
 import { civitThumbUrl } from "../api/civitDetailApi";
 import { userSettingsTable } from "../../db-tables/WorkspaceDB";
-import { useInView } from "../hooks/useInView";
+import { useInView } from "../../customHooks/useInView";
 import { formatCount, formatSpeed, formatEta } from "../utils";
 import { NSFW_BLUR_FILTER } from "../components/CivitDetailShared";
 import type { DownloadStat } from "./InstallModelsModal";

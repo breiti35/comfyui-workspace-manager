@@ -273,6 +273,13 @@ export function isImageFormat(fileName: string) {
   const extension = fileName.split(".").pop();
   return extension != null && imageExtensions.includes(extension);
 }
+// Intentionally narrower than the backend's video_extensions (which also
+// serves .mov/.avi/.mkv with a matching content-type). Those containers are
+// unreliable or unsupported in HTML5 <video> across mainstream browsers, and
+// a decode failure surfaces through the same onError path used for actually
+// missing files - so misclassifying them as playable would silently wipe
+// legitimate gallery entries whenever hideBrokenImage is set. Keep this list
+// to formats that reliably play so onError stays a trustworthy "broken" signal.
 export function isVideoFormat(fileName: string) {
   const videoExtensions = ["mp4", "webm", "ogg"];
   const extension = fileName.split(".").pop();

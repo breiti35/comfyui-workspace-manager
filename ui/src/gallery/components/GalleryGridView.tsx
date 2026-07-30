@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import GalleryMediaItem from "./GalleryMediaItem";
+import GalleryGridTile from "./GalleryGridTile";
 import { Flex, Grid, Text } from "@chakra-ui/react";
 import { IconPhotoOff } from "@tabler/icons-react";
 import type { Media } from "../../types/dbTypes";
@@ -32,8 +32,15 @@ export default function GalleryGridView({ medias }: { medias: Media[] }) {
       gap={4}
       pb={2}
     >
+      {/* Each tile lazily mounts its real content once scrolled near view
+          (see GalleryGridTile) - keeps a large gallery from requesting every
+          media file / mounting every hover-action subtree up front, without
+          changing the grid's layout or scroll height. Keyed by media.id so
+          a freshly generated image landing at the top of this
+          createTime-desc-sorted, freshly-set list doesn't disturb the
+          visibility state of tiles already scrolled into view. */}
       {medias.map((media) => (
-        <GalleryMediaItem
+        <GalleryGridTile
           key={media.id}
           media={media}
           onClickMedia={openDetail}
