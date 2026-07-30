@@ -30,8 +30,16 @@ dann Mittelgroßes, zuletzt der große Brocken. Nummerierung = geplante Reihenfo
    - Suche nach Prompt / Modell / LoRA (statt nur Dateiname + rohes JSON).
    - Favorit/Stern bzw. Bewertung je Bild, plus Filter darauf.
 
-5. **Video/GIF im Galerie-Grid**
-   - Aktuell nur Bilder; Video/GIF mit abspielbarer/vorschaubarer Kachel.
+5. **Video/GIF im Galerie-Grid** ✅ **fertig** *(2026-07-30, Commit 870b2d4)*
+   - `MediaPreview` rendert `<video>` für mp4/webm/ogg: Kachel zeigt Standbild
+     + Play-Abzeichen, spielt stumm beim Hover, spult beim Verlassen zurück.
+     GIFs liefen als Bild schon animiert.
+   - Großansicht läuft über `Carousel.tsx` (nicht `MediaPreview`) — dort fehlten
+     die `controls`, ohne die sich nicht pausieren/spulen ließ; ergänzt.
+   - Backend `media_service.py` auf `web.FileResponse` umgestellt → Range-
+     Requests (206/416), sonst kann der Player nicht spulen und ein großes
+     Video landet komplett im RAM. Dabei eine Lücke in der Pfadprüfung
+     geschlossen (`os.path.isabs` statt nur führendes `/`).
 
 6. **Editierbare Modell-Notizen**
    - Freitext-Notiz je Modell (persistiert), im Detail sichtbar/bearbeitbar.
@@ -39,9 +47,17 @@ dann Mittelgroßes, zuletzt der große Brocken. Nummerierung = geplante Reihenfo
 7. **Galerie: Mehrfachauswahl + Bulk-Aktionen**
    - Mehrere Bilder wählen → gemeinsam herunterladen/entfernen; evtl. Drag auf Canvas.
 
-8. **Virtualisiertes Galerie-Grid** *(Performance)*
-   - Windowing-Muster aus dem Models-Panel (`useInView`/IntersectionObserver)
-     wiederverwenden; wichtig, sobald viele Outputs vorliegen.
+8. **Virtualisiertes Galerie-Grid** *(Performance)* ✅ **fertig** *(2026-07-30, Commit 870b2d4)*
+   - `GalleryGridTile.tsx` + gemeinsamer Hook `customHooks/useInView.ts` (der lag
+     doppelt vor, jetzt eine Quelle für Models-Panel und Galerie). Platzhalter
+     halten die Kachelgröße → Scrollhöhe korrekt, Scrollposition stabil.
+     Bewusst **nicht** das Batch-Muster aus `ModelsList.tsx`: das setzt das
+     Fenster bei neuer Listenreferenz zurück, und `refreshLists()` würde die
+     Scrollposition zurückschnappen lassen.
+   - Zugleich der doppelte Ladevorgang entfernt (Preflight-`fetch` in
+     `MediaPreview` war redundant zu `onError`) → ein Request pro Medium.
+   - Gemessen mit 303 Medien: 32 statt 303 geladene Kacheln beim Öffnen, nach
+     komplettem Durchscrollen 103, keine Löcher.
 
 9. **Workflow-Liste (RecentFilesDrawer) aufs reiche Karten-Muster heben**
    - Reichere Vorschau-Karten, bessere Ordner/Interaktion.
