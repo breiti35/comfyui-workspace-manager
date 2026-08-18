@@ -27,6 +27,13 @@ const GalleryModal = React.lazy(() => import("./gallery/GalleryModal"));
 import { IconExternalLink } from "@tabler/icons-react";
 import { DRAWER_Z_INDEX, UPGRADE_TO_2WAY_SYNC_KEY } from "./const";
 import { WorkspaceRoute } from "./types/types";
+import {
+  currentRoute,
+  initialRouteStack,
+  pushRoute,
+  popRoute,
+  resetRouteStack,
+} from "./routeStack";
 import { useStateRef } from "./customHooks/useStateRef";
 import { indexdb } from "./db-tables/indexdb";
 import EnableTwowaySyncConfirm from "./settings/EnableTwowaySyncConfirm";
@@ -40,7 +47,26 @@ import { useT } from "./i18n/LanguageContext";
 
 export default function App() {
   const [curFlowName, setCurFlowName] = useState<string | null>(null);
-  const [route, setRoute] = useState<WorkspaceRoute>("root");
+  const [routeStack, setRouteStack] = useState<WorkspaceRoute[]>(
+    initialRouteStack,
+  );
+  const route = currentRoute(routeStack);
+  const openRoute = useCallback((r: WorkspaceRoute) => {
+    setRouteStack((s) => pushRoute(s, r));
+  }, []);
+  const closeRoute = useCallback(() => {
+    setRouteStack((s) => popRoute(s));
+  }, []);
+  const resetRoutes = useCallback(() => {
+    setRouteStack((s) => resetRouteStack(s));
+  }, []);
+  // Deprecated: narrow compatibility shim for call sites that were missed
+  // during the routeStack migration, or added later without noticing it.
+  // Prefer openRoute/closeRoute/resetRoutes directly.
+  const setRoute = useCallback(
+    (r: WorkspaceRoute) => (r === "root" ? closeRoute() : openRoute(r)),
+    [closeRoute, openRoute],
+  );
   const [loadingDB, setLoadingDB] = useState(true);
   const [flowID, setFlowID] = useState<string | null>(null);
   const curFlowID = useRef<string | null>(null);
@@ -227,7 +253,9 @@ export default function App() {
       setCurVersion(null);
       app.loadGraphData(JSON.parse(flow.json));
     }
-    setRoute("root");
+    // A workflow just landed on the canvas - the surface should be free,
+    // not one level back into whatever was open before.
+    resetRoutes();
     isDirty && setIsDirty(false);
   };
 
@@ -294,7 +322,7 @@ export default function App() {
       name: input?.name,
     });
     flow && (await loadWorkflowID(flow.id));
-    setRoute("root");
+    resetRoutes();
   };
 
   const loadFilePath = async (
@@ -313,7 +341,7 @@ export default function App() {
       type: res.headers.get("Content-Type") || "",
     });
     await app.handleFile(fileObj);
-    setRoute("root");
+    resetRoutes();
   };
 
   const onDuplicateWorkflow = async (
@@ -345,8 +373,8 @@ export default function App() {
   }, []);
 
   const onCloseDrawer = useCallback(() => {
-    setRoute("root");
-  }, []);
+    closeRoute();
+  }, [closeRoute]);
 
   useEffect(() => {
     /**
@@ -415,6 +443,10 @@ export default function App() {
         loadFilePath: loadFilePath,
         setRoute: setRoute,
         route: route,
+        routeStack: routeStack,
+        openRoute: openRoute,
+        closeRoute: closeRoute,
+        resetRoutes: resetRoutes,
         curVersion: curVersion,
         setCurVersion: setCurVersion,
         setCurFlowIDAndName: setCurFlowIDAndName,
@@ -439,14 +471,14 @@ export default function App() {
                   onClose={onCloseDrawer}
                   onClickNewFlow={() => {
                     loadNewWorkflow();
-                    setRoute("root");
+                    closeRoute();
                   }}
                 />
               </Suspense>
             )}
             {route === "gallery" && (
               <Suspense>
-                <GalleryModal onclose={() => setRoute("root")} />
+                <GalleryModal onclose={closeRoute} />
               </Suspense>
             )}
           </Box>

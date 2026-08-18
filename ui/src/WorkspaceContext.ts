@@ -20,8 +20,13 @@ export const WorkspaceContext = createContext<{
   isDirty: boolean;
   loadNewWorkflow: (input?: { json: string; name?: string }) => void;
   loadFilePath: (path: string, overwriteCurrent?: boolean) => void;
+  /** @deprecated Narrow compatibility shim - prefer openRoute/closeRoute/resetRoutes. */
   setRoute: (route: WorkspaceRoute) => void;
   route: WorkspaceRoute;
+  routeStack: WorkspaceRoute[];
+  openRoute: (route: WorkspaceRoute) => void;
+  closeRoute: () => void;
+  resetRoutes: () => void;
   curVersion: WorkflowVersion | null;
   setCurVersion: (version: WorkflowVersion | null) => void;
   setCurFlowIDAndName: (workflow: Workflow | null) => void;
@@ -35,6 +40,10 @@ export const WorkspaceContext = createContext<{
   loadFilePath: () => {},
   setRoute: () => {},
   route: "root",
+  routeStack: ["root"],
+  openRoute: () => {},
+  closeRoute: () => {},
+  resetRoutes: () => {},
   curVersion: null,
   setIsDirty: () => {},
   setCurVersion: () => {},

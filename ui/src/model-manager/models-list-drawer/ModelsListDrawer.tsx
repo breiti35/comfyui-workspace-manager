@@ -21,6 +21,7 @@ import { type Model } from "../../types/dbTypes";
 import ModelDropEventListener from "../topbar/ModelDropEventListener";
 import { WorkspaceContext } from "../../WorkspaceContext";
 import { hideScrollbarSx } from "../utils";
+import { useModalSubLevelDismiss } from "../../customHooks/useModalSubLevelDismiss";
 
 interface Props {
   onClose: () => void;
@@ -37,7 +38,7 @@ const SORT_CMP: Record<
 };
 
 export default function ModelsListDrawer({ onClose }: Props) {
-  const { setRoute } = useContext(WorkspaceContext);
+  const { openRoute } = useContext(WorkspaceContext);
   const [selectedModel, setSelectedModel] = useState("checkpoints");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("az");
@@ -51,6 +52,14 @@ export default function ModelsListDrawer({ onClose }: Props) {
   const [curModelList, setCurModelList] = useState<ModelsListRespItem[]>([]);
   // when set, the detail view replaces the grid (gallery-style back nav).
   const [detailItem, setDetailItem] = useState<ModelsListRespItem | null>(null);
+  const closeDetail = () => setDetailItem(null);
+  // Esc/overlay click should only back out of the detail view when it's open,
+  // not blow away the grid's search/filter/scroll state underneath it.
+  const modalDismissProps = useModalSubLevelDismiss(
+    detailItem !== null,
+    closeDetail,
+    onClose,
+  );
 
   useEffect(() => {
     getDbModels();
@@ -98,7 +107,12 @@ export default function ModelsListDrawer({ onClose }: Props) {
 
   return (
     <>
-      <Modal isOpen={true} onClose={onClose} blockScrollOnMount={true}>
+      <Modal
+        isOpen={true}
+        onClose={onClose}
+        blockScrollOnMount={true}
+        {...modalDismissProps}
+      >
         <ModalOverlay />
         <ModalContent
           width={"90%"}
@@ -130,10 +144,7 @@ export default function ModelsListDrawer({ onClose }: Props) {
           >
             {detailItem ? (
               <Box flex={1} minHeight={0}>
-                <ModelDetailView
-                  data={detailItem}
-                  onBack={() => setDetailItem(null)}
-                />
+                <ModelDetailView data={detailItem} onBack={closeDetail} />
               </Box>
             ) : (
               <>
@@ -148,7 +159,7 @@ export default function ModelsListDrawer({ onClose }: Props) {
                   favoritesOnly={favoritesOnly}
                   setFavoritesOnly={setFavoritesOnly}
                   onRefresh={refresh}
-                  onInstall={() => setRoute("installModels")}
+                  onInstall={() => openRoute("installModels")}
                   resultCount={curModelList.length}
                 />
                 <Box

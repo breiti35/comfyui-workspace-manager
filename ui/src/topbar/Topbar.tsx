@@ -46,7 +46,7 @@ interface Props {
 }
 export function Topbar({ curFlowName, setCurFlowName }: Props) {
   const { t } = useT();
-  const { isDirty, saveCurWorkflow, setRoute, curFlowID, route } =
+  const { isDirty, saveCurWorkflow, openRoute, closeRoute, curFlowID, route } =
     useContext(WorkspaceContext);
   const [positionStyle, setPositionStyle] = useState<PanelPosition>();
   const updatePanelPosition: (
@@ -111,7 +111,7 @@ export function Topbar({ curFlowName, setCurFlowName }: Props) {
             variant={"ghost"}
             aria-label={t("topbar.workspaceFolderAria")}
             height={TOPBAR_BUTTON_HEIGHT + "px"}
-            onClick={() => setRoute("recentFlows")}
+            onClick={() => openRoute("recentFlows")}
             px={2}
           >
             <HStack gap={1}>
@@ -143,7 +143,7 @@ export function Topbar({ curFlowName, setCurFlowName }: Props) {
           <HStack gap={"4px"}>
             <Tooltip label={t("topbar.openGalleryTooltip")}>
               <IconButton
-                onClick={() => setRoute("gallery")}
+                onClick={() => openRoute("gallery")}
                 icon={<IconPhoto size={22} color="white" />}
                 size={"sm"}
                 aria-label={t("topbar.openGalleryAria")}
@@ -171,7 +171,7 @@ export function Topbar({ curFlowName, setCurFlowName }: Props) {
         <AppIsDirtyEventListener />
         <Tooltip label={t("topbar.promptLibraryTooltip")}>
           <IconButton
-            onClick={() => setRoute("promptLibrary")}
+            onClick={() => openRoute("promptLibrary")}
             icon={<IconBook2 size={20} color="white" />}
             size={"sm"}
             aria-label={t("topbar.promptLibraryAria")}
@@ -180,7 +180,7 @@ export function Topbar({ curFlowName, setCurFlowName }: Props) {
         </Tooltip>
         <Tooltip label={t("topbar.settingsTooltip")}>
           <IconButton
-            onClick={() => setRoute("settings")}
+            onClick={() => openRoute("settings")}
             icon={<IconSettings size={20} color="white" />}
             size={"sm"}
             aria-label={t("topbar.settingsAria")}
@@ -199,12 +199,12 @@ export function Topbar({ curFlowName, setCurFlowName }: Props) {
         {route === "spotlightSearch" && <SpotlightSearch />}
         {route === "settings" && (
           <Suspense fallback={null}>
-            <WorkspaceSettingsModal onClose={() => setRoute("root")} />
+            <WorkspaceSettingsModal onClose={closeRoute} />
           </Suspense>
         )}
         {route === "promptLibrary" && (
           <Suspense fallback={null}>
-            <PromptLibraryModal onClose={() => setRoute("root")} />
+            <PromptLibraryModal onClose={closeRoute} />
           </Suspense>
         )}
       </HStack>

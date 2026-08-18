@@ -24,6 +24,7 @@ import {
   getCivitModelDownloadUrl,
 } from "../../utils/civitUtils";
 import { useStateRef } from "../../customHooks/useStateRef";
+import { useModalSubLevelDismiss } from "../../customHooks/useModalSubLevelDismiss";
 import {
   FileEssential,
   MODEL_TYPE,
@@ -75,6 +76,14 @@ export default function InstallModelsModal({
     new Set(),
   );
   const [detailItem, setDetailItem] = useState<CivitiModel | null>(null);
+  const closeDetail = () => setDetailItem(null);
+  // Esc/overlay click should only back out of the detail view when it's open,
+  // not blow away the search/filter/paging state underneath it.
+  const modalDismissProps = useModalSubLevelDismiss(
+    detailItem !== null,
+    closeDetail,
+    onCloseInstallModelsModal,
+  );
 
   const { isOpen, onOpen, onClose: onCloseChooseFolderModal } = useDisclosure();
   const toast = useToast();
@@ -246,6 +255,7 @@ export default function InstallModelsModal({
         isOpen={true}
         onClose={onCloseInstallModelsModal}
         blockScrollOnMount={true}
+        {...modalDismissProps}
       >
         <ModalOverlay />
         <ModalContent
@@ -284,7 +294,7 @@ export default function InstallModelsModal({
                   installingNames={pending}
                   statForName={statFor}
                   onInstallVersion={installVersion}
-                  onBack={() => setDetailItem(null)}
+                  onBack={closeDetail}
                 />
               </Box>
             ) : (

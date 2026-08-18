@@ -28,6 +28,7 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { hideScrollbarSx } from "../model-manager/utils";
 import { useT } from "../i18n/LanguageContext";
+import { useModalSubLevelDismiss } from "../customHooks/useModalSubLevelDismiss";
 import PromptEditor from "./PromptEditor";
 import {
   addPrompt,
@@ -168,6 +169,14 @@ export default function PromptLibraryModal({ onClose }: Props) {
   const [editing, setEditing] = useState<PromptRecipe | null | undefined>(
     undefined,
   );
+  const closeEditing = () => setEditing(undefined);
+  // Esc/overlay click should only back out of the editor when it's open, not
+  // blow away the grid's search/tag filter underneath it.
+  const modalDismissProps = useModalSubLevelDismiss(
+    editing !== undefined,
+    closeEditing,
+    onClose,
+  );
 
   const refresh = useCallback(() => {
     listPrompts(true).then(setItems);
@@ -202,7 +211,12 @@ export default function PromptLibraryModal({ onClose }: Props) {
   };
 
   return (
-    <Modal isOpen={true} onClose={onClose} blockScrollOnMount={true}>
+    <Modal
+      isOpen={true}
+      onClose={onClose}
+      blockScrollOnMount={true}
+      {...modalDismissProps}
+    >
       <ModalOverlay />
       <ModalContent
         width={"90%"}

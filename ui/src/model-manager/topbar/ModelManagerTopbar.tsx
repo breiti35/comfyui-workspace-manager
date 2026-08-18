@@ -19,10 +19,12 @@ import DownloadIndicator from "../install-models/DownloadIndicator";
 import { TOPBAR_BUTTON_HEIGHT } from "../../const";
 import ErrorBoundary from "../../components/ErrorBoundary";
 import { useT } from "../../i18n/LanguageContext";
+import { routeStackSignature } from "../../routeStack";
 
 export default function ModelManagerTopbar() {
   const { t } = useT();
-  const { setRoute, route } = useContext(WorkspaceContext);
+  const { openRoute, closeRoute, route, routeStack } =
+    useContext(WorkspaceContext);
 
   useEffect(() => {
     // One-time reset of stale NSFW caches from earlier fix iterations, before
@@ -85,7 +87,7 @@ export default function ModelManagerTopbar() {
           color={"white"}
           colorScheme="blue"
           aria-label={t("models.topbar.myModelsAria")}
-          onClick={() => setRoute("modelList")}
+          onClick={() => openRoute("modelList")}
           px={1}
           height={TOPBAR_BUTTON_HEIGHT + "px"}
         >
@@ -94,19 +96,22 @@ export default function ModelManagerTopbar() {
         <DownloadIndicator />
       </HStack>
       {/* A crash inside a drawer/modal must never take the whole plugin UI
-          (incl. this topbar) down - contain it here. key={route} gives each
-          route a fresh boundary so a caught error resets on navigation. */}
+          (incl. this topbar) down - contain it here. key={routeStackSignature(routeStack)}
+          gives each distinct stack a fresh boundary so a caught error resets
+          on navigation - the full signature (not just the top route) is the
+          right trigger because the stack's depth can change without the top
+          route itself changing. */}
       <ErrorBoundary
-        key={route}
+        key={routeStackSignature(routeStack)}
         label={t("models.topbar.errorBoundary")}
       >
         {route === "modelList" && (
-          <ModelsListDrawer onClose={() => setRoute("root")} />
+          <ModelsListDrawer onClose={closeRoute} />
         )}
         {route === "installModels" && (
           <InatallModelsModal
             modelType="Checkpoint"
-            onclose={() => setRoute("root")}
+            onclose={closeRoute}
           />
         )}
       </ErrorBoundary>

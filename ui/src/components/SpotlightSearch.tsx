@@ -29,7 +29,7 @@ import { ESortTypes } from "../RecentFilesDrawer/types";
 
 export default function SpotlightSearch() {
   const { colorMode } = useColorMode();
-  const { loadWorkflowID, setRoute } = useContext(WorkspaceContext);
+  const { loadWorkflowID, closeRoute } = useContext(WorkspaceContext);
   const [allFileList, setAllFileList] = useState<RecentlyOpenedFile[]>([]);
   const [searchKey, setSearchKey, searchKeyRef] = useStateRef("");
   const recentlyOpenedFileListRef = useRef<RecentlyOpenedFile[]>([]);
@@ -44,7 +44,14 @@ export default function SpotlightSearch() {
   });
 
   const onClose = () => {
-    setRoute("root");
+    // Reached both on plain cancel (Esc / overlay click, nothing picked) and
+    // via onOpen() after loadWorkflowID() below. Since spotlight search can
+    // be opened over an already-open panel, plain cancel must only pop this
+    // level - resetting here would tear down whatever was open underneath.
+    // The selection path is still handled correctly: loadWorkflowID ->
+    // loadWorkflowIDImpl in App.tsx already calls resetRoutes() itself once
+    // a workflow lands on the canvas.
+    closeRoute();
   };
 
   const onOpen = (fileInfo: RecentlyOpenedFile) => {

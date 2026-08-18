@@ -51,7 +51,9 @@ export default function DropdownTitle() {
     loadWorkflowID,
     discardUnsavedChanges,
     saveCurWorkflow,
-    setRoute,
+    openRoute,
+    closeRoute,
+    resetRoutes,
     route,
   } = useContext(WorkspaceContext);
 
@@ -94,11 +96,15 @@ export default function DropdownTitle() {
     });
 
     flow && (await loadWorkflowID(flow.id, null, true));
-    handleOnCloseModal();
+    // Save As just loaded a brand-new workflow into the canvas - clear the
+    // whole stack instead of popping one level back into the modal's parent.
+    resetRoutes();
   };
 
-  const handleOnCloseModal = () => {
-    setRoute("root");
+  // Cancel / X / overlay-click / Esc: just back out of the Save As modal,
+  // preserving whatever route (if any) was open underneath it.
+  const closeSaveAsModal = () => {
+    closeRoute();
   };
 
   const handleDownload = useCallback(async () => {
@@ -158,7 +164,7 @@ export default function DropdownTitle() {
                 Download
               </MenuItem>
               <MenuItem
-                onClick={() => setRoute("saveAsModal")}
+                onClick={() => openRoute("saveAsModal")}
                 icon={<IconDeviceFloppy size={20} />}
                 iconSpacing={1}
                 command={saveShortcut.saveAs}
@@ -166,14 +172,14 @@ export default function DropdownTitle() {
                 Save As
               </MenuItem>
               <MenuItem
-                onClick={() => setRoute("versionHistory")}
+                onClick={() => openRoute("versionHistory")}
                 icon={<IconHistory size={20} />}
                 iconSpacing={1}
               >
                 Versions History
               </MenuItem>
               <MenuItem
-                onClick={() => setRoute("share")}
+                onClick={() => openRoute("share")}
                 icon={<IconShare2 size={20} />}
                 iconSpacing={1}
               >
@@ -185,14 +191,14 @@ export default function DropdownTitle() {
       />
       {route === "share" && (
         <Suspense fallback={null}>
-          <ShareDialog onClose={() => setRoute("root")} />
+          <ShareDialog onClose={closeRoute} />
         </Suspense>
       )}
-      {route == "versionHistory" && (
-        <VersionHistoryDrawer onClose={() => setRoute("root")} />
+      {route === "versionHistory" && (
+        <VersionHistoryDrawer onClose={closeRoute} />
       )}
       {route === "saveAsModal" && (
-        <Modal isOpen={true} onClose={handleOnCloseModal}>
+        <Modal isOpen={true} onClose={closeSaveAsModal}>
           <ModalOverlay />
           <ModalContent>
             <ModalHeader>Save As</ModalHeader>
@@ -225,7 +231,7 @@ export default function DropdownTitle() {
               >
                 Save
               </Button>
-              <Button onClick={handleOnCloseModal}>Cancel</Button>
+              <Button onClick={closeSaveAsModal}>Cancel</Button>
             </ModalFooter>
           </ModalContent>
         </Modal>

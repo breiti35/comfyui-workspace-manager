@@ -14,7 +14,7 @@ export default function AppIsDirtyEventListener() {
   const {
     isDirty,
     setIsDirty,
-    setRoute,
+    openRoute,
     saveCurWorkflow,
     setCurFlowIDAndName,
   } = useContext(WorkspaceContext);
@@ -44,10 +44,10 @@ export default function AppIsDirtyEventListener() {
             saveCurWorkflow();
             break;
           case EShortcutKeys.SAVE_AS:
-            setRoute("saveAsModal");
+            openRoute("saveAsModal");
             break;
           case EShortcutKeys.openSpotlightSearch:
-            setRoute("spotlightSearch");
+            openRoute("spotlightSearch");
             break;
         }
       } else if (

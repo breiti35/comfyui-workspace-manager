@@ -5,13 +5,13 @@ import { useT } from "../../i18n/LanguageContext";
 
 export default function InstallModelsButton() {
   const { t } = useT();
-  const { setRoute } = useContext(WorkspaceContext);
+  const { openRoute } = useContext(WorkspaceContext);
   return (
     <>
       <Button
         size={"sm"}
         colorScheme="blue"
-        onClick={() => setRoute("installModels")}
+        onClick={() => openRoute("installModels")}
       >
         {t("install.title")}
       </Button>

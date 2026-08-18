@@ -12,7 +12,7 @@ import {
   ModalOverlay,
   Tooltip,
 } from "@chakra-ui/react";
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { mediaTable, workflowsTable } from "../db-tables/WorkspaceDB";
 import { IconArrowLeft } from "@tabler/icons-react";
 import { WorkspaceContext } from "../WorkspaceContext";
@@ -26,6 +26,7 @@ import { GallerySidebar } from "./components/GallerySidebar.tsx";
 import { GalleryPreviewImage } from "./components/GalleryPreviewImage.tsx";
 import { usePreviewImage } from "./usePreviewImage.ts";
 import { useT } from "../i18n/LanguageContext";
+import { useModalSubLevelDismiss } from "../customHooks/useModalSubLevelDismiss";
 
 export default function GalleryModal({ onclose }: { onclose: () => void }) {
   const { t } = useT();
@@ -38,6 +39,16 @@ export default function GalleryModal({ onclose }: { onclose: () => void }) {
   const [allMedia, setAllMedia] = useState<Media[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const debounceSearchValue = useDebounce(searchValue, 300);
+  // setDetailOpen is a stable state setter, so this never changes identity.
+  const closeDetail = useCallback(() => setDetailOpen(false), []);
+  // Esc/overlay click should only back out of the detail view when it's
+  // open, not blow away the section/search/scroll state underneath it. Must
+  // run before the `curFlowID == null` early return below (Rules of Hooks).
+  const modalDismissProps = useModalSubLevelDismiss(
+    detailOpen,
+    closeDetail,
+    onclose,
+  );
 
   const refreshLists = async () => {
     if (curFlowID == null) return;
@@ -89,11 +100,10 @@ export default function GalleryModal({ onclose }: { onclose: () => void }) {
     setCurMedia(media);
     setDetailOpen(true);
   };
-  const closeDetail = () => setDetailOpen(false);
 
   const selectSection = (next: GallerySection) => {
     setSection(next);
-    setDetailOpen(false);
+    closeDetail();
   };
 
   const baseList = section === "all" ? allMedia : workflowMedia;
@@ -123,7 +133,12 @@ export default function GalleryModal({ onclose }: { onclose: () => void }) {
         removeMedia,
       }}
     >
-      <Modal isOpen={true} onClose={onclose} blockScrollOnMount={true}>
+      <Modal
+        isOpen={true}
+        onClose={onclose}
+        blockScrollOnMount={true}
+        {...modalDismissProps}
+      >
         <ModalOverlay />
         <ModalContent width={"90%"} maxWidth={"90vw"} height={"90vh"}>
           <ModalCloseButton

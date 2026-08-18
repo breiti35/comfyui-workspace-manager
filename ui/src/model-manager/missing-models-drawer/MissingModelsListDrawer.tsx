@@ -44,7 +44,7 @@ export default function MissingModelsListDrawer({
   }, []);
   const [selectedModelDeps, setSelectedModelDeps] = useState<ModelDep[]>([]);
   const [foldersList, setFoldersList] = useState<Record<string, string[]>>({});
-  const { setRoute } = useContext(WorkspaceContext);
+  const { openRoute } = useContext(WorkspaceContext);
   const loadData = useCallback(async () => {
     const folders_list = await getAllFoldersList();
     folders_list && setFoldersList(folders_list);
@@ -92,7 +92,7 @@ export default function MissingModelsListDrawer({
       duration: 4000,
       isClosable: true,
     });
-    setRoute("installModels");
+    openRoute("installModels");
   };
 
   return (

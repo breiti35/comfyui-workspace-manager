@@ -4,7 +4,7 @@ import { useContext, useEffect } from "react";
 import { WorkspaceContext } from "../WorkspaceContext";
 
 export default function VersionNameTopbar({}: {}) {
-  const { setRoute, curVersion, isDirty, setCurVersion } =
+  const { openRoute, curVersion, isDirty, setCurVersion } =
     useContext(WorkspaceContext);
   useEffect(() => {
     if (isDirty && curVersion && curVersion?.name.endsWith("*") === false) {
@@ -20,7 +20,7 @@ export default function VersionNameTopbar({}: {}) {
         {/* <IconButton aria-label="Add to friends" icon={<IconPlus size={18} />} /> */}
         <Button
           rightIcon={<IconTriangleInvertedFilled size={10} />}
-          onClick={() => setRoute("versionHistory")}
+          onClick={() => openRoute("versionHistory")}
         >
           {curVersion.name}
         </Button>
