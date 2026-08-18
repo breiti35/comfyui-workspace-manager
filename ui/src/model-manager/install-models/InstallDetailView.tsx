@@ -34,7 +34,7 @@ import {
 import { getCivitModelPageUrl } from "../../utils/civitUtils";
 import { userSettingsTable } from "../../db-tables/WorkspaceDB";
 import { KBtoGB, hideScrollbarSx, formatSpeed, formatEta } from "../utils";
-import type { DownloadStat } from "./InstallModelsModal";
+import type { DownloadEntry } from "./downloadStore";
 import { getFileEssential } from "./util/modelTypes";
 import {
   ImageMeta,
@@ -48,7 +48,7 @@ interface InstallDetailViewProps {
   model: CivitiModel;
   installedVersionIds: Set<string>;
   installingNames: string[];
-  statForName: (fileName?: string) => DownloadStat | undefined;
+  statForName: (fileName?: string) => DownloadEntry | undefined;
   onInstallVersion: (version: CivitiModelVersion, model: CivitiModel) => void;
   onBack: () => void;
 }

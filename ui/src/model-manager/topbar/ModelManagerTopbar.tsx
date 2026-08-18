@@ -1,4 +1,4 @@
-import { Button, DarkMode, Stack } from "@chakra-ui/react";
+import { Button, DarkMode, HStack, Stack } from "@chakra-ui/react";
 import { lazy, useEffect, useContext, Suspense } from "react";
 import ModelsListDrawer from "../models-list-drawer/ModelsListDrawer";
 import "./index.css";
@@ -15,6 +15,7 @@ import {
 import { indexdb } from "../../db-tables/indexdb";
 import type { ModelsListRespItemFromApi } from "../types";
 import InatallModelsModal from "../install-models/InstallModelsModal";
+import DownloadIndicator from "../install-models/DownloadIndicator";
 import { TOPBAR_BUTTON_HEIGHT } from "../../const";
 import ErrorBoundary from "../../components/ErrorBoundary";
 import { useT } from "../../i18n/LanguageContext";
@@ -74,18 +75,24 @@ export default function ModelManagerTopbar() {
 
   return (
     <Stack style={{ position: "relative" }}>
-      <Button
-        size={"sm"}
-        variant={"ghost"}
-        color={"white"}
-        colorScheme="blue"
-        aria-label={t("models.topbar.myModelsAria")}
-        onClick={() => setRoute("modelList")}
-        px={1}
-        height={TOPBAR_BUTTON_HEIGHT + "px"}
-      >
-        {t("models.topbar.button")}
-      </Button>
+      {/* HStack just to seat the (always-mounted, but usually invisible)
+          download indicator next to the button - the button itself is
+          untouched. */}
+      <HStack spacing={1}>
+        <Button
+          size={"sm"}
+          variant={"ghost"}
+          color={"white"}
+          colorScheme="blue"
+          aria-label={t("models.topbar.myModelsAria")}
+          onClick={() => setRoute("modelList")}
+          px={1}
+          height={TOPBAR_BUTTON_HEIGHT + "px"}
+        >
+          {t("models.topbar.button")}
+        </Button>
+        <DownloadIndicator />
+      </HStack>
       {/* A crash inside a drawer/modal must never take the whole plugin UI
           (incl. this topbar) down - contain it here. key={route} gives each
           route a fresh boundary so a caught error resets on navigation. */}

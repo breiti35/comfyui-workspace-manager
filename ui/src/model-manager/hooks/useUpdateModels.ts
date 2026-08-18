@@ -16,12 +16,13 @@ export const useUpdateModels = () => {
 
   useEffect(() => {
     initData();
-    api.addEventListener(
-      "model_list",
-      async (e: { detail: ModelsListRespItemFromApi[] }) => {
-        updateModels(e.detail);
-      },
-    );
+    const handleModelList = (e: { detail: ModelsListRespItemFromApi[] }) => {
+      updateModels(e.detail);
+    };
+    api.addEventListener("model_list", handleModelList);
+    return () => {
+      api.removeEventListener("model_list", handleModelList);
+    };
   }, []);
 
   const initData = async () => {

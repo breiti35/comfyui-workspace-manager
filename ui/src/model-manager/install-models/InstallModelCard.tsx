@@ -18,13 +18,13 @@ import { userSettingsTable } from "../../db-tables/WorkspaceDB";
 import { useInView } from "../../customHooks/useInView";
 import { formatCount, formatSpeed, formatEta } from "../utils";
 import { NSFW_BLUR_FILTER } from "../components/CivitDetailShared";
-import type { DownloadStat } from "./InstallModelsModal";
+import type { DownloadEntry } from "./downloadStore";
 import { useT } from "../../i18n/LanguageContext";
 
 interface InstallModelCardProps {
   model: CivitiModel;
   installed: boolean;
-  stat?: DownloadStat;
+  stat?: DownloadEntry;
   installing: boolean;
   onQuickInstall: (model: CivitiModel) => void;
   onOpenDetail: (model: CivitiModel) => void;

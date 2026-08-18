@@ -191,7 +191,7 @@ export async function cancelDownload(savePath: string) {
     const result = await response.text();
     return result;
   } catch (error) {
-    console.error("Error move file:", error);
+    console.error("Error canceling download:", error);
   }
 }
 

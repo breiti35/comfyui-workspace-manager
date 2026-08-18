@@ -35,6 +35,7 @@ import { loadCivitApiKey } from "./utils/civitUtils";
 import { fetchApi } from "./Api";
 import { serverInfo } from "./utils/OsPathUtils";
 import { startPreviewImageCapture } from "./gallery/previewImageStore";
+import { startDownloadTracking } from "./model-manager/install-models/downloadStore";
 import { useT } from "./i18n/LanguageContext";
 
 export default function App() {
@@ -367,6 +368,11 @@ export default function App() {
     // Capture "Preview Image" node outputs at app level so they're kept even
     // while the gallery modal is closed (the gallery only reads the store).
     startPreviewImageCapture();
+
+    // Same reasoning for model downloads: tracking has to outlive the install
+    // panel, otherwise closing it loses the progress (and the cancel button)
+    // while the backend keeps downloading.
+    startDownloadTracking();
 
     const handleExecuted = (e: any) => {
       e.detail?.output?.images?.forEach(

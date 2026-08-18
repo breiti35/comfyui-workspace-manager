@@ -89,6 +89,14 @@ const en = {
   "install.title": "Install Models",
   "install.search.placeholder": "Search models on Civitai…",
   "install.customUrl.button": "Custom URL",
+
+  // Topbar download indicator - visible whatever panel is open.
+  "install.downloads.triggerTooltip": "Downloads in progress",
+  "install.downloads.popoverTitle": "Downloads",
+  "install.downloads.preparing": "Preparing…",
+  "install.downloads.cancelAria": "Cancel download",
+  "install.downloads.cancelling": "Cancelling…",
+
   "install.categoryAll": "All",
   "install.sort.label": "Sort:",
   "install.sort.mostDownloaded": "Most downloaded",
@@ -449,6 +457,14 @@ const de: Record<TransKey, string> = {
   "install.title": "Modelle installieren",
   "install.search.placeholder": "Modelle in Civitai suchen…",
   "install.customUrl.button": "Eigene URL",
+
+  // Download-Anzeige in der Topbar - sichtbar, egal welches Panel offen ist.
+  "install.downloads.triggerTooltip": "Downloads laufen",
+  "install.downloads.popoverTitle": "Downloads",
+  "install.downloads.preparing": "Wird vorbereitet…",
+  "install.downloads.cancelAria": "Download abbrechen",
+  "install.downloads.cancelling": "Wird abgebrochen…",
+
   "install.categoryAll": "Alle",
   "install.sort.label": "Sortierung:",
   "install.sort.mostDownloaded": "Meiste Downloads",

@@ -34,7 +34,8 @@ import { getModelFromCivitAPi } from "./util/getModelFromCivitAPI";
 import { userSettingsTable } from "../../db-tables/WorkspaceDB";
 import { indexdb } from "../../db-tables/indexdb";
 import { hideScrollbarSx } from "../utils";
-import { api } from "../../utils/comfyapp";
+import { useDownloads } from "./useDownloads";
+import { markDownloadStarted } from "./downloadStore";
 import type { CivitiModel, CivitiModelVersion } from "../types";
 import { useT } from "../../i18n/LanguageContext";
 
@@ -43,24 +44,6 @@ interface Props {
   searchQuery?: string;
   modelType?: MODEL_TYPE;
 }
-
-type ProgressEntry = {
-  save_path: string;
-  progress: number;
-  speed?: number;
-  downloaded?: number;
-  total?: number;
-};
-
-// What a download card/row needs to render: percent + (optional) live speed
-// and estimated time remaining.
-export type DownloadStat = {
-  progress: number;
-  speed?: number;
-  eta?: number;
-};
-
-const basename = (p: string) => p.replace(/^.*[\\/]/, "");
 
 export default function InstallModelsModal({
   onclose: onCloseInstallModelsModal,
@@ -85,8 +68,6 @@ export default function InstallModelsModal({
   const [nextCursor, setNextCursor] = useState<string | undefined>(undefined);
   const [pageNumber, setPageNumber] = useState(1);
   const gridScrollRef = useRef<HTMLDivElement>(null);
-  const [installing, setInstalling] = useState<string[]>([]);
-  const [progressQueue, setProgressQueue] = useState<ProgressEntry[]>([]);
   const [installedModelIds, setInstalledModelIds] = useState<Set<string>>(
     new Set(),
   );
@@ -97,9 +78,11 @@ export default function InstallModelsModal({
 
   const { isOpen, onOpen, onClose: onCloseChooseFolderModal } = useDisclosure();
   const toast = useToast();
-  // Filenames that have appeared in a download_progress queue at least once,
-  // so we can tell "completed" (was seen, now gone) from "not started yet".
-  const seenDownloadsRef = useRef<Set<string>>(new Set());
+  const { pending, lastError, statFor } = useDownloads();
+  // Tick of the last error we've already shown a toast for - starts at
+  // whatever the store already holds so a stale error isn't re-toasted just
+  // because the panel got reopened.
+  const shownErrorTickRef = useRef(lastError?.tick ?? 0);
   const [fileState, setFile, file] = useStateRef<FileEssential>();
   const [defaultFolders, setDefaultFolders] = useState<
     Record<MODEL_TYPE, string>
@@ -192,65 +175,20 @@ export default function InstallModelsModal({
     })();
   }, [models]);
 
-  // Download-Fortschritt (globales Event) für die Karten-Anzeige.
+  // Fehler-Toast aus dem app-weiten Download-Store: nur bei neuem tick
+  // anzeigen, nie erneut für einen Fehler, der schon vor dem Öffnen des
+  // Panels aufgetreten ist.
   useEffect(() => {
-    const onProgress = (e: { detail: ProgressEntry[] }) => {
-      const queue = e.detail ?? [];
-      setProgressQueue(queue);
-      // The worker emits an empty queue once it has drained all tasks, so
-      // nothing is downloading anymore - clear every optimistic marker. This
-      // also covers the case where the backend renamed a file via
-      // Content-Disposition (so its basename never matched and the seen-based
-      // pruning below couldn't catch it), preventing a stuck overlay.
-      if (queue.length === 0) {
-        seenDownloadsRef.current.clear();
-        setInstalling([]);
-        return;
-      }
-      const active = new Set(queue.map((q) => basename(q.save_path)));
-      active.forEach((n) => seenDownloadsRef.current.add(n));
-      // Drop optimistic "installing" markers once their download has appeared
-      // in a queue and then left it again (i.e. finished). Keep markers that
-      // haven't shown up yet (backend still preparing the download).
-      setInstalling((cur) =>
-        cur.filter(
-          (name) => active.has(name) || !seenDownloadsRef.current.has(name),
-        ),
-      );
-    };
-    const onError = (e: { detail: string }) => {
-      toast({
-        title: t("install.toast.downloadError.title"),
-        description: e.detail,
-        status: "error",
-        duration: 5000,
-        isClosable: true,
-      });
-      // The failed download's optimistic marker can't be cleared via the progress
-      // handler when the error fires before it ever entered a progress queue
-      // (e.g. missing-API-key → file_size 0 raises immediately). Clear optimistic
-      // markers here; still-active/queued downloads stay covered by their own
-      // live progressQueue entries, so we deliberately do NOT clear progressQueue.
-      setInstalling([]);
-    };
-    api.addEventListener("download_progress", onProgress);
-    api.addEventListener("download_error", onError);
-    return () => {
-      api.removeEventListener("download_progress", onProgress);
-      api.removeEventListener("download_error", onError);
-    };
-  }, []);
-
-  const statForFile = (fileName?: string): DownloadStat | undefined => {
-    if (!fileName) return undefined;
-    const entry = progressQueue.find((q) => basename(q.save_path) === fileName);
-    if (!entry) return undefined;
-    const eta =
-      entry.total && entry.speed && entry.speed > 0
-        ? (entry.total - (entry.downloaded ?? 0)) / entry.speed
-        : undefined;
-    return { progress: entry.progress, speed: entry.speed, eta };
-  };
+    if (!lastError || lastError.tick === shownErrorTickRef.current) return;
+    shownErrorTickRef.current = lastError.tick;
+    toast({
+      title: t("install.toast.downloadError.title"),
+      description: lastError.message,
+      status: "error",
+      duration: 5000,
+      isClosable: true,
+    });
+  }, [lastError, t, toast]);
 
   const doDownload = async (
     fileEssential: FileEssential,
@@ -260,8 +198,7 @@ export default function InstallModelsModal({
     let url = await getCivitModelDownloadUrl(String(fileEssential.id));
     let version = fileEssential.name ?? url.split("/").pop();
     if (!version) return;
-    setInstalling((cur) => [...cur, version as string]);
-    seenDownloadsRef.current.delete(version as string);
+    markDownloadStarted(version as string);
     const apiKey = getCivitApiKey();
     if (apiKey) {
       try {
@@ -344,8 +281,8 @@ export default function InstallModelsModal({
                 <InstallDetailView
                   model={detailItem}
                   installedVersionIds={installedVersionIds}
-                  installingNames={installing}
-                  statForName={statForFile}
+                  installingNames={pending}
+                  statForName={statFor}
                   onInstallVersion={installVersion}
                   onBack={() => setDetailItem(null)}
                 />
@@ -391,10 +328,10 @@ export default function InstallModelsModal({
                           key={model.id}
                           model={model}
                           installed={installedModelIds.has(String(model.id))}
-                          stat={statForFile(latestFile?.name)}
+                          stat={statFor(latestFile?.name)}
                           installing={
                             latestFile?.name
-                              ? installing.includes(latestFile.name)
+                              ? pending.includes(latestFile.name)
                               : false
                           }
                           onQuickInstall={quickInstall}
@@ -455,8 +392,7 @@ export default function InstallModelsModal({
           } else if (customUrl) {
             // Custom URL Install: direkt über die bestehende API laden.
             const version = customUrl.split("/").pop() ?? "download";
-            setInstalling((cur) => [...cur, version]);
-            seenDownloadsRef.current.delete(version);
+            markDownloadStarted(version);
             const apiKey = getCivitApiKey();
             let url = customUrl;
             if (apiKey && !/[?&]token=/.test(url)) {
