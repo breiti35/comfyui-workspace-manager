@@ -60,8 +60,8 @@ def _install_comfy_stubs():
         sys.modules["server"] = server_mod
 
     if "nodes" not in sys.modules:
-        # missing_models liest hierueber die Node-Definitionen. Fuer die
-        # Download-Tests reicht eine leere Registry.
+        # node_service liest hierueber die Node-Definitionen. Fuer die
+        # Tests reicht eine leere Registry.
         nodes_mod = types.ModuleType("nodes")
         nodes_mod.NODE_CLASS_MAPPINGS = {}
         sys.modules["nodes"] = nodes_mod
@@ -112,6 +112,10 @@ class _Handler(http.server.BaseHTTPRequestHandler):
       /redirect        - 302 auf /file (prueft, dass die finale URL aufgeloest wird)
       /authwall        - HTML-Login-Seite statt der Datei
       /truncated       - liefert bei Range absichtlich zu wenig Bytes
+      /flaky           - bricht die Verbindung mitten im Body ab, solange
+                         server.flaky_budget > 0 (prueft Retry + Fortsetzen).
+                         Ausgenommen: der erste Request ohne Range (das
+                         Aufloesen der URL) und die Range-Probe bytes=0-1.
     """
 
     protocol_version = "HTTP/1.1"
@@ -147,6 +151,31 @@ class _Handler(http.server.BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(chunk)
 
+    def _send_cut_off(self, body: bytes, rng):
+        """Header versprechen den vollen Umfang, geschickt wird nur die
+        Haelfte - dann Verbindung hart zu (wie ein abreissender Proxy)."""
+        if rng:
+            m = re.match(r"bytes=(\d+)-(\d*)", rng)
+            start = int(m.group(1))
+            end = int(m.group(2)) if m.group(2) else len(body) - 1
+            chunk = body[start : end + 1]
+            self.send_response(206)
+            self.send_header("Content-Range", f"bytes {start}-{end}/{len(body)}")
+        else:
+            chunk = body
+            self.send_response(200)
+        self.send_header("Content-Type", "application/octet-stream")
+        self.send_header("Content-Length", str(len(chunk)))
+        self.send_header("Accept-Ranges", "bytes")
+        self.end_headers()
+        self.wfile.write(chunk[: len(chunk) // 2])
+        self.wfile.flush()
+        self.close_connection = True
+        try:
+            self.connection.shutdown(socket.SHUT_RDWR)
+        except OSError:
+            pass
+
     # -- Routen ------------------------------------------------------------
     def do_GET(self):
         path = self.path.split("?")[0]
@@ -168,6 +197,22 @@ class _Handler(http.server.BaseHTTPRequestHandler):
         if path == "/norange":
             # Range wird bewusst ignoriert -> immer die ganze Datei, Status 200.
             self._send_full(self.payload)
+            return
+
+        if path == "/flaky":
+            if rng is None:
+                self.server.flaky_plain_requests += 1
+            truncatable = (rng is None and self.server.flaky_plain_requests > 1) or (
+                rng is not None and rng != "bytes=0-1"
+            )
+            if truncatable and self.server.flaky_budget > 0:
+                self.server.flaky_budget -= 1
+                self._send_cut_off(self.payload, rng)
+                return
+            if rng:
+                self._send_range(self.payload, rng)
+            else:
+                self._send_full(self.payload)
             return
 
         if path == "/truncated":
@@ -202,6 +247,9 @@ class ServerHandle:
         self.payload = payload
         self.sha256 = hashlib.sha256(payload).hexdigest()
 
+    def set_flaky_budget(self, n: int):
+        self._httpd.flaky_budget = n
+
     def url(self, path="/file") -> str:
         return f"http://127.0.0.1:{self.port}{path}"
 
@@ -224,6 +272,8 @@ def http_server():
         httpd = _TestServer(("127.0.0.1", port), _Handler)
         httpd.payload = payload
         httpd.requests = []
+        httpd.flaky_budget = 0
+        httpd.flaky_plain_requests = 0
         thread = threading.Thread(target=httpd.serve_forever, daemon=True)
         thread.start()
         handle = ServerHandle(httpd, port, payload)
@@ -253,11 +303,18 @@ def installer(monkeypatch):
     sent = []
 
     def fake_send_ws(event, data):
-        sent.append((event, data))
+        # Gleiche Aufbereitung wie der echte send_ws (Token-Maskierung) -
+        # die Tests sehen also genau das, was an den Browser ginge.
+        sent.append((event, mi._ws_data(data)))
 
     monkeypatch.setattr(mi, "send_ws", fake_send_ws)
     # Drosselung aus, damit jeder Fortschritts-Tick im Test ankommt.
     monkeypatch.setattr(mi, "last_call_time", 0)
-    monkeypatch.setattr(mi, "cancel_path", None)
+    # Kein globaler cancel_path mehr - Abbruch laeuft pro Download ueber
+    # request_cancel(). Vorsichtshalber keinen haengenden Download aus einem
+    # frueheren Test uebernehmen.
+    monkeypatch.setattr(mi, "_active_download", None)
+    # Retries im Test ohne Wartezeit.
+    monkeypatch.setattr(mi, "RETRY_DELAY_S", 0)
     mi._test_sent = sent
     return mi

@@ -168,16 +168,25 @@ def test_html_loginseite_wird_als_fehlender_apikey_gemeldet(
 
 
 def test_abbruch_raeumt_temp_datei_weg(installer, http_server, tmp_path, monkeypatch):
-    """Der Abbrechen-Button setzt cancel_path. Danach darf weder die Ziel-
-    noch die Temp-Datei zurueckbleiben."""
+    """Der Abbrechen-Button schickt den Pfad des laufenden Downloads. Danach
+    darf weder die Ziel- noch die Temp-Datei zurueckbleiben."""
     monkeypatch.setattr(installer, "PARALLEL_MIN_BYTES", 1024)
-    srv = http_server(size_bytes=8 * 1024 * 1024)
+    # Kleine Chunks, damit der Download lange genug laeuft, um ihn mitten
+    # drin zu erwischen.
+    monkeypatch.setattr(installer, "DOWNLOAD_CHUNK_SIZE", 4 * 1024)
+    srv = http_server(size_bytes=32 * 1024 * 1024)
 
     file_path = os.path.join(str(tmp_path), "abbruch.safetensors")
+    ergebnis = {}
 
     def cancel_soon():
-        time.sleep(0.05)
-        installer.cancel_path = file_path
+        # Warten, bis der Download aktiv ist und seinen Zielpfad kennt.
+        deadline = time.time() + 5
+        while time.time() < deadline:
+            if installer.request_cancel(file_path) == "active":
+                ergebnis["cancel"] = "active"
+                return
+            time.sleep(0.005)
 
     t = threading.Thread(target=cancel_soon, daemon=True)
     t.start()
@@ -187,6 +196,7 @@ def test_abbruch_raeumt_temp_datei_weg(installer, http_server, tmp_path, monkeyp
     )
     t.join(timeout=5)
 
+    assert ergebnis.get("cancel") == "active"
     assert ok is False
     assert not os.path.exists(file_path)
     assert not os.path.exists(file_path + ".temp")

@@ -23,18 +23,22 @@ Einzeln:
 cd tests; python -m pytest -q
 
 # Frontend
-node --experimental-test-module-mocks --import ./tests/frontend/setup.mjs `
+node --experimental-transform-types --experimental-test-module-mocks `
+     --disable-warning=ExperimentalWarning `
+     --import ./tests/frontend/setup.mjs `
      --test tests/frontend/i18n.test.ts
 ```
 
 ## Was abgedeckt ist
 
-### Backend (`pytest`, 26 Tests)
+### Backend (`pytest`, 137 Tests)
 
 | Datei | Inhalt |
 |---|---|
 | `test_model_installer.py` | Der beschleunigte Download – **gegen einen echten lokalen HTTP-Server**, nicht gegen Mocks. Jeder Integritätstest vergleicht den SHA256 der geschriebenen Datei mit dem Original: 6 parallele Segmente, krumme Dateigrößen, Fallback auf Einzelstream ohne Range-Support, Redirect-Auflösung **ohne** Range-Header (die HuggingFace-Falle), unvollständige Segmente, HTML-Loginseite statt Datei, Abbruch, Tempo-/ETA-Felder im Fortschritt. |
 | `test_civarchive.py` | Der CivArchive-Fallback: Parsen des `__NEXT_DATA__`-Payloads, Unterscheidung „nicht im Archiv" (`{}`) von „Fehler" (`None`), plattformübergreifende Quellen (CivitAI/HuggingFace), Route inkl. Hash-Normalisierung und Cache. |
+| `test_download_haertung.py` | Härtung des Downloads: `install_model` nimmt nur http/https, nur bekannte Modellordner (Schlüssel oder registrierter Pfad) und Dateinamen ohne Pfadanteil; Zielordner über `WORKSPACE_MANAGER_MODEL_ROOT`; vorhandene Datei wird nicht überschrieben; Speicherplatz-Check; Retry mit Fortsetzen nach abgerissener Verbindung (parallel und Einzelstream) bzw. sauberer Fehler ohne Range-Support; Abbruch pro Download (unbekannter Pfad wird ignoriert, Abbruch nach dem letzten Chunk löscht nichts); kaputte Aufgabe beendet den Worker nicht; Token-Maskierung; `HF_TOKEN` nur an den HF-Host, nie an das CDN. |
+| `test_pfad_sicherheit.py` | Pfad-Sicherheit aller Routen mit Client-Pfaden: `safe_join()` (`..`, absolute Pfade, `C:foo`, NUL, Nachbarordner mit gleichem Präfix), Workflow-/Ordner-Routen nur innerhalb von my-workflows (legitime relative Aufrufe funktionieren weiter), Root-Routen (`delete_file`, `update_file`, `rename_file`, `delete_folder`, `get_system_dir` mit `WORKSPACE_MANAGER_BROWSE_ROOTS`), `save_db`/`get_db` (Tabellenname, atomares UTF-8-Schreiben), Bild-Upload (nur Dateiname, nur Bildendungen), `isInput=false`. |
 
 ### Frontend (`node --test`, 25 Tests)
 

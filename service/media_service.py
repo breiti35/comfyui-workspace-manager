@@ -6,6 +6,7 @@ from aiohttp import web
 import folder_paths
 import os
 from .model_manager.model_preview import get_thumbnail_for_image_file
+from .path_utils import safe_join, UnsafePathError
 
 image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
 video_extensions = ['.mp4', '.mov', '.avi', '.webm', '.mkv']
@@ -23,7 +24,12 @@ def view_media(filename, isPreview = False, isInput = False):
         return web.Response(status=400)
 
     path = folder_paths.get_input_directory() if isInput else folder_paths.get_output_directory()
-    file_path = os.path.join(path, filename)
+    # The checks above only catch the obvious spellings; safe_join resolves
+    # the final path (symlinks included) and verifies it is still inside.
+    try:
+        file_path = safe_join(path, filename, allow_absolute=False)
+    except UnsafePathError:
+        return web.Response(status=400)
 
     if not os.path.exists(file_path):
         return web.Response(status=404)
@@ -66,7 +72,9 @@ async def preview_file(request):
 @server.PromptServer.instance.routes.get("/workspace/view_media")
 async def view_file(request):
     filename = request.query.get("filename", None)
-    isPreview = request.query.get("isPreview", False)
-    isInput = request.query.get("isInput", False)
+    # Query values are strings: the old truthiness check treated
+    # "?isInput=false" as True. Only an explicit "true" enables a flag.
+    isPreview = request.query.get("isPreview", "").lower() == "true"
+    isInput = request.query.get("isInput", "").lower() == "true"
     return await asyncio.to_thread(view_media, filename, isPreview, isInput)
 

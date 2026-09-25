@@ -9,6 +9,7 @@ from threading import Lock
 import server
 import uuid
 from .setting_service import get_my_workflows_dir
+from .path_utils import safe_join, is_within, UnsafePathError, bad_path_response
 
 @server.PromptServer.instance.routes.get('/workspace/get_os')
 async def scan_my_workflows_files(request):
@@ -17,20 +18,35 @@ async def scan_my_workflows_files(request):
 @server.PromptServer.instance.routes.post('/workspace/file/scan_my_workflows_folder')
 async def scan_my_workflows_files(request):
     reqJson = await request.json()
-    path = reqJson['path']
-    path = os.path.join(get_my_workflows_dir(), path)
+    base = get_my_workflows_dir()
+    user_path = reqJson.get('path')
+    try:
+        # Validate only - traversal keeps using the plain join so the 'path'
+        # fields in the answer stay byte-identical to before (no realpath /
+        # case normalization that the frontend might compare against).
+        safe_join(base, user_path)
+    except UnsafePathError as e:
+        return bad_path_response(e)
+    path = os.path.join(base, user_path)
     recursive = reqJson.get('recursive', False)
     metaInfoOnly = reqJson.get('metaInfoOnly', False)
-    
-    fileList = await asyncio.to_thread(folder_handle, path, recursive, metaInfoOnly)
+
+    fileList = await asyncio.to_thread(folder_handle, path, recursive, metaInfoOnly, None, base)
     return web.Response(text=json.dumps(fileList), content_type='application/json')
 
-def folder_handle(path, recursive, metaInfoOnly, fileList=None):
+def folder_handle(path, recursive, metaInfoOnly, fileList=None, base=None):
     if fileList is None:
         fileList = []
+    if base is None:
+        base = path
     for item in os.listdir(path):
         item_path = os.path.join(path, item)
         try:
+            # A symlink inside the workflows dir can point anywhere. file_handle
+            # rewrites JSON files (to add a missing id), so never follow links
+            # out of the workflows dir - that would modify foreign files.
+            if not is_within(base, item_path):
+                continue
             if os.path.isfile(item_path) and item_path.endswith('.json'):
                 file_handle(item, fileList, item_path, metaInfoOnly)
 
@@ -45,7 +61,7 @@ def folder_handle(path, recursive, metaInfoOnly, fileList=None):
                 })
                 # Recursively scan if recursive is True
                 if recursive:
-                    folder_handle(item_path, recursive, metaInfoOnly, fileList)
+                    folder_handle(item_path, recursive, metaInfoOnly, fileList, base)
         except Exception as e:
             logging.error(f"Error scan workflow {item_path}: {e}, {traceback.format_exc()}")
     return fileList

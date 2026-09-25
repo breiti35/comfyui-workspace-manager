@@ -10,17 +10,31 @@ from pathlib import Path
 from .twoway_sync_folder_service import *
 import shutil
 from .scan_my_workflows_folder import *
+from .path_utils import safe_join, safe_name, is_within, check_browse_allowed, UnsafePathError, bad_path_response
+
+
+def _wf_path(user_path):
+    """Client path -> absolute path inside the my-workflows dir, or
+    UnsafePathError (turned into HTTP 400 by _run_confined)."""
+    return safe_join(get_my_workflows_dir(), user_path)
+
+
+async def _run_confined(sync_fn, *args):
+    try:
+        data = await asyncio.to_thread(sync_fn, *args)
+    except UnsafePathError as e:
+        return bad_path_response(e)
+    return web.json_response(data, content_type='application/json')
 
 @server.PromptServer.instance.routes.post('/workspace/file/save')
 async def save_file(request):
     reqJson = await request.json()
-    data = await asyncio.to_thread(save_file_sync, reqJson)
-    return web.json_response(data, content_type='application/json')
+    return await _run_confined(save_file_sync, reqJson)
 
 def save_file_sync(reqJson):
     current_path = reqJson.get('path')
     new_json_data_str = reqJson.get('json')
-    current_path = os.path.join(get_my_workflows_dir(), current_path)
+    current_path = _wf_path(current_path)
     try:
         new_json_data = json.loads(new_json_data_str)
     except json.JSONDecodeError:
@@ -51,14 +65,15 @@ def save_file_sync(reqJson):
 @server.PromptServer.instance.routes.post('/workspace/file/rename')
 async def rename_file(request):
     reqJson = await request.json()
-    data = await asyncio.to_thread(rename_file_sync, reqJson)
-    return web.json_response(data, content_type='application/json')
+    return await _run_confined(rename_file_sync, reqJson)
 
 def rename_file_sync(reqJson):
-    current_path = Path(get_my_workflows_dir()) / reqJson['path']
-    new_name = reqJson.get('newName')
+    current_path = Path(_wf_path(reqJson.get('path')))
+    # newName must be a bare file name - "../../x" or an absolute path would
+    # turn the rename into a move anywhere on disk.
+    new_name = safe_name(reqJson.get('newName'))
+    new_path = Path(_wf_path(str(current_path.parent / new_name)))
     try:
-        new_path = current_path.parent / new_name
         Path(current_path).rename(new_path)
         return {"success": True}
     except Exception as e:
@@ -67,14 +82,13 @@ def rename_file_sync(reqJson):
 @server.PromptServer.instance.routes.post('/workspace/file/move')
 async def move_file(request):
     reqJson = await request.json()
-    data = await asyncio.to_thread(move_file_sync, reqJson)
-    return web.json_response(data, content_type='application/json')
+    return await _run_confined(move_file_sync, reqJson)
 
 def move_file_sync(reqJson):
     current_path = reqJson.get('path')
     new_path = reqJson.get('newParentPath')
-    current_path = os.path.join(get_my_workflows_dir(), current_path)
-    new_path = os.path.join(get_my_workflows_dir(), new_path)
+    current_path = _wf_path(current_path)
+    new_path = _wf_path(new_path or "")
     try:
         shutil.move(current_path, new_path)
         return {"success": True}
@@ -84,9 +98,9 @@ def move_file_sync(reqJson):
 @server.PromptServer.instance.routes.post('/workspace/create_workflow_file')
 async def create_workflow_file(request):
     reqJson = await request.json()
-    data = await asyncio.to_thread(create_workflow_file, reqJson)
-    return web.json_response(data, content_type='application/json')
-def create_workflow_file(reqJson):
+    return await _run_confined(create_workflow_file_sync, reqJson)
+
+def create_workflow_file_sync(reqJson):
     try:
         parentFolderPath = reqJson.get('parentFolderPath')
         name = reqJson.get('name')
@@ -95,7 +109,7 @@ def create_workflow_file(reqJson):
         if not name or workflow_json is None:
             print('🔴Create workflow missing necessary data')
             return {}  # Missing necessary data
-        abs_path = Path(get_my_workflows_dir()) / parentFolderPath
+        abs_path = Path(_wf_path(parentFolderPath or ""))
         # Create the directory if it does not exist
         abs_path.mkdir(parents=True, exist_ok=True)
         
@@ -109,18 +123,21 @@ def create_workflow_file(reqJson):
             new_file_name = f"{base_name}_{counter}{extension}"
             counter += 1
         
-        new_file_path = abs_path / new_file_name
+        # The name comes from the client too: confine the final file as well.
+        new_file_path = Path(_wf_path(str(abs_path / new_file_name)))
         # Writing JSON data to the file
         with open(new_file_path, 'w', encoding='utf-8') as file:
             file.write(workflow_json)
         new_base_name,ext = os.path.splitext(new_file_name)
         return {"name": new_base_name}
+    except UnsafePathError:
+        raise
     except Exception as e:
         print(f"Failed to create workflow file: {e}")
         return {}  # In case of any error
 
 def read_workflow_file(path, id):
-    abs_path = os.path.join(get_my_workflows_dir(), path)
+    abs_path = _wf_path(path)
     create_time, update_time = getFileCreateTime(abs_path)
     with open(abs_path, 'r', encoding='utf-8') as f:
         json_data = json.load(f)
@@ -174,6 +191,9 @@ def dedupe_workflow_ids():
             if not file.endswith(".json"):
                 continue
             file_path = os.path.join(root, file)
+            # A symlinked .json pointing outside would get its id rewritten.
+            if not is_within(abs_path, file_path):
+                continue
             try:
                 check_and_update_workflow_id(file_path, seen_ids)
             except Exception as e:
@@ -189,18 +209,22 @@ async def get_workflow_file(request):
     reqJson = await request.json()
     path = reqJson.get('path')
     id = reqJson.get('id')
-    
-    data = await asyncio.to_thread(read_workflow_file, path, id)
-    
-    return web.json_response(data, content_type='application/json')
+    return await _run_confined(read_workflow_file, path, id)
 
 
 # Scan .json and folders in the given path
 @server.PromptServer.instance.routes.post("/workspace/scan_my_workflows_files")
 async def scan_local_new_files(request):
     reqJson = await request.json()
-    path = reqJson['path']
-    
+    # Legacy route (the UI uses /workspace/file/scan_my_workflows_folder now).
+    # It used to list - and rewrite! - JSON in any directory on disk; it is now
+    # confined to the workflows dir like everything else. Relative and
+    # absolute-inside paths keep working.
+    try:
+        path = _wf_path(reqJson.get('path'))
+    except UnsafePathError as e:
+        return bad_path_response(e)
+
     fileList = await asyncio.to_thread(folder_handle, path)
     return web.Response(text=json.dumps(fileList), content_type='application/json')
 
@@ -209,6 +233,10 @@ def folder_handle(path):
     for item in os.listdir(path):
         try:
             item_path = os.path.join(path, item)
+            # file_handle rewrites files without an id - never via a symlink
+            # that points out of the directory being scanned.
+            if not is_within(path, item_path):
+                continue
             if os.path.isfile(item_path) and item_path.endswith('.json'):
                 with open(item_path, 'r', encoding='utf-8') as f:
                     file_handle(item, f, fileList, item_path)
@@ -250,15 +278,14 @@ def file_handle(name, file, fileList, file_path):
 @server.PromptServer.instance.routes.post('/workspace/file/gen_unique_name')
 async def generate_unique_file_name(request):
     reqJson = await request.json()
-    data = await asyncio.to_thread(generate_unique_file_name_sync, reqJson)
-    return web.json_response(data, content_type='application/json')
+    return await _run_confined(generate_unique_file_name_sync, reqJson)
 
 def generate_unique_file_name_sync(reqJson):
     file_path = reqJson.get('path')
     if not file_path:
         return {"success": False, "error": "File path is required"}
 
-    path = Path(get_my_workflows_dir()) / file_path
+    path = Path(_wf_path(file_path))
     if not path.parent.is_dir():
         return {"success": False, "error": "Directory of the provided path does not exist"}
 
@@ -277,15 +304,14 @@ def generate_unique_file_name_sync(reqJson):
 @server.PromptServer.instance.routes.post('/workspace/file/count_files')
 async def count_files(request):
     reqJson = await request.json()
-    data = await asyncio.to_thread(count_files_sync, reqJson)
-    return web.json_response(data, content_type='application/json')
+    return await _run_confined(count_files_sync, reqJson)
 
 def count_files_sync(reqJson):
     directory_path = reqJson.get('path')
     if not directory_path:
         return {"success": False, "error": "Directory path is required"}
 
-    path = Path(get_my_workflows_dir()) / directory_path
+    path = Path(_wf_path(directory_path))
     if not path.is_dir():
         return {"success": False, "error": "Provided path is not a directory"}
     file_count = 0
@@ -297,25 +323,47 @@ def count_files_sync(reqJson):
 @server.PromptServer.instance.routes.post('/workspace/copy_json_files')
 async def copy_json_files(request):
     reqJson = await request.json()
-    src_dir = reqJson['src']
-    dest_dir = reqJson['dst']
+    src_dir = reqJson.get('src')
+    dest_dir = reqJson.get('dst')
     try:
-        for item in os.listdir(src_dir):
-            src_item_path = os.path.join(src_dir, item)
-            dest_item_path = os.path.join(dest_dir, item)
+        # The only caller (settings -> change workflows dir) sends the current
+        # workflows dir as src. Anything else would turn this into "copy any
+        # directory tree on the server somewhere else".
+        if not isinstance(src_dir, str) or not isinstance(dest_dir, str):
+            raise UnsafePathError("src and dst are required")
+        current = os.path.realpath(get_my_workflows_dir())
+        if os.path.normcase(os.path.realpath(src_dir)) != os.path.normcase(current):
+            raise UnsafePathError("src must be the current workflows directory")
+        check_browse_allowed(dest_dir)
+        if not os.path.isdir(dest_dir):
+            raise UnsafePathError("dst is not an existing directory")
+        # Copying a tree into its own subfolder recurses until the disk is full.
+        if is_within(current, dest_dir):
+            raise UnsafePathError("dst must not be inside the current workflows directory")
+    except UnsafePathError as e:
+        return bad_path_response(e)
 
-            if os.path.isdir(src_item_path):
-                dest_item_path = await get_unique_dir_name(dest_item_path)
-                await asyncio.to_thread(shutil.copytree, src_item_path, dest_item_path)
-            elif item.endswith('.json'):
-                dest_item_path = await get_unique_file_name(dest_item_path)
-                await asyncio.to_thread(shutil.copy2, src_item_path, dest_item_path)
-
+    try:
+        await asyncio.to_thread(_copy_json_files_sync, src_dir, dest_dir)
         return web.json_response({"success": True}, content_type='application/json')
     except Exception as e:
         return web.json_response({"success": False, "error": str(e)}, content_type='application/json')
 
-async def get_unique_file_name(path):
+def _copy_json_files_sync(src_dir, dest_dir):
+    for item in os.listdir(src_dir):
+        src_item_path = os.path.join(src_dir, item)
+        dest_item_path = os.path.join(dest_dir, item)
+
+        if os.path.isdir(src_item_path):
+            dest_item_path = get_unique_dir_name(dest_item_path)
+            # symlinks=True: copy links as links instead of pulling in
+            # whatever they point to outside the workflows dir.
+            shutil.copytree(src_item_path, dest_item_path, symlinks=True)
+        elif item.endswith('.json'):
+            dest_item_path = get_unique_file_name(dest_item_path)
+            shutil.copy2(src_item_path, dest_item_path)
+
+def get_unique_file_name(path):
     base, extension = os.path.splitext(path)
     counter = 1
     while os.path.exists(path):
@@ -323,7 +371,7 @@ async def get_unique_file_name(path):
         counter += 1
     return path
 
-async def get_unique_dir_name(path):
+def get_unique_dir_name(path):
     original_path = path
     counter = 1
     while os.path.exists(path):
@@ -332,31 +380,67 @@ async def get_unique_dir_name(path):
     return path
 # End: Copy all files to the new directory when switching the save directory
 
+# Cover images only - view_media serves these with an image content type.
+ALLOWED_IMAGE_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp'}
+# Cover images are small; the cap keeps a single request from filling the
+# (often small, ephemeral) container disk or RAM.
+MAX_IMAGE_UPLOAD_BYTES = 50 * 1024 * 1024
+
+
+def _write_bytes(path, data):
+    with open(path, 'wb') as f:
+        f.write(data)
+
+
 @server.PromptServer.instance.routes.post('/workspace/images/save')
 async def save_images(request):
     reader = await request.multipart()
-    subfolder = "workspace_manager"  # 默认子文件夹，实际上你可能会从表单中动态获取
+    subfolder = "workspace_manager"  # fixed subfolder of the ComfyUI output dir
     output_path = folder_paths.get_output_directory()
     safe_dir = Path(os.path.join(output_path, subfolder))
     if not safe_dir.exists():
         safe_dir.mkdir(parents=True, exist_ok=True)
 
-    # 用于存储保存的文件路径
     files_saved = []
-    # 处理multipart/form-data中的每一部分
+    errors = []
     async for part in reader:
-        if part.name.startswith('images'):
-            filename = part.filename
-            if not filename:
-                continue
-            file_path = safe_dir / filename
-            loop = asyncio.get_running_loop()
-            # 异步写入文件
-            with open(file_path, 'wb') as f:
-                while True:
-                    chunk = await part.read_chunk()  # 默认8192 bytes
-                    if not chunk:
-                        break
-                    await loop.run_in_executor(None, f.write, chunk)
-            files_saved.append(str(file_path))
-    return web.Response(text=json.dumps({"imgPaths": files_saved}), content_type='application/json')
+        if not part.name or not part.name.startswith('images'):
+            continue
+        # basename(): the multipart filename is client controlled
+        # ("../../custom_nodes/x.py" would otherwise be written as-is).
+        # Browsers already send a bare name, so the UI's
+        # "workspace_manager/<file.name>" reference stays valid.
+        filename = os.path.basename((part.filename or '').replace('\\', '/'))
+        if not filename or filename in ('.', '..'):
+            continue
+        if os.path.splitext(filename)[1].lower() not in ALLOWED_IMAGE_EXTENSIONS:
+            errors.append(f"{filename}: file type not allowed")
+            continue
+        try:
+            file_path = safe_join(safe_dir, filename, allow_absolute=False)
+        except UnsafePathError as e:
+            errors.append(str(e))
+            continue
+
+        data = bytearray()
+        too_big = False
+        while True:
+            chunk = await part.read_chunk(1024 * 1024)
+            if not chunk:
+                break
+            data.extend(chunk)
+            if len(data) > MAX_IMAGE_UPLOAD_BYTES:
+                too_big = True
+                break
+        if too_big:
+            errors.append(f"{filename}: larger than {MAX_IMAGE_UPLOAD_BYTES // (1024 * 1024)} MB")
+            continue
+        # One thread hop for the whole file instead of one per 8 KB chunk.
+        await asyncio.to_thread(_write_bytes, file_path, bytes(data))
+        files_saved.append(str(file_path))
+
+    result = {"imgPaths": files_saved}
+    if errors:
+        result["errors"] = errors
+    status = 400 if errors and not files_saved else 200
+    return web.Response(text=json.dumps(result), content_type='application/json', status=status)
