@@ -8,6 +8,7 @@ import {
   Image,
   Spinner,
   Text,
+  Tooltip,
 } from "@chakra-ui/react";
 import { useEffect, useMemo, useState } from "react";
 import { IconCheck, IconDownload, IconHeart } from "@tabler/icons-react";
@@ -28,6 +29,8 @@ interface InstallModelCardProps {
   installing: boolean;
   onQuickInstall: (model: CivitiModel) => void;
   onOpenDetail: (model: CivitiModel) => void;
+  /** Where a quick install lands (resolved path, or the folder key). */
+  targetFolder?: string;
 }
 
 export default function InstallModelCard({
@@ -37,6 +40,7 @@ export default function InstallModelCard({
   installing,
   onQuickInstall,
   onOpenDetail,
+  targetFolder,
 }: InstallModelCardProps) {
   const { t } = useT();
   const { ref, inView } = useInView<HTMLDivElement>("400px");
@@ -190,22 +194,31 @@ export default function InstallModelCard({
             <IconCheck size={12} /> {t("install.installedBadge")}
           </Badge>
         ) : (
-          <Button
-            alignSelf={"flex-start"}
-            size={"xs"}
-            colorScheme={"blue"}
-            leftIcon={<IconDownload size={14} />}
-            isDisabled={downloading}
-            opacity={0}
-            _groupHover={{ opacity: 1 }}
-            transition={"opacity 0.12s"}
-            onClick={(e) => {
-              e.stopPropagation();
-              onQuickInstall(model);
-            }}
+          <Tooltip
+            label={
+              targetFolder
+                ? `${t("install.targetFolder")}: ${targetFolder}`
+                : undefined
+            }
+            isDisabled={!targetFolder}
           >
-            {t("install.installButton")}
-          </Button>
+            <Button
+              alignSelf={"flex-start"}
+              size={"xs"}
+              colorScheme={"blue"}
+              leftIcon={<IconDownload size={14} />}
+              isDisabled={downloading}
+              opacity={0}
+              _groupHover={{ opacity: 1 }}
+              transition={"opacity 0.12s"}
+              onClick={(e) => {
+                e.stopPropagation();
+                onQuickInstall(model);
+              }}
+            >
+              {t("install.installButton")}
+            </Button>
+          </Tooltip>
         )}
       </Flex>
 

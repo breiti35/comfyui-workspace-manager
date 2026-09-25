@@ -35,7 +35,8 @@ if ($Only -in @("all", "fe")) {
         $testdateien = Get-ChildItem "tests/frontend/*.test.ts" | ForEach-Object {
             "tests/frontend/$($_.Name)"
         }
-        node --experimental-test-module-mocks `
+        node --experimental-transform-types `
+             --experimental-test-module-mocks `
              --disable-warning=ExperimentalWarning `
              --import ./tests/frontend/setup.mjs `
              --test @testdateien

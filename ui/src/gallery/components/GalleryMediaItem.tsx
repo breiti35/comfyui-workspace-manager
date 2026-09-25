@@ -45,7 +45,7 @@ export default function GalleryMediaItem({
       {
         label: t("gallery.loadWorkflowDialog.newWorkflow"),
         onClick: () => loadFilePath(localPath),
-        colorScheme: "teal",
+        colorScheme: "blue",
       },
       {
         label: t("gallery.loadWorkflowDialog.overwrite"),

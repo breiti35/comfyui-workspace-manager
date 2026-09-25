@@ -14,6 +14,22 @@ export function currentRoute(stack: WorkspaceRoute[]): WorkspaceRoute {
   return stack[stack.length - 1] ?? ROOT_ROUTE;
 }
 
+/**
+ * Routes that occupy the same level: opening one replaces the other instead
+ * of stacking on top of it. modelList and installModels are two tabs of the
+ * same panel (see ModelsPanel.tsx), so a stack holding both would mean
+ * closing once leaves the panel open on the other tab.
+ */
+const SIBLING_ROUTES: readonly (readonly WorkspaceRoute[])[] = [
+  ["modelList", "installModels"],
+];
+
+// Every route is, at minimum, its own sibling (a singleton group) - that's
+// what makes the lookup below subsume the plain "already in stack" case.
+function siblingGroupOf(route: WorkspaceRoute): readonly WorkspaceRoute[] {
+  return SIBLING_ROUTES.find((group) => group.includes(route)) ?? [route];
+}
+
 export function pushRoute(
   stack: WorkspaceRoute[],
   route: WorkspaceRoute,
@@ -33,13 +49,19 @@ export function pushRoute(
   // pushing onto an empty stack lands on ["root", route] just like it would
   // if the stack had started out via initialRouteStack().
   const base = stack.length === 0 ? [ROOT_ROUTE] : stack;
-  const existingIndex = base.indexOf(route);
+  // Look for the nearest entry that shares a level with the route being
+  // opened - either the exact same route lower in the stack (e.g.
+  // versionHistory can be opened from two places, modelList can be
+  // re-entered from installModels), or one of its siblings (e.g.
+  // installModels opened while modelList is showing). Either way we
+  // navigate back to that level instead of growing the stack: a route is
+  // its own sibling, so an exact match falls out of this lookup the same
+  // way it always did, just via SIBLING_ROUTES' singleton fallback instead
+  // of a dedicated indexOf check.
+  const group = siblingGroupOf(route);
+  const existingIndex = base.findIndex((entry) => group.includes(entry));
   if (existingIndex !== -1) {
-    // Route is already lower in the stack (e.g. versionHistory can be
-    // opened from two places, modelList can be re-entered from
-    // installModels): navigate back to that level instead of growing the
-    // stack or letting the same route appear twice.
-    return base.slice(0, existingIndex + 1);
+    return [...base.slice(0, existingIndex), route];
   }
   return [...base, route];
 }

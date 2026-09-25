@@ -1,5 +1,5 @@
 import { fetchApi } from "../Api";
-import { Folder } from "../types/dbTypes";
+import type { Folder } from "../types/dbTypes";
 import { sanitizeRelPath } from "../utils/OsPathUtils";
 
 export namespace TwowayFolderSyncAPI {

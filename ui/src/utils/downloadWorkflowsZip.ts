@@ -1,4 +1,4 @@
-import { Workflow } from "../types/dbTypes";
+import type { Workflow } from "../types/dbTypes";
 import { formatTimestamp } from "../utils";
 import JSZip from "JSZip";
 import { genFolderRelPath } from "../db-tables/DiskFileUtils";

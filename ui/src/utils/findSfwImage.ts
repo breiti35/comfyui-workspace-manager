@@ -1,6 +1,6 @@
-import { SearchHit } from "../model-manager/civitSearchTypes";
+import type { SearchHit } from "../model-manager/civitSearchTypes";
 import { isCivitModel } from "../model-manager/install-models/util/modelTypes";
-import { CivitiModel } from "../model-manager/types";
+import type { CivitiModel } from "../model-manager/types";
 
 interface ImageLike {
   url?: string;

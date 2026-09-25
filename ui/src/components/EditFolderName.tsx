@@ -75,7 +75,7 @@ export default function EditFolderNameModal({ folder, onclose }: Props) {
         </ModalBody>
         <ModalFooter>
           <Button
-            colorScheme="teal"
+            colorScheme="blue"
             mr={3}
             onClick={onSubmit}
             isDisabled={!editName || !!submitError}

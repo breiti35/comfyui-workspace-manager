@@ -1,6 +1,7 @@
 import { ESortTypes } from "./RecentFilesDrawer/types";
 import { userSettingsTable } from "./db-tables/WorkspaceDB";
-import { Workflow, EShortcutKeys, SortableItem } from "./types/dbTypes";
+import { EShortcutKeys } from "./types/dbTypes";
+import type { Workflow, SortableItem } from "./types/dbTypes";
 import { app } from "./utils/comfyapp";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

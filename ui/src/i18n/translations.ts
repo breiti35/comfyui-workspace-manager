@@ -103,6 +103,8 @@ const en = {
   "install.sort.highestRated": "Highest rated",
   "install.sort.newest": "Newest",
   "install.baseModel.all": "All base models",
+  "install.baseModel.searchPlaceholder": "Search base model…",
+  "install.baseModel.noMatch": "No matching base model",
   "install.pageSize.label": "Show:",
   "install.pageSize.perPage": "per page",
   "install.results.onThisPage": "on this page",
@@ -191,7 +193,6 @@ const en = {
   "models.toolbar.sortShortNewest": "New",
   "models.toolbar.sortShortOldest": "Old",
   "models.toolbar.searchPlaceholder": "Search models…",
-  "models.toolbar.installButton": "Install Models",
   "models.toolbar.searchPrefix": "Search:",
   "models.toolbar.sortTooltip": "Sort",
   "models.toolbar.refreshTooltip": "Reload model list",
@@ -206,6 +207,8 @@ const en = {
   "models.topbar.errorBoundary": "The Model Manager ran into an error.",
   "models.installMissing.aria": "missing models",
   "models.installMissing.button": "Install Missing",
+  "models.panel.tabMyModels": "My Models",
+  "models.panel.tabAdd": "Add",
 
   // --- Plugin topbar ---
   "topbar.recentFilesTooltip": "Recent files & folders",
@@ -365,6 +368,14 @@ const en = {
   "prompts.saveToLibrary": "Save to prompt library",
   "prompts.saved": "Saved",
   "prompts.savedToast": "Saved to prompt library",
+  "prompts.saveError": "Could not save to the prompt library",
+  "prompts.loadError":
+    "Could not load the prompt library. Nothing is saved until it loads again.",
+  "prompts.retry": "Retry",
+
+  "models.list.loadError": "Could not load the model list",
+  "models.list.retry": "Retry",
+  "install.targetFolder": "Target folder",
 } as const;
 
 export type TransKey = keyof typeof en;
@@ -471,6 +482,8 @@ const de: Record<TransKey, string> = {
   "install.sort.highestRated": "Beste Bewertung",
   "install.sort.newest": "Neueste",
   "install.baseModel.all": "Alle Basismodelle",
+  "install.baseModel.searchPlaceholder": "Basismodell suchen…",
+  "install.baseModel.noMatch": "Kein passendes Basismodell",
   "install.pageSize.label": "Anzeigen:",
   "install.pageSize.perPage": "pro Seite",
   "install.results.onThisPage": "auf dieser Seite",
@@ -559,7 +572,6 @@ const de: Record<TransKey, string> = {
   "models.toolbar.sortShortNewest": "Neu",
   "models.toolbar.sortShortOldest": "Alt",
   "models.toolbar.searchPlaceholder": "Modelle durchsuchen…",
-  "models.toolbar.installButton": "Modelle installieren",
   "models.toolbar.searchPrefix": "Suche:",
   "models.toolbar.sortTooltip": "Sortierung",
   "models.toolbar.refreshTooltip": "Modell-Liste neu einlesen",
@@ -574,6 +586,8 @@ const de: Record<TransKey, string> = {
   "models.topbar.errorBoundary": "Der Model-Manager ist auf einen Fehler gestoßen.",
   "models.installMissing.aria": "fehlende Modelle",
   "models.installMissing.button": "Fehlende installieren",
+  "models.panel.tabMyModels": "Meine Modelle",
+  "models.panel.tabAdd": "Hinzufügen",
 
   // --- Plugin topbar ---
   "topbar.recentFilesTooltip": "Zuletzt verwendete Dateien & Ordner",
@@ -737,6 +751,14 @@ const de: Record<TransKey, string> = {
   "prompts.saveToLibrary": "In Prompt-Bibliothek speichern",
   "prompts.saved": "Gespeichert",
   "prompts.savedToast": "In Prompt-Bibliothek gespeichert",
+  "prompts.saveError": "Speichern in der Prompt-Bibliothek fehlgeschlagen",
+  "prompts.loadError":
+    "Die Prompt-Bibliothek konnte nicht geladen werden. Bis sie wieder lädt, wird nichts gespeichert.",
+  "prompts.retry": "Erneut versuchen",
+
+  "models.list.loadError": "Die Modellliste konnte nicht geladen werden",
+  "models.list.retry": "Erneut versuchen",
+  "install.targetFolder": "Zielordner",
 };
 
 export const translations: Record<Lang, Record<TransKey, string>> = { en, de };

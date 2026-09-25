@@ -51,6 +51,12 @@ interface InstallDetailViewProps {
   statForName: (fileName?: string) => DownloadEntry | undefined;
   onInstallVersion: (version: CivitiModelVersion, model: CivitiModel) => void;
   onBack: () => void;
+  /**
+   * Where an install lands (resolved absolute path, or just the folder key
+   * when the backend can't resolve it). Undefined = no default folder, the
+   * folder picker opens instead.
+   */
+  targetFolder?: string;
 }
 
 export default function InstallDetailView({
@@ -60,6 +66,7 @@ export default function InstallDetailView({
   statForName,
   onInstallVersion,
   onBack,
+  targetFolder,
 }: InstallDetailViewProps) {
   const { t } = useT();
   const versions = useMemo(() => model.modelVersions ?? [], [model]);
@@ -238,6 +245,17 @@ export default function InstallDetailView({
               {t("install.detail.versionsLabel")}
               {versions.length ? ` (${versions.length})` : ""}
             </SectionLabel>
+            {targetFolder && (
+              <Text
+                fontSize={"xs"}
+                color={"gray.500"}
+                mb={1.5}
+                noOfLines={1}
+                title={targetFolder}
+              >
+                {t("install.targetFolder")}: {targetFolder}
+              </Text>
+            )}
             <Box
               maxH={"360px"}
               overflowY={"auto"}
@@ -325,18 +343,27 @@ export default function InstallDetailView({
                           </Box>
                         </HStack>
                       ) : (
-                        <Button
-                          size={"xs"}
-                          colorScheme={"blue"}
-                          leftIcon={<IconDownload size={14} />}
-                          flexShrink={0}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onInstallVersion(v, model);
-                          }}
+                        <Tooltip
+                          label={
+                            targetFolder
+                              ? `${t("install.targetFolder")}: ${targetFolder}`
+                              : undefined
+                          }
+                          isDisabled={!targetFolder}
                         >
-                          {t("install.installButton")}
-                        </Button>
+                          <Button
+                            size={"xs"}
+                            colorScheme={"blue"}
+                            leftIcon={<IconDownload size={14} />}
+                            flexShrink={0}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onInstallVersion(v, model);
+                            }}
+                          >
+                            {t("install.installButton")}
+                          </Button>
+                        </Tooltip>
                       )}
                     </Flex>
                   );

@@ -1,7 +1,8 @@
 import { getDB, saveDB } from "../Api";
 import { getWorkspaceIndexDB } from "./IndexDBUtils";
-import { TableBaseModel } from "../types/dbTypes";
-import { Table, userSettingsTable } from "./WorkspaceDB";
+import type { TableBaseModel } from "../types/dbTypes";
+import { userSettingsTable } from "./WorkspaceDB";
+import type { Table } from "./WorkspaceDB";
 import { indexdb } from "./indexdb";
 import { nanoid } from "nanoid";
 

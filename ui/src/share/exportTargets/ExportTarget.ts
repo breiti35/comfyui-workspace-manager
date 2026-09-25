@@ -1,5 +1,5 @@
 import type { ComponentType } from "react";
-import { Workflow } from "../../types/dbTypes";
+import type { Workflow } from "../../types/dbTypes";
 
 /**
  * Options a caller can pass to influence what an ExportTarget includes.

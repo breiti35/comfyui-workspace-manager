@@ -1,5 +1,4 @@
 import type { MODEL_TYPE } from "../model-manager/install-models/util/modelTypes";
-import { TopFieldType } from "../gallery/components/MetaBox/MetadataForm.tsx";
 
 export interface SortableItem {
   name: string;
@@ -22,7 +21,6 @@ export interface Workflow extends SortableItem {
   parentFolderID?: string | null; //TODO remove undefined, use null only
   cloudOrigin?: string;
   latestImage?: string;
-  topFieldsConfig?: TopFieldType[];
 }
 
 export interface TableBaseModel {

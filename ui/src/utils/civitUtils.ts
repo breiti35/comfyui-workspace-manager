@@ -44,7 +44,11 @@ export function getCivitApiKey(): string | null {
 export function setCivitApiKey(apiKey: string) {
   apiKeyCache = apiKey || null;
   // Persist server-side (the durable store) and mirror to localStorage.
-  userSettingsTable?.upsert({ civitaiApiKey: apiKey });
+  // Not awaited (sync API); a failed write is logged, the in-memory key and
+  // the localStorage mirror still work for this session.
+  userSettingsTable
+    ?.upsert({ civitaiApiKey: apiKey })
+    ?.catch?.((e: unknown) => console.error("Error saving Civitai API key:", e));
   if (apiKey) {
     localStorage.setItem(CIVIT_API_KEY_STORAGE_KEY, apiKey);
   } else {
@@ -140,6 +144,10 @@ interface HashLookupResult {
   // a failed/404/unknown lookup is NOT treated as NSFW. Callers must also
   // gate this by isNsfwBlurEligibleCategory() before using it to blur.
   imageIsNsfw: boolean;
+  // true when the lookup didn't reach a verdict (rate limit, 5xx, network
+  // error, or we're still backing off from one). Such results are never
+  // cached, and callers must not overwrite previously known data with them.
+  transient?: boolean;
 }
 
 const HASH_LOOKUP_CACHE_PREFIX = "civit-hash-lookup:";
@@ -167,7 +175,17 @@ const HASH_LOOKUP_FAILURE_TTL_MS = 60 * 60 * 1000; // 1 hour
  *      whichever version last scanned it (the bulk scan keeps existing
  *      hashed records as-is), so everything repopulates with current logic.
  */
-export async function runCivitCacheMigrationOnce(): Promise<void> {
+let migrationPromise: Promise<void> | null = null;
+
+export function runCivitCacheMigrationOnce(): Promise<void> {
+  // Memoized: the websocket sync and the HTTP sync may both call this right
+  // at startup, and a second concurrent run would clear indexdb.models again
+  // after the first sync already refilled it.
+  if (!migrationPromise) migrationPromise = runCivitCacheMigration();
+  return migrationPromise;
+}
+
+async function runCivitCacheMigration(): Promise<void> {
   try {
     if (
       localStorage.getItem(CIVIT_CACHE_MIGRATION_LS_KEY) ===
@@ -227,6 +245,10 @@ export async function fetchCivitModelFromHashKey(
   }
 
   const result = await lookupCivitModelFromHashKey(baseUrl, filehash);
+  // Only real verdicts (hit or 404) are cached. A rate limit / 5xx / network
+  // error says nothing about the model, so caching it as "not on Civitai"
+  // would hide the card data for the whole failure TTL.
+  if (result.transient) return result;
   await indexdb.cache?.put({
     id: cacheKey,
     value: JSON.stringify({
@@ -301,21 +323,83 @@ export async function fetchCivArchiveByHash(
   return result;
 }
 
+/**
+ * Global backoff for Civitai hash lookups after a transient failure. A 429
+ * applies to all our requests, not just the one hash, so while it's active
+ * every lookup returns a transient "unknown" without touching the network.
+ */
+let civitBackoffUntil = 0;
+let civitConsecutiveFailures = 0;
+const CIVIT_BACKOFF_BASE_MS = 30 * 1000;
+const CIVIT_BACKOFF_MAX_MS = 10 * 60 * 1000;
+
+/**
+ * Parses a Retry-After header (delta-seconds or HTTP-date) into a delay in
+ * ms. Returns null when absent/unparseable. (Pure - exported for tests.)
+ */
+export function parseRetryAfter(
+  value: string | null | undefined,
+  now: number = Date.now(),
+): number | null {
+  if (!value) return null;
+  const trimmed = value.trim();
+  if (/^\d+(\.\d+)?$/.test(trimmed)) return Math.round(Number(trimmed) * 1000);
+  const date = Date.parse(trimmed);
+  if (Number.isNaN(date)) return null;
+  return Math.max(0, date - now);
+}
+
+/**
+ * Backoff delay after the n-th consecutive failure: the server's Retry-After
+ * if given, else exponential (30s, 60s, 120s, ...), capped at 10 min.
+ * (Pure - exported for tests.)
+ */
+export function computeCivitBackoffMs(
+  consecutiveFailures: number,
+  retryAfterMs: number | null,
+): number {
+  if (retryAfterMs != null) return Math.min(retryAfterMs, CIVIT_BACKOFF_MAX_MS);
+  const exp = CIVIT_BACKOFF_BASE_MS * 2 ** Math.max(0, consecutiveFailures - 1);
+  return Math.min(exp, CIVIT_BACKOFF_MAX_MS);
+}
+
+function noteCivitFailure(retryAfterMs: number | null) {
+  civitConsecutiveFailures += 1;
+  civitBackoffUntil =
+    Date.now() + computeCivitBackoffMs(civitConsecutiveFailures, retryAfterMs);
+}
+
+function noteCivitSuccess() {
+  civitConsecutiveFailures = 0;
+  civitBackoffUntil = 0;
+}
+
 async function lookupCivitModelFromHashKey(
   baseUrl: string,
   filehash: string,
 ): Promise<HashLookupResult> {
+  if (Date.now() < civitBackoffUntil) {
+    return { imageIsNsfw: false, transient: true };
+  }
   try {
     const url = `${baseUrl}/api/v1/model-versions/by-hash/${filehash}`;
     const resp = await fetch(url);
-    if (!resp.ok) {
-      // e.g. a 404 - most often just means the model isn't registered on
-      // Civitai at all (private/custom checkpoints, LoRAs trained locally,
-      // etc.), which is the common case, not the exception. Unknown is not
-      // NSFW.
+    if (resp.status === 404) {
+      // Most often just means the model isn't registered on Civitai at all
+      // (private/custom checkpoints, LoRAs trained locally, etc.), which is
+      // the common case, not the exception. Unknown is not NSFW. This is the
+      // only failure that gets cached as "not on Civitai".
+      noteCivitSuccess();
       return { imageIsNsfw: false };
     }
+    if (!resp.ok) {
+      // 429 / 5xx / auth trouble: no verdict about this hash. Back off
+      // (honouring Retry-After when Civitai sends it) and don't cache.
+      noteCivitFailure(parseRetryAfter(resp.headers?.get("Retry-After")));
+      return { imageIsNsfw: false, transient: true };
+    }
     const json: ResponsePartial = await resp.json();
+    noteCivitSuccess();
     // For the thumbnail we still prefer an explicitly SFW image (so the
     // preview shown - blurred or not - isn't the most explicit one), but the
     // blur DECISION is the model-level adult flag, not the chosen image's
@@ -335,8 +419,9 @@ async function lookupCivitModelFromHashKey(
       imageIsNsfw: json.model?.nsfw === true,
     };
   } catch (e) {
-    // Network error, malformed JSON, etc. - same fallback as a non-ok
-    // response above: unknown is not NSFW.
-    return { imageIsNsfw: false };
+    // Network error, malformed JSON, etc. - unknown is not NSFW, and it's
+    // transient: back off and retry later instead of caching a miss.
+    noteCivitFailure(null);
+    return { imageIsNsfw: false, transient: true };
   }
 }

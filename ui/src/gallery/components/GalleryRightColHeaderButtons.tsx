@@ -14,7 +14,7 @@ import {
   IconPinFilled,
   IconTrash,
 } from "@tabler/icons-react";
-import { formatTimestamp } from "../../utils.tsx";
+import { formatTimestamp } from "../../utils.ts";
 import { mediaTable, workflowsTable } from "../../db-tables/WorkspaceDB.ts";
 import { useContext, useEffect, useState } from "react";
 import { GalleryContext } from "../GalleryContext.ts";
@@ -118,7 +118,7 @@ export const GalleryRightColHeaderButtons = ({
               onClick: () => {
                 loadFilePath(media.localPath);
               },
-              colorScheme: "teal",
+              colorScheme: "blue",
             },
             {
               label: t("gallery.loadWorkflowDialog.overwrite"),

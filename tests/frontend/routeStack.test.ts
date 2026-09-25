@@ -5,10 +5,17 @@
  * aktuellen Stack als Parameter und gibt den naechsten zurueck (reine
  * Funktionen, keine Mocks noetig).
  *
- * Zentraler Anlassfall fuer diese Datei: Canvas -> Modellliste -> "Modell
- * installieren" oeffnen -> Installationsansicht wieder schliessen. Vorher
- * fiel das Ergebnis dabei auf "root" zurueck statt zur Modellliste - der
- * erste Test unten haelt genau das fest.
+ * Zentraler Regressionsfall fuer diese Datei: popRoute auf einer tieferen
+ * Ebene (z.B. drei Ebenen tief) muss genau eine Ebene zurueckgehen, nicht
+ * bis auf "root" durchfallen - der erste Test unten haelt genau das fest.
+ *
+ * modelList und installModels sind seit dem Panel-Zusammenbau ein
+ * Geschwisterpaar (zwei Reiter desselben Panels, siehe die Tests im
+ * Abschnitt "Geschwister-Routen" weiter unten) und ersetzen einander statt
+ * sich zu stapeln. Die uebrigen Tests in dieser Datei verwenden deshalb
+ * bewusst andere Routenpaare (z.B. gallery/settings), um allgemeine
+ * Stack-Mechanik zu pruefen, ohne versehentlich die Geschwister-Sonderregel
+ * mitzutesten.
  *
  * Ausserdem geben mehrere Funktionen bei "keine Aenderung" bewusst die
  * unveraenderte Eingabe-Referenz zurueck (nicht nur inhaltlich gleiche neue
@@ -55,21 +62,21 @@ test("currentRoute bei leerem Stack faellt defensiv auf root zurueck statt zu we
 
 // --- Der eigentliche Regressionsfall ---------------------------------------
 
-test("Canvas -> Modellliste -> Modell installieren -> Installationsansicht schliessen: obenauf liegt wieder die Modellliste, nicht root", () => {
+test("popRoute auf einer tieferen Ebene kehrt genau eine Ebene zurueck, nicht bis root (Canvas -> Galerie -> Einstellungen -> Einstellungen schliessen)", () => {
   let stack = initialRouteStack();
-  stack = pushRoute(stack, "modelList");
-  stack = pushRoute(stack, "installModels");
-  assert.deepEqual(stack, ["root", "modelList", "installModels"]);
+  stack = pushRoute(stack, "gallery");
+  stack = pushRoute(stack, "settings");
+  assert.deepEqual(stack, ["root", "gallery", "settings"]);
 
-  // Nutzer schliesst die Installationsansicht (z.B. per Zurueck-Button).
+  // Nutzer schliesst die oberste Ebene (z.B. per Zurueck-Button).
   const nachSchliessen = popRoute(stack);
 
   assert.equal(
     currentRoute(nachSchliessen),
-    "modelList",
-    "nach dem Schliessen von 'installModels' muss 'modelList' wieder obenauf liegen, nicht 'root'",
+    "gallery",
+    "nach dem Schliessen von 'settings' muss 'gallery' wieder obenauf liegen, nicht 'root'",
   );
-  assert.deepEqual(nachSchliessen, ["root", "modelList"]);
+  assert.deepEqual(nachSchliessen, ["root", "gallery"]);
 });
 
 // --- Referenzgleichheit bei Nicht-Aenderungen ------------------------------
@@ -149,10 +156,10 @@ test("zweimal dieselbe Route oeffnen laesst den Stack nicht wachsen (z.B. versio
 });
 
 test("pushRoute haengt eine neue, noch nicht enthaltene Route an", () => {
-  const stack: WorkspaceRoute[] = ["root", "modelList"];
-  const result = pushRoute(stack, "installModels");
+  const stack: WorkspaceRoute[] = ["root", "recentFlows"];
+  const result = pushRoute(stack, "gallery");
 
-  assert.deepEqual(result, ["root", "modelList", "installModels"]);
+  assert.deepEqual(result, ["root", "recentFlows", "gallery"]);
   assert.notStrictEqual(result, stack);
 });
 
@@ -213,12 +220,12 @@ test("routeStackSignature fuer [root] liefert schlicht 'root'", () => {
 
 test("eine tiefe Kette vorwaerts und wieder vollstaendig zurueck endet exakt bei [root]", () => {
   let stack = initialRouteStack();
-  stack = pushRoute(stack, "modelList");
-  stack = pushRoute(stack, "installModels");
-  stack = popRoute(stack); // installModels schliessen
+  stack = pushRoute(stack, "gallery");
+  stack = pushRoute(stack, "recentFlows");
+  stack = popRoute(stack); // recentFlows schliessen
   stack = pushRoute(stack, "settings");
   stack = pushRoute(stack, "promptLibrary");
-  assert.deepEqual(stack, ["root", "modelList", "settings", "promptLibrary"]);
+  assert.deepEqual(stack, ["root", "gallery", "settings", "promptLibrary"]);
 
   stack = popRoute(stack);
   stack = popRoute(stack);
@@ -227,4 +234,86 @@ test("eine tiefe Kette vorwaerts und wieder vollstaendig zurueck endet exakt bei
 
   assert.deepEqual(stack, ["root"]);
   assert.equal(currentRoute(stack), "root");
+});
+
+// --- Geschwister-Routen: modelList <-> installModels ersetzen sich statt
+// sich zu stapeln -------------------------------------------------------
+//
+// "Meine Modelle" und "Modell hinzufuegen" sind seit dem Panel-Merge zwei
+// Reiter desselben Panels, keine getrennten Ansichten mehr. modelList und
+// installModels muessen sich deshalb auf derselben Stack-Ebene ersetzen -
+// sonst oeffnet z.B. ein openRoute("installModels") von ausserhalb des
+// Panels (frueher der inzwischen entfernte MissingModelsListDrawer) den
+// Reiter, waehrend "modelList" schon offen ist und der Stack waechst auf drei Eintraege
+// (["root","modelList","installModels"]). Das X im Panel poppt dann nur
+// eine Ebene und das Panel bleibt sichtbar - fuer den Nutzer sieht es aus,
+// als wuerde "Schliessen" nicht funktionieren.
+
+test("installModels ueber bereits offenem modelList (z.B. per openRoute von ausserhalb des Panels) ersetzt den Reiter statt ihn zu stapeln - sonst schliesst das X das Panel nicht mehr vollstaendig", () => {
+  const stack: WorkspaceRoute[] = ["root", "modelList"];
+  const result = pushRoute(stack, "installModels");
+
+  assert.deepEqual(
+    result,
+    ["root", "installModels"],
+    "installModels muss modelList auf derselben Ebene ersetzen, nicht obendrauf gestapelt werden",
+  );
+});
+
+test("modelList ueber bereits offenem installModels ersetzt ebenso den Reiter statt zu stapeln (Gegenrichtung)", () => {
+  const stack: WorkspaceRoute[] = ["root", "installModels"];
+  const result = pushRoute(stack, "modelList");
+
+  assert.deepEqual(result, ["root", "modelList"]);
+});
+
+test("nach einem Geschwister-Wechsel fuehrt ein einziges popRoute zurueck auf [root] - das ist es, was der Nutzer beim Schliessen tatsaechlich sieht", () => {
+  let stack = initialRouteStack();
+  stack = pushRoute(stack, "modelList");
+  stack = pushRoute(stack, "installModels"); // Geschwister-Wechsel, kein Stapeln
+
+  const nachEinmaligemSchliessen = popRoute(stack);
+
+  assert.deepEqual(nachEinmaligemSchliessen, ["root"]);
+});
+
+test("liegt das Geschwister tiefer im Stack (z.B. unter gallery), wird auf dessen Position ersetzt und alles darueber verworfen", () => {
+  const stack: WorkspaceRoute[] = ["root", "modelList", "gallery"];
+  const result = pushRoute(stack, "installModels");
+
+  assert.deepEqual(result, ["root", "installModels"]);
+});
+
+test("die Geschwister-Regel greift nicht bei fremden Routen - diese stapeln weiterhin normal", () => {
+  const stack: WorkspaceRoute[] = ["root", "gallery"];
+  const result = pushRoute(stack, "settings");
+
+  assert.deepEqual(result, ["root", "gallery", "settings"]);
+  assert.equal(result.length, 3, "settings ist kein Geschwister von gallery und muss sich stapeln");
+});
+
+test("pushRoute derselben Route wie oben liefert weiterhin die unveraenderte Eingabe-Referenz, auch fuer Geschwister-Routen (eine Route ist ihr eigenes Geschwister)", () => {
+  const stackModelList: WorkspaceRoute[] = ["root", "modelList"];
+  assert.strictEqual(pushRoute(stackModelList, "modelList"), stackModelList);
+
+  const stackInstallModels: WorkspaceRoute[] = ["root", "installModels"];
+  assert.strictEqual(pushRoute(stackInstallModels, "installModels"), stackInstallModels);
+});
+
+test("der Geschwister-Wechsel per pushRoute veraendert das uebergebene Array nicht", () => {
+  const stack: WorkspaceRoute[] = ["root", "modelList", "gallery"];
+  const vorher = [...stack];
+
+  pushRoute(stack, "installModels");
+
+  assert.deepEqual(stack, vorher, "Inhalt darf sich nicht aendern");
+  assert.equal(stack.length, vorher.length, "Laenge darf sich nicht aendern");
+});
+
+test('pushRoute(stack, "root") bleibt ein voller Reset, auch wenn ein Geschwister (modelList/installModels) im Stack liegt', () => {
+  const stack: WorkspaceRoute[] = ["root", "modelList", "installModels"];
+  const result = pushRoute(stack, "root");
+
+  assert.deepEqual(result, ["root"]);
+  assert.equal(result.length, 1);
 });

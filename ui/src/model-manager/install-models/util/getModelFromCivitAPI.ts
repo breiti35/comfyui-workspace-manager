@@ -1,8 +1,9 @@
 import { indexdb } from "../../../db-tables/indexdb";
 import { userSettingsTable } from "../../../db-tables/WorkspaceDB";
 import { getCivitBaseUrl } from "../../../utils/civitUtils";
-import { CivitiModel } from "../../types";
-import { CACHE_EXPIRY_DAYS, MODEL_TYPE } from "./modelTypes";
+import type { CivitiModel } from "../../types";
+import { CACHE_EXPIRY_DAYS } from "./modelTypes";
+import type { MODEL_TYPE } from "./modelTypes";
 
 type CivitModelQueryParams = {
   types?: MODEL_TYPE;

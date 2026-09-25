@@ -48,6 +48,14 @@ function viewURL(im: ComfyImageRef): string {
 }
 
 /**
+ * Signals the gallery (if open) to refresh its saved lists. Called by
+ * App.tsx after mediaTable.create() has stored the new media record.
+ */
+export function notifyMediaSaved(): void {
+  setState({ savedTick: state.savedTick + 1 });
+}
+
+/**
  * Starts listening on ComfyUI's existing WebSocket for "Preview Image" node
  * outputs and keeps the latest one in a module-level store. Idempotent (safe
  * under React StrictMode / repeated calls).
@@ -85,11 +93,10 @@ export function startPreviewImageCapture(): void {
       });
     }
 
-    // "Save Image" node -> output dir. The plugin creates the media record;
-    // signal the gallery (if open) to refresh its saved lists.
-    if (images.some((im) => im.type === "output")) {
-      setState({ savedTick: state.savedTick + 1 });
-    }
+    // "Save Image" node -> output dir: nothing to do here. App.tsx creates
+    // the media record and calls notifyMediaSaved() once it's actually
+    // stored - bumping savedTick here raced that write, so the gallery
+    // refreshed before the new image existed in indexdb.
   });
 
   const done = () => setState({ isGenerating: false });

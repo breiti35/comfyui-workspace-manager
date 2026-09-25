@@ -1,6 +1,18 @@
+.workspaceManagerPanel {
+    /* Matches ComfyUI's own UI font (--font-inter) so our topbar's text
+       doesn't visibly switch fonts where it sits over ComfyUI's bar. Falls
+       back to Chakra's default system-font stack (our previous look) if
+       ComfyUI doesn't define the variable. */
+    font-family: var(--font-inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif);
+}
+
+/* Dimmed but always visible, like ComfyUI's own drag handle - fully hiding
+   it (display: none until hover) meant nobody discovered the toolbar is
+   freely repositionable. Kept subtle at rest so it doesn't dominate the bar. */
 .dragPanelIcon {
-    display: none !important;
+    opacity: 0.45;
+    transition: opacity 0.15s ease;
 }
 .workspaceManagerPanel:hover .dragPanelIcon {
-    display: block !important;
+    opacity: 1;
 }

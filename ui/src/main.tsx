@@ -42,10 +42,40 @@ const theme = extendTheme({
   zIndices,
   colors: {
     comfy: {
-      // Matches native ComfyUI's own toolbar group background (measured via
-      // devtools on its queue-button-group: rgb(38, 39, 41)), so our topbar
-      // reads as one continuous bar instead of separately floating buttons.
-      topbarBg: "#262729",
+      // Tied to ComfyUI's own toolbar/menu background variable so our topbar
+      // sits flush with ComfyUI's bar instead of reading as a foreign panel,
+      // and so it follows along automatically when the user switches
+      // ComfyUI's theme. Keeps our previous literal (measured via devtools
+      // on ComfyUI's queue-button-group: rgb(38, 39, 41)) as a fallback in
+      // case ComfyUI ever removes or renames the variable, or an older
+      // ComfyUI build doesn't define it yet - without the fallback we'd
+      // render invisible/transparent instead of merely "not perfectly
+      // matched".
+      topbarBg: "var(--comfy-menu-bg, #262729)",
+    },
+    // Overrides Chakra's built-in "blue" palette (instead of introducing a
+    // new color key) so every colorScheme="blue" usage - the ones already in
+    // the renovated areas (Models, Gallery, Downloads) as well as the ones
+    // migrated off the old teal accent - share exactly one accent, matching
+    // ComfyUI's own accent color (#0B8CE9, measured) at the 500 step. The
+    // other steps are a standard HSL ramp at the same hue, so
+    // Chakra's built-in dark-mode shade swap (Button/Tag/Tabs default to
+    // e.g. blue.200/blue.300 in dark mode for contrast against their text)
+    // keeps working unchanged - only the hue moves, not the contrast
+    // behavior. blue.200 (the shade Button's dark solid variant uses as
+    // background with gray.800 text) keeps a ~4.6:1 contrast ratio, which
+    // passes WCAG AA for normal text.
+    blue: {
+      50: "#E7F4FD",
+      100: "#D0E9FB",
+      200: "#A1D3F7",
+      300: "#68B9F3",
+      400: "#36A4F2",
+      500: "#0B8CE9",
+      600: "#0975C3",
+      700: "#075E9C",
+      800: "#064674",
+      900: "#052F4D",
     },
   },
   semanticTokens: {

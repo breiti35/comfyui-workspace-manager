@@ -99,7 +99,7 @@ export default function SpotlightSearch() {
       <>
         {renderDataSource.map((result, index) => (
           <Button
-            colorScheme="teal"
+            colorScheme="blue"
             variant="ghost"
             key={result.id}
             size="sm"

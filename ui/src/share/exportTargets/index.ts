@@ -1,4 +1,4 @@
-import { ExportTarget } from "./ExportTarget";
+import type { ExportTarget } from "./ExportTarget";
 import { LocalFileExport } from "./LocalFileExport";
 
 /**

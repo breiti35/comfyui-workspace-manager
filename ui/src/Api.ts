@@ -1,4 +1,4 @@
-import { Table } from "./db-tables/WorkspaceDB";
+import type { Table } from "./db-tables/WorkspaceDB";
 import type { ModelsListRespItem } from "./model-manager/types";
 import { api } from "./utils/comfyapp";
 
@@ -129,18 +129,63 @@ export async function fetchMyWorkflowsDir() {
   return res;
 }
 
-export async function getAllModelsList() {
+// fresh=true makes the backend rescan before answering (the "Aktualisieren"
+// action); otherwise it answers with its last scan and pushes a newer one
+// via the model_list websocket event.
+export async function getAllModelsList(
+  fresh = false,
+): Promise<Array<ModelsListRespItem & { date: number }>> {
+  // Throws on network errors, non-2xx answers and malformed bodies, so the
+  // models panel can show an error instead of spinning forever.
+  const url = "/model_manager/get_model_list" + (fresh ? "?fresh=1" : "");
+  const response = await fetchApi(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+  if (!response.ok) {
+    throw new Error(`get_model_list failed: HTTP ${response.status}`);
+  }
+  const result = await response.json();
+  if (!Array.isArray(result)) {
+    throw new Error("get_model_list returned no list");
+  }
+  return result as Array<ModelsListRespItem & { date: number }>;
+}
+
+// folder key -> absolute download target (null = backend can't resolve it,
+// e.g. an older backend without the route). Session-lifetime cache: the
+// mapping only changes with extra_model_paths.yaml, i.e. a ComfyUI restart.
+const resolvedFolderCache = new Map<string, string | null>();
+
+/**
+ * Absolute directory a download into `folder` (a model folder key like
+ * "loras") ends up in, via GET /model_manager/resolve_folder. Returns null
+ * when the route is missing (404) or fails - callers then show the key.
+ */
+export async function resolveModelFolder(
+  folder: string,
+): Promise<string | null> {
+  if (resolvedFolderCache.has(folder)) {
+    return resolvedFolderCache.get(folder) ?? null;
+  }
   try {
-    const response = await fetchApi("/model_manager/get_model_list", {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    const result = await response.json();
-    return result as Array<ModelsListRespItem & { date: number }>;
+    const response = await fetchApi(
+      `/model_manager/resolve_folder?folder=${encodeURIComponent(folder)}`,
+    );
+    if (!response.ok) {
+      // A 404 won't change during this session - remember it. Other errors
+      // (proxy hiccup) are retried on the next call.
+      if (response.status === 404) resolvedFolderCache.set(folder, null);
+      return null;
+    }
+    const result = (await response.json()) as { path?: string };
+    const path = typeof result?.path === "string" && result.path ? result.path : null;
+    resolvedFolderCache.set(folder, path);
+    return path;
   } catch (error) {
-    console.error("Error get all models list:", error);
+    return null;
   }
 }
 

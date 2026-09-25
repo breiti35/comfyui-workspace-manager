@@ -1,5 +1,5 @@
-import { Model } from "../types/dbTypes";
-import { Table } from "./WorkspaceDB";
+import type { Model } from "../types/dbTypes";
+import type { Table } from "./WorkspaceDB";
 import { TableBase } from "./TableBase";
 
 export class ModelsTable extends TableBase<Model> {

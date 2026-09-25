@@ -172,7 +172,7 @@ export default function SelectMyWorkflowsDir() {
         mb={2}
       />
       <Button
-        colorScheme="teal"
+        colorScheme="blue"
         mr={3}
         size="sm"
         onClick={() => {
@@ -248,7 +248,7 @@ export default function SelectMyWorkflowsDir() {
                 <span key={dir}>
                   {index > 0 && slash}
                   <Button
-                    colorScheme="teal"
+                    colorScheme="blue"
                     variant="link"
                     minW={1}
                     key={`${dir}-${index}`}
@@ -293,7 +293,7 @@ export default function SelectMyWorkflowsDir() {
             </SimpleGrid>
             <Box w="100%" textAlign="end">
               <Button
-                colorScheme="teal"
+                colorScheme="blue"
                 size="sm"
                 onClick={() => {
                   onSubmit();
@@ -326,7 +326,7 @@ export default function SelectMyWorkflowsDir() {
                 <Text fontWeight={500}>
                   {t("workflowsDir.noPermission.macIntro")}
                   <Button
-                    colorScheme="teal"
+                    colorScheme="blue"
                     variant="link"
                     as="a"
                     ml={2}

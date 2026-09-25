@@ -15,7 +15,6 @@ import {
 } from "@chakra-ui/react";
 import {
   IconChevronDown,
-  IconDownload,
   IconHome,
   IconRefresh,
   IconStar,
@@ -39,7 +38,6 @@ interface Props {
   favoritesOnly: boolean;
   setFavoritesOnly: (b: boolean) => void;
   onRefresh: () => void;
-  onInstall: () => void;
   resultCount: number;
 }
 
@@ -91,7 +89,6 @@ export default function ModelsPanelToolbar({
   favoritesOnly,
   setFavoritesOnly,
   onRefresh,
-  onInstall,
   resultCount,
 }: Props) {
   const { t } = useT();
@@ -101,7 +98,7 @@ export default function ModelsPanelToolbar({
 
   return (
     <Box flexShrink={0}>
-      {/* Row 1 - the "address bar": title, search, NSFW toggle, install. */}
+      {/* Row 1 - the "address bar": title, search, NSFW toggle. */}
       <Flex
         align={"center"}
         gap={3}
@@ -127,15 +124,6 @@ export default function ModelsPanelToolbar({
             mb={0}
           />
           <NsfwToggleButton />
-          <Button
-            size={"sm"}
-            colorScheme={"blue"}
-            leftIcon={<IconDownload size={16} />}
-            onClick={onInstall}
-            flexShrink={0}
-          >
-            {t("models.toolbar.installButton")}
-          </Button>
         </HStack>
       </Flex>
 

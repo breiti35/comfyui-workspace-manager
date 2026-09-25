@@ -1,5 +1,6 @@
 import { userSettingsTable, workflowsTable } from "./WorkspaceDB";
-import { EFlowOperationType, Folder } from "../types/dbTypes";
+import { EFlowOperationType } from "../types/dbTypes";
+import type { Folder } from "../types/dbTypes";
 import { nanoid } from "nanoid";
 import { TableBase } from "./TableBase";
 import { indexdb } from "./indexdb";

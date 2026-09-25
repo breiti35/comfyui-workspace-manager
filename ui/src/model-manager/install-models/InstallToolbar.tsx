@@ -19,6 +19,7 @@ import SearchInput from "../../components/SearchInput";
 import CategoryTabs from "../components/CategoryTabs";
 import NsfwToggleButton from "../models-list-drawer/NsfwToggleButton";
 import AddApiKeyPopover from "./AddApiKeyPopover";
+import BaseModelPicker from "./BaseModelPicker";
 import { ALL_MODEL_TYPES, type MODEL_TYPE } from "./util/modelTypes";
 import { useT } from "../../i18n/LanguageContext";
 import type { TransKey } from "../../i18n/translations";
@@ -32,49 +33,6 @@ export const SORT_OPTIONS: { key: string; labelKey: TransKey }[] = [
 // Civitai `limit` accepts up to 100; we offer a small, sensible set. Standard 25.
 export const PAGE_SIZE_OPTIONS = [10, 15, 25, 50];
 
-// key = exakter Civitai-`baseModels`-Wert (muss 1:1 zur API passen, sonst leere
-// Treffer); "" = kein Filter. Label = derselbe String, damit unmissverständlich.
-// Nach Familien geordnet, gängige oben. Neue Basismodelle tauchen bei Civitai
-// laufend auf - Liste bei Bedarf ergänzen.
-export const BASE_MODEL_OPTIONS: { key: string; label: string }[] = [
-  { key: "", label: "Alle Basismodelle" },
-  // SD 1.x / 2.x
-  { key: "SD 1.5", label: "SD 1.5" },
-  { key: "SD 1.5 LCM", label: "SD 1.5 LCM" },
-  { key: "SD 1.5 Hyper", label: "SD 1.5 Hyper" },
-  { key: "SD 2.0", label: "SD 2.0" },
-  { key: "SD 2.1 768", label: "SD 2.1 768" },
-  // SDXL + Varianten
-  { key: "SDXL 0.9", label: "SDXL 0.9" },
-  { key: "SDXL 1.0", label: "SDXL 1.0" },
-  { key: "SDXL 1.0 LCM", label: "SDXL 1.0 LCM" },
-  { key: "SDXL Lightning", label: "SDXL Lightning" },
-  { key: "SDXL Hyper", label: "SDXL Hyper" },
-  // SDXL-basierte Anime-Modelle
-  { key: "Pony", label: "Pony" },
-  { key: "Illustrious", label: "Illustrious" },
-  { key: "NoobAI", label: "NoobAI" },
-  // Flux
-  { key: "Flux.1 S", label: "Flux.1 S" },
-  { key: "Flux.1 D", label: "Flux.1 D" },
-  { key: "Flux.1 Kontext", label: "Flux.1 Kontext" },
-  { key: "Flux.1 Krea", label: "Flux.1 Krea" },
-  { key: "Flux.2 D", label: "Flux.2 D" },
-  // Weitere Bildmodelle
-  { key: "Chroma", label: "Chroma" },
-  { key: "HiDream", label: "HiDream" },
-  { key: "Qwen", label: "Qwen" },
-  { key: "Krea 2", label: "Krea 2" },
-  { key: "Stable Cascade", label: "Stable Cascade" },
-  { key: "Kolors", label: "Kolors" },
-  { key: "AuraFlow", label: "AuraFlow" },
-  { key: "PixArt a", label: "PixArt α" },
-  { key: "PixArt E", label: "PixArt Σ" },
-  { key: "Hunyuan 1", label: "Hunyuan DiT" },
-  // Video
-  { key: "Wan Video", label: "Wan Video" },
-  { key: "LTXV 2.3", label: "LTXV 2.3" },
-];
 
 interface InstallToolbarProps {
   searchQuery: string;
@@ -114,11 +72,6 @@ export default function InstallToolbar({
     SORT_OPTIONS.find((o) => o.key === sortBy)?.labelKey ??
       SORT_OPTIONS[0].labelKey,
   );
-  const baseLabel =
-    baseModel === ""
-      ? t("install.baseModel.all")
-      : (BASE_MODEL_OPTIONS.find((o) => o.key === baseModel)?.label ??
-        t("install.baseModel.all"));
 
   return (
     <Box flexShrink={0}>
@@ -225,31 +178,7 @@ export default function InstallToolbar({
           </MenuList>
         </Menu>
 
-        <Menu>
-          <MenuButton
-            as={Box}
-            cursor={"pointer"}
-            px={3}
-            py={1}
-            borderRadius={"md"}
-            border={"1px solid"}
-            borderColor={baseModel ? "blue.400" : "rowBorderColor"}
-            color={baseModel ? "blue.300" : undefined}
-            _hover={{ bg: "rowHoverBg" }}
-          >
-            <HStack gap={1}>
-              <Text fontSize={"sm"}>{baseLabel}</Text>
-              <IconChevronDown size={14} />
-            </HStack>
-          </MenuButton>
-          <MenuList>
-            {BASE_MODEL_OPTIONS.map((o) => (
-              <MenuItem key={o.key} onClick={() => setBaseModel(o.key)}>
-                {o.key === "" ? t("install.baseModel.all") : o.label}
-              </MenuItem>
-            ))}
-          </MenuList>
-        </Menu>
+        <BaseModelPicker value={baseModel} onChange={setBaseModel} />
 
         <Menu>
           <MenuButton

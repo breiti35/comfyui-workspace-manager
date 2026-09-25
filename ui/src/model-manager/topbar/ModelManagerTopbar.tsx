@@ -1,78 +1,44 @@
-import { Button, DarkMode, HStack, Stack } from "@chakra-ui/react";
-import { lazy, useEffect, useContext, Suspense } from "react";
-import ModelsListDrawer from "../models-list-drawer/ModelsListDrawer";
+import { Button, HStack, Stack } from "@chakra-ui/react";
+import { useEffect, useContext } from "react";
+import ModelsPanel from "../ModelsPanel";
 import "./index.css";
 import { WorkspaceContext } from "../../WorkspaceContext";
 // @ts-ignore
 import { api } from "/scripts/api.js";
 
-import { Model } from "../../types/dbTypes";
-import {
-  fetchCivitModelFromHashKey,
-  isNsfwBlurEligibleCategory,
-  runCivitCacheMigrationOnce,
-} from "../../utils/civitUtils";
-import { indexdb } from "../../db-tables/indexdb";
 import type { ModelsListRespItemFromApi } from "../types";
-import InatallModelsModal from "../install-models/InstallModelsModal";
+import { syncModelsToDb } from "../syncModelsToDb";
 import DownloadIndicator from "../install-models/DownloadIndicator";
 import { TOPBAR_BUTTON_HEIGHT } from "../../const";
 import ErrorBoundary from "../../components/ErrorBoundary";
 import { useT } from "../../i18n/LanguageContext";
-import { routeStackSignature } from "../../routeStack";
 
 export default function ModelManagerTopbar() {
   const { t } = useT();
-  const { openRoute, closeRoute, route, routeStack } =
-    useContext(WorkspaceContext);
+  const { openRoute, closeRoute, route } = useContext(WorkspaceContext);
+  // modelList and installModels are just two tabs of the same panel now
+  // (see ModelsPanel.tsx) - either route means the panel is open. Narrowed
+  // to a single value (rather than a plain boolean) so it can be passed on
+  // as ModelsPanel's initialRoute below without widening back to
+  // WorkspaceRoute.
+  const modelsPanelRoute =
+    route === "modelList" || route === "installModels" ? route : null;
 
   useEffect(() => {
-    // One-time reset of stale NSFW caches from earlier fix iterations, before
-    // any scan repopulates indexdb.models with the current logic.
-    runCivitCacheMigrationOnce();
-    api.addEventListener(
-      "model_list",
-      async (e: { detail: ModelsListRespItemFromApi[] }) => {
-        const modelsPromises = e.detail?.map(async (item) => {
-          const existing = await indexdb.models.get(
-            item.model_name + "@" + item.model_type,
-          );
-          // avoid overwriting existing models cuz it may have downloadUrl info
-          if (existing?.fileHash) return existing;
-          let newModel: Model = {
-            id: item.model_name + "@" + item.model_type,
-            modelName: null,
-            fileHash: item.file_hash ?? null,
-            fileFolder: item.model_type,
-            fileName: item.model_name + item.model_extension,
-          };
-          if (!item.file_hash) return newModel;
-          const json = await fetchCivitModelFromHashKey(item.file_hash);
-          newModel = {
-            ...newModel,
-            modelName: json.modelName ?? null,
-            civitModelID: json.civitModelID,
-            civitModelVersionID: json.civitModelVersionID,
-            imageUrl: json.imageUrl ?? null,
-            // Only checkpoints/loras can ever be blurred, and only on a
-            // confirmed Civitai NSFW hit - see civitUtils.ts.
-            imageIsNsfw:
-              isNsfwBlurEligibleCategory(item.model_type) &&
-              (json.imageIsNsfw ?? false),
-          };
-          return newModel;
-        });
-        const models = (await Promise.all(modelsPromises)).filter(
-          (model) => model != null,
-        );
-        // clear first so deleted models can be removed?
-        await indexdb.models.clear();
-        await indexdb.models.bulkPut(
-          models.filter((model) => model != null) as Model[],
-        );
-        window.dispatchEvent(new CustomEvent("model_list_updated"));
-      },
-    );
+    // Mirror every model_list push from the backend into indexdb.models (the
+    // Civitai names/thumbnails the cards and search use). syncModelsToDb
+    // runs the one-time cache migration first, throttles the Civitai
+    // lookups, and discards a run as soon as a newer list arrives.
+    const handleModelList = (e: { detail: ModelsListRespItemFromApi[] }) => {
+      if (!Array.isArray(e.detail)) return;
+      syncModelsToDb(e.detail).catch((err) =>
+        console.error("Error syncing model list to indexdb:", err),
+      );
+    };
+    api.addEventListener("model_list", handleModelList);
+    return () => {
+      api.removeEventListener("model_list", handleModelList);
+    };
   }, []);
 
   return (
@@ -96,23 +62,19 @@ export default function ModelManagerTopbar() {
         <DownloadIndicator />
       </HStack>
       {/* A crash inside a drawer/modal must never take the whole plugin UI
-          (incl. this topbar) down - contain it here. key={routeStackSignature(routeStack)}
-          gives each distinct stack a fresh boundary so a caught error resets
-          on navigation - the full signature (not just the top route) is the
-          right trigger because the stack's depth can change without the top
-          route itself changing. */}
+          (incl. this topbar) down - contain it here. The key tracks the
+          panel's open/closed identity, not the route: modelList and
+          installModels are two tabs of the same panel (see
+          ModelsPanel.tsx), so switching tabs must keep the same boundary -
+          and thus the panel's state - alive. The key only changes when the
+          panel opens or closes, so a caught error resets on the next open,
+          not mid-use while the user is just switching tabs. */}
       <ErrorBoundary
-        key={routeStackSignature(routeStack)}
+        key={modelsPanelRoute ? "open" : "closed"}
         label={t("models.topbar.errorBoundary")}
       >
-        {route === "modelList" && (
-          <ModelsListDrawer onClose={closeRoute} />
-        )}
-        {route === "installModels" && (
-          <InatallModelsModal
-            modelType="Checkpoint"
-            onclose={closeRoute}
-          />
+        {modelsPanelRoute && (
+          <ModelsPanel initialRoute={modelsPanelRoute} onClose={closeRoute} />
         )}
       </ErrorBoundary>
     </Stack>

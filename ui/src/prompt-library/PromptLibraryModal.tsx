@@ -178,9 +178,38 @@ export default function PromptLibraryModal({ onClose }: Props) {
     onClose,
   );
 
+  // true when the library couldn't be read. Shown instead of the "empty
+  // library" hint, and the "New" button is disabled - the store refuses
+  // writes until a load succeeded anyway.
+  const [loadError, setLoadError] = useState(false);
+
   const refresh = useCallback(() => {
-    listPrompts(true).then(setItems);
+    listPrompts(true)
+      .then((list) => {
+        setItems(list);
+        setLoadError(false);
+      })
+      .catch((e) => {
+        console.error("Error loading prompt library:", e);
+        setLoadError(true);
+      });
   }, []);
+
+  // Save/delete failures keep the editor open so nothing typed is lost.
+  const runMutation = async (action: () => Promise<unknown>) => {
+    try {
+      await action();
+      setEditing(undefined);
+    } catch (e) {
+      toast({
+        title: t("prompts.saveError"),
+        description: e instanceof Error ? e.message : String(e),
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  };
 
   useEffect(() => {
     refresh();
@@ -252,17 +281,14 @@ export default function PromptLibraryModal({ onClose }: Props) {
               onCancel={() => setEditing(undefined)}
               onDelete={
                 editing
-                  ? async () => {
-                      await deletePrompt(editing.id);
-                      setEditing(undefined);
-                    }
+                  ? () => runMutation(() => deletePrompt(editing.id))
                   : undefined
               }
-              onSave={async (data) => {
-                if (editing) await updatePrompt(editing.id, data);
-                else await addPrompt(data);
-                setEditing(undefined);
-              }}
+              onSave={(data) =>
+                runMutation(() =>
+                  editing ? updatePrompt(editing.id, data) : addPrompt(data),
+                )
+              }
             />
           ) : (
             <>
@@ -301,6 +327,7 @@ export default function PromptLibraryModal({ onClose }: Props) {
                   size={"sm"}
                   colorScheme={"blue"}
                   leftIcon={<IconPlus size={16} />}
+                  isDisabled={loadError}
                   onClick={() => setEditing(null)}
                 >
                   {t("prompts.new")}
@@ -349,7 +376,22 @@ export default function PromptLibraryModal({ onClose }: Props) {
                 py={4}
                 sx={hideScrollbarSx}
               >
-                {shown.length === 0 ? (
+                {loadError ? (
+                  <Flex
+                    direction={"column"}
+                    align={"center"}
+                    justify={"center"}
+                    py={16}
+                    gap={2}
+                  >
+                    <Text color={"red.300"} fontSize={"sm"}>
+                      {t("prompts.loadError")}
+                    </Text>
+                    <Button size={"xs"} variant={"outline"} onClick={refresh}>
+                      {t("prompts.retry")}
+                    </Button>
+                  </Flex>
+                ) : shown.length === 0 ? (
                   <Flex
                     direction={"column"}
                     align={"center"}

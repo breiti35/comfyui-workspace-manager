@@ -1,5 +1,5 @@
-import { Tag } from "../types/dbTypes";
-import { Table } from "./WorkspaceDB";
+import type { Tag } from "../types/dbTypes";
+import type { Table } from "./WorkspaceDB";
 import { TableBase } from "./TableBase";
 
 export class TagsTable extends TableBase<Tag> {

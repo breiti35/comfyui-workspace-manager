@@ -3,19 +3,17 @@ import {
   foldersTable,
   userSettingsTable,
 } from "./WorkspaceDB";
-import { Folder, Workflow } from "../types/dbTypes";
+import type { Folder, Workflow } from "../types/dbTypes";
 import { sortFileItem } from "../utils";
 import { nanoid } from "nanoid";
 import { TableBase } from "./TableBase";
 import { indexdb } from "./indexdb";
-import { ESortTypes, ImportWorkflow } from "../RecentFilesDrawer/types";
+import { ESortTypes } from "../RecentFilesDrawer/types";
+import type { ImportWorkflow } from "../RecentFilesDrawer/types";
 import { defaultGraph } from "../defaultGraph";
 import { scanMyWorkflowsDir } from "../utils/twowaySyncUtils";
-import {
-  ScanLocalFile,
-  TwowaySyncAPI,
-  scanLocalFiles,
-} from "../apis/TwowaySyncApi";
+import { TwowaySyncAPI, scanLocalFiles } from "../apis/TwowaySyncApi";
+import type { ScanLocalFile } from "../apis/TwowaySyncApi";
 import { COMFYSPACE_TRACKING_FIELD_NAME } from "../const";
 
 export class WorkflowsTable extends TableBase<Workflow> {
@@ -146,13 +144,6 @@ export class WorkflowsTable extends TableBase<Workflow> {
     _change: Partial<Workflow>,
   ): Promise<Workflow | null> {
     throw new Error("Method not allowed.");
-  }
-
-  public async updateTopFields(
-    id: string,
-    change: Pick<Partial<Workflow>, "topFieldsConfig">,
-  ): Promise<Workflow | null> {
-    return this._update(id, change);
   }
 
   public async updateMetaInfo(

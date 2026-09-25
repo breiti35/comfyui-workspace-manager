@@ -1,12 +1,9 @@
 import { ESortTypes } from "../RecentFilesDrawer/types";
-import {
-  ScanLocalFile,
-  ScanLocalFolder,
-  scanLocalFiles,
-} from "../apis/TwowaySyncApi";
+import { scanLocalFiles } from "../apis/TwowaySyncApi";
+import type { ScanLocalFile, ScanLocalFolder } from "../apis/TwowaySyncApi";
 import { isFolder } from "../db-tables/WorkspaceDB";
 import { indexdb } from "../db-tables/indexdb";
-import { Folder, Workflow } from "../types/dbTypes";
+import type { Folder, Workflow } from "../types/dbTypes";
 import { sortFileItem } from "../utils";
 import { sanitizeRelPath } from "./OsPathUtils";
 

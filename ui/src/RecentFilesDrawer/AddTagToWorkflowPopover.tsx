@@ -120,7 +120,7 @@ export default function AddTagToWorkflowPopover({ workflow }: Props) {
             <Button
               iconSpacing={1}
               leftIcon={<IconPlus size={16} />}
-              colorScheme="teal"
+              colorScheme="blue"
               variant="solid"
               size={"xs"}
               px={5}

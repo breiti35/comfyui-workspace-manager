@@ -29,7 +29,14 @@ export default function CommonToggleSetting({
   const onToggle = async (next: boolean) => {
     // The switch flipping IS the "saved" feedback - no intrusive toast.
     setChecked(next);
-    await userSettingsTable?.upsert({ [settingKey]: next });
+    try {
+      await userSettingsTable?.upsert({ [settingKey]: next });
+    } catch (e) {
+      // Write failed - flip back so the switch doesn't claim a saved state.
+      console.error(`Error saving setting ${String(settingKey)}:`, e);
+      setChecked(!next);
+      return;
+    }
     onAfterChange?.(next);
   };
 

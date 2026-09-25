@@ -1,5 +1,5 @@
-import { Table } from "./WorkspaceDB";
-import { WorkflowVersion } from "../types/dbTypes";
+import type { Table } from "./WorkspaceDB";
+import type { WorkflowVersion } from "../types/dbTypes";
 import { TableBase } from "./TableBase";
 import { indexdb } from "./indexdb";
 

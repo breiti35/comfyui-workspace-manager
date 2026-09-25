@@ -1,7 +1,7 @@
 import { fetchApi } from "../Api";
 import { COMFYSPACE_TRACKING_FIELD_NAME } from "../const";
 import { indexdb } from "../db-tables/indexdb";
-import { Workflow } from "../types/dbTypes";
+import type { Workflow } from "../types/dbTypes";
 import {
   getWorkflowRelPath,
   joinRelPath,

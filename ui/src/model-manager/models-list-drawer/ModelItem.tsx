@@ -12,11 +12,12 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { ModelsListRespItem } from "../types";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { indexdb } from "../../db-tables/indexdb";
 import { Model } from "../../types/dbTypes";
 import type { DragEvent, MouseEvent as ReactMouseEvent } from "react";
 import {
+  IconCube,
   IconCopy,
   IconStar,
   IconStarFilled,
@@ -85,6 +86,12 @@ export function ModelItem({ data, onOpenDetail }: Props) {
   const [showNsfw, setShowNsfw] = useState(false);
   const [revealed, setRevealed] = useState(false);
   const [hashing, setHashing] = useState(!data.file_hash);
+  // true once getThumbnail() has finished for the current file - with no url
+  // by then, the card shows a placeholder instead of an endless spinner.
+  const [thumbDone, setThumbDone] = useState(false);
+  // Bumped per getThumbnail() run; a run that's no longer the latest (hash
+  // changed, card unmounted) doesn't touch state anymore.
+  const thumbRunRef = useRef(0);
   const [model, setModel] = useState<Model>();
   const [isFav, setIsFav] = useState(false);
   const toast = useToast();
@@ -98,7 +105,17 @@ export function ModelItem({ data, onOpenDetail }: Props) {
   useEffect(() => {
     if (!inView) return;
     setHashing(!data.file_hash);
-    getThumbnail();
+    setThumbDone(false);
+    const run = ++thumbRunRef.current;
+    const isCurrent = () => run === thumbRunRef.current;
+    getThumbnail(isCurrent)
+      .catch((e) => console.error("Error loading model thumbnail:", e))
+      .finally(() => {
+        if (isCurrent()) setThumbDone(true);
+      });
+    return () => {
+      thumbRunRef.current++;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [inView, data.file_hash]);
 
@@ -115,12 +132,12 @@ export function ModelItem({ data, onOpenDetail }: Props) {
     };
   }, []);
 
-  const getThumbnail = async () => {
+  const getThumbnail = async (isCurrent: () => boolean) => {
     const nsfwEligible = isNsfwBlurEligibleCategory(data.model_type);
+    const id = data.model_name + "@" + data.model_type;
     let resolvedUrl: string | undefined;
-    const m = await indexdb.models.get(
-      data.model_name + "@" + data.model_type,
-    );
+    const m = await indexdb.models.get(id);
+    if (!isCurrent()) return;
     if (m != null) {
       setModel(m);
       if (m.imageUrl?.length) resolvedUrl = m.imageUrl;
@@ -129,28 +146,46 @@ export function ModelItem({ data, onOpenDetail }: Props) {
     if (!resolvedUrl && data.file_hash != null) {
       try {
         const json = await fetchCivitModelFromHashKey(data.file_hash);
+        if (!isCurrent()) return;
         const image_url = json.imageUrl;
         if (image_url) resolvedUrl = image_url;
         const imageIsNsfw = nsfwEligible && (json.imageIsNsfw ?? false);
         setIsNsfw(imageIsNsfw);
 
-        const newModel: Model = {
-          id: data.model_name + "@" + data.model_type,
-          fileHash: data.file_hash,
-          fileFolder: data.model_type,
-          fileName: data.model_name + data.model_extension,
-          modelName: json.modelName ?? null,
-          versionName: json.versionName,
-          baseModel: json.baseModel,
-          civitModelID: json.civitModelID,
-          civitModelVersionID: json.civitModelVersionID,
-          imageUrl: image_url ?? null,
-          imageIsNsfw,
-        };
-        indexdb.models.put(newModel);
-        setModel(newModel);
-      } catch (e) {}
+        // A transient lookup (rate limit / network) carries no data - don't
+        // overwrite the record with empty Civitai fields.
+        if (!json.transient) {
+          const civitFields: Partial<Model> = {
+            fileHash: data.file_hash,
+            fileFolder: data.model_type,
+            fileName: data.model_name + data.model_extension,
+            modelName: json.modelName ?? null,
+            versionName: json.versionName,
+            baseModel: json.baseModel,
+            civitModelID: json.civitModelID,
+            civitModelVersionID: json.civitModelVersionID,
+            imageUrl: image_url ?? null,
+            imageIsNsfw,
+          };
+          // Merge into the stored record (it may carry e.g. downloadUrl,
+          // or have been refreshed by a sync meanwhile) instead of replacing.
+          const merged = await indexdb.transaction(
+            "rw",
+            indexdb.models,
+            async () => {
+              const current = await indexdb.models.get(id);
+              const next: Model = { ...current, ...civitFields, id } as Model;
+              await indexdb.models.put(next);
+              return next;
+            },
+          );
+          if (isCurrent()) setModel(merged);
+        }
+      } catch (e) {
+        console.error("Error updating model record:", e);
+      }
     }
+    if (!isCurrent()) return;
     // A user's own local preview file beats a remote thumbnail.
     if (data.preview) resolvedUrl = data.preview;
     // Last resort: models Civitai doesn't know (deleted, or mirrored from
@@ -161,7 +196,7 @@ export function ModelItem({ data, onOpenDetail }: Props) {
         if (arch.imageUrl) resolvedUrl = arch.imageUrl;
       } catch (e) {}
     }
-    if (resolvedUrl) setUrl(resolvedUrl);
+    if (resolvedUrl && isCurrent()) setUrl(resolvedUrl);
   };
 
   const handleDragStart = (e: DragEvent<HTMLDivElement>) => {
@@ -238,9 +273,26 @@ export function ModelItem({ data, onOpenDetail }: Props) {
       bg="blackAlpha.300"
     >
       {/* Cover */}
-      {hashing || (inView && !url) ? (
+      {!url && (hashing || (inView && !thumbDone)) ? (
         <Flex position="absolute" inset={0} justify="center" align="center">
           <Spinner size="sm" />
+        </Flex>
+      ) : !url && thumbDone ? (
+        // Nothing found anywhere (no Civitai/CivArchive hit, no local
+        // preview): a type placeholder instead of an endless spinner.
+        <Flex
+          position="absolute"
+          inset={0}
+          direction="column"
+          justify="center"
+          align="center"
+          gap={1}
+          color="whiteAlpha.500"
+        >
+          <IconCube size={40} stroke={1.2} />
+          <Text fontSize="xs" fontWeight={600}>
+            {typeBadge}
+          </Text>
         </Flex>
       ) : url ? (
         <Image

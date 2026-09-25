@@ -67,7 +67,7 @@ export default function TopbarNewWorkflowButton() {
         <Button
           size={"sm"}
           variant={"outline"}
-          colorScheme="teal"
+          colorScheme="blue"
           aria-label={t("topbar.newWorkflow.aria")}
           height={TOPBAR_BUTTON_HEIGHT + "px"}
           onClick={() => {
@@ -105,7 +105,7 @@ export default function TopbarNewWorkflowButton() {
           </ModalBody>
           <ModalFooter>
             <Button
-              colorScheme="teal"
+              colorScheme="blue"
               mr={3}
               onClick={saveNewWorkflow}
               isDisabled={!workflowName.trim()}

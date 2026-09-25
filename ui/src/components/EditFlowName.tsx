@@ -117,7 +117,7 @@ export default function EditFlowName({
           </ModalBody>
           <ModalFooter>
             <Button
-              colorScheme="teal"
+              colorScheme="blue"
               mr={3}
               onClick={onSubmit}
               isDisabled={!editName || !!submitError}

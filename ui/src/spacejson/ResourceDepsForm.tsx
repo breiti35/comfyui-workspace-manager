@@ -11,7 +11,7 @@ export default function ResourceDepsForm({
 }) {
   const imageDepsArr = Object.values(deps?.images ?? {});
   if (!deps) {
-    return <Spinner size="md" color="teal.400" />;
+    return <Spinner size="md" color="blue.400" />;
   }
 
   return (
@@ -25,7 +25,7 @@ export default function ResourceDepsForm({
           </HStack>
           {uploadingImage && (
             <span>
-              <Spinner size="md" color="teal.400" /> Uploading
+              <Spinner size="md" color="blue.400" /> Uploading
             </span>
           )}
           {imageDepsArr.map((image) => (

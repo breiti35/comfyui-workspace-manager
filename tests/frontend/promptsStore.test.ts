@@ -8,7 +8,9 @@
  * nach, damit der Stolperstein im Test abgesichert ist.
  *
  * Aufruf (siehe tests/README.md):
- *   node --experimental-test-module-mocks --import ./tests/frontend/setup.mjs \
+ *   node --experimental-transform-types --experimental-test-module-mocks \
+ *        --disable-warning=ExperimentalWarning \
+ *        --import ./tests/frontend/setup.mjs \
  *        --test tests/frontend/promptsStore.test.ts
  */
 
@@ -18,10 +20,21 @@ import assert from "node:assert/strict";
 // --- Fake-Server, der db/prompts.json nachbildet -------------------------
 let dateiInhalt: string | null = null; // exakt das, was db/prompts.json haelt
 const aufrufe: string[] = [];
+// Stoerungen simulieren: "http" = Server antwortet mit 500, "netz" = fetch
+// wirft (z.B. abgerissene Proxy-Verbindung).
+let ladeFehler: null | "http" | "netz" = null;
+let speicherFehler: null | "http" | "netz" = null;
+// Optionale kuenstliche Verzoegerung beim Speichern, um Ueberholvorgaenge
+// paralleler Aenderungen sichtbar zu machen.
+let speicherVerzoegerung = 0;
 
 async function fakeFetchApi(route: string, options?: any) {
   aufrufe.push(route);
   if (route.startsWith("/workspace/get_db")) {
+    if (ladeFehler === "netz") throw new Error("network down");
+    if (ladeFehler === "http") {
+      return { ok: false, status: 500, json: async () => null } as any;
+    }
     return {
       ok: true,
       // Der Server antwortet mit dem gespeicherten String (bzw. null).
@@ -29,7 +42,14 @@ async function fakeFetchApi(route: string, options?: any) {
     } as any;
   }
   if (route === "/workspace/save_db") {
+    if (speicherFehler === "netz") throw new Error("network down");
+    if (speicherFehler === "http") {
+      return { ok: false, status: 500, text: async () => "boom" } as any;
+    }
     const body = JSON.parse(options.body);
+    if (speicherVerzoegerung) {
+      await new Promise((r) => setTimeout(r, speicherVerzoegerung));
+    }
     dateiInhalt = body.json; // <- String, nicht Objekt
     return { ok: true, text: async () => "ok" } as any;
   }
@@ -47,6 +67,9 @@ before(async () => {
 
 beforeEach(async () => {
   dateiInhalt = null;
+  ladeFehler = null;
+  speicherFehler = null;
+  speicherVerzoegerung = 0;
   // Der Store haelt die Liste modulintern vor. Einmal erzwungen nachladen,
   // damit dieser Zwischenspeicher nicht aus dem vorigen Test durchschlaegt.
   await store.listPrompts(true);
@@ -168,10 +191,77 @@ test("wiederholtes Lesen nutzt den Zwischenspeicher", async () => {
 
 // --- Robustheit ---------------------------------------------------------
 
-test("unbrauchbarer Dateiinhalt fuehrt nicht zum Absturz", async () => {
+test("unbrauchbarer Dateiinhalt gilt als Ladefehler statt als leere Bibliothek", async () => {
+  // Eine kaputte Datei darf nicht als [] durchgehen - sonst wuerde das
+  // naechste Speichern die (evtl. noch rettbare) Datei ueberschreiben.
   dateiInhalt = "{kein json";
-  assert.deepEqual(await store.listPrompts(true), []);
+  await assert.rejects(store.listPrompts(true), (e: any) => e.kind === "load");
 
   dateiInhalt = JSON.stringify({ nicht: "ein array" });
-  assert.deepEqual(await store.listPrompts(true), []);
+  await assert.rejects(store.listPrompts(true), (e: any) => e.kind === "load");
+});
+
+test("Ladefehler (HTTP und Netz) werden gemeldet, nicht als [] zwischengespeichert", async () => {
+  for (const art of ["http", "netz"] as const) {
+    ladeFehler = art;
+    await assert.rejects(store.listPrompts(true), (e: any) => e.kind === "load");
+  }
+});
+
+test("ohne erfolgreiches Laden wird nicht geschrieben (kein Ueberschreiben der Bibliothek)", async () => {
+  // Frisches Modul, damit kein Zwischenspeicher aus frueheren Tests greift.
+  const frisch = await import(
+    "../../ui/src/prompt-library/promptsStore.ts?frisch=" + Date.now()
+  );
+  dateiInhalt = JSON.stringify([
+    { id: "alt", name: "Bestand", positive: "x", tags: [], createTime: 1 },
+  ]);
+  ladeFehler = "http";
+  await assert.rejects(frisch.listPrompts(), (e: any) => e.kind === "load");
+  aufrufe.length = 0;
+  await assert.rejects(
+    frisch.addPrompt({ name: "neu", positive: "y", tags: [] } as any),
+    (e: any) => e.kind === "load",
+  );
+  assert.ok(
+    !aufrufe.includes("/workspace/save_db"),
+    "es darf kein save_db abgesetzt werden",
+  );
+  assert.match(dateiInhalt!, /Bestand/, "Bestand auf dem Server bleibt erhalten");
+
+  // Sobald das Laden wieder klappt, funktioniert auch das Speichern.
+  ladeFehler = null;
+  await frisch.addPrompt({ name: "neu", positive: "y", tags: [] } as any);
+  const namen = JSON.parse(dateiInhalt!).map((p: any) => p.name);
+  assert.deepEqual(namen, ["neu", "Bestand"]);
+});
+
+test("fehlgeschlagenes Speichern aendert weder Cache noch meldet es ein Event", async () => {
+  await store.addPrompt({ name: "A", positive: "a", tags: [] } as any);
+  (globalThis as any).__dispatchedEvents = [];
+
+  for (const art of ["http", "netz"] as const) {
+    speicherFehler = art;
+    await assert.rejects(
+      store.addPrompt({ name: "B", positive: "b", tags: [] } as any),
+      (e: any) => e.kind === "save",
+    );
+  }
+  assert.deepEqual((globalThis as any).__dispatchedEvents, []);
+  const liste = await store.listPrompts(); // aus dem Cache
+  assert.deepEqual(
+    liste.map((p) => p.name),
+    ["A"],
+  );
+});
+
+test("parallele Aenderungen werden nacheinander ausgefuehrt und gehen nicht verloren", async () => {
+  speicherVerzoegerung = 5;
+  await Promise.all([
+    store.addPrompt({ name: "eins", positive: "1", tags: [] } as any),
+    store.addPrompt({ name: "zwei", positive: "2", tags: [] } as any),
+    store.addPrompt({ name: "drei", positive: "3", tags: [] } as any),
+  ]);
+  const namen = JSON.parse(dateiInhalt!).map((p: any) => p.name);
+  assert.deepEqual(namen, ["drei", "zwei", "eins"]);
 });

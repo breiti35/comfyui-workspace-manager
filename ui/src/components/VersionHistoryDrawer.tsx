@@ -105,7 +105,7 @@ export function VersionHistoryDrawer({ onClose }: { onClose: () => void }) {
           isFitted
           variant="enclosed"
           onChange={setActive}
-          colorScheme="teal"
+          colorScheme="blue"
         >
           <TabList mb="1em">
             <Tab>Versions</Tab>
@@ -122,7 +122,7 @@ export function VersionHistoryDrawer({ onClose }: { onClose: () => void }) {
                       mb={1}
                       justify={"space-between"}
                       backgroundColor={
-                        version.id === curVersion?.id ? "teal.300" : undefined
+                        version.id === curVersion?.id ? "blue.300" : undefined
                       }
                       borderRadius={4}
                     >
@@ -194,7 +194,7 @@ export function VersionHistoryDrawer({ onClose }: { onClose: () => void }) {
                         Saved at {new Date(c.createTime).toLocaleString()}
                       </Button>
                       {c.isAutoSave ? (
-                        <Tag colorScheme="teal" size={"sm"}>
+                        <Tag colorScheme="blue" size={"sm"}>
                           Auto save
                         </Tag>
                       ) : null}

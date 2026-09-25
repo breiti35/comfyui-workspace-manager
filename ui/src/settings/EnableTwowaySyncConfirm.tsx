@@ -22,7 +22,7 @@ export default function EnableTwoWaySyncConfirm({
         {t("sync.confirmDialog.backupNote")}
       </p>
       <Button
-        colorScheme="teal"
+        colorScheme="blue"
         variant={"outline"}
         width={"fit-content"}
         onClick={async () => {

@@ -1,6 +1,6 @@
 import { createContext } from "react";
-import { Folder, Workflow, WorkflowVersion } from "./types/dbTypes";
-import { WorkspaceRoute } from "./types/types";
+import type { Folder, Workflow, WorkflowVersion } from "./types/dbTypes";
+import type { WorkspaceRoute } from "./types/types";
 export type JsonDiff = {
   old: Object;
   new: Object;

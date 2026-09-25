@@ -36,8 +36,11 @@ export default function WorkspaceSettingsModal({
   // Adult host state drives whether the NSFW-blur toggle is meaningful.
   const [adultOn, setAdultOn] = useState(false);
   useEffect(() => {
-    userSettingsTable
-      ?.getSetting("civitaiIncludeAdultContent")
+    // Settings are cached in memory (see UserSettingsTable); re-read them
+    // once when the panel opens so changes from another tab show up.
+    (userSettingsTable?.refresh() ?? Promise.resolve())
+      .catch(() => undefined)
+      .then(() => userSettingsTable?.getSetting("civitaiIncludeAdultContent"))
       .then((r) => setAdultOn(!!r));
   }, []);
 

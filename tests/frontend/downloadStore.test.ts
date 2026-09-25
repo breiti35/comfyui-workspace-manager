@@ -15,7 +15,9 @@
  *  - "../../Api" (cancelDownload) -> zeichnet nur die Aufrufe auf.
  *
  * Aufruf (siehe tests/README.md):
- *   node --experimental-test-module-mocks --import ./tests/frontend/setup.mjs \
+ *   node --experimental-transform-types --experimental-test-module-mocks \
+ *        --disable-warning=ExperimentalWarning \
+ *        --import ./tests/frontend/setup.mjs \
  *        --test tests/frontend/downloadStore.test.ts
  */
 
@@ -198,6 +200,18 @@ test("download_error leert pending, laesst active unangetastet und zaehlt tick h
   fire("download_error", "netzwerkfehler");
   snap = store.getDownloadSnapshot();
   assert.equal(snap.lastError?.tick, 2, "gleicher Fehlertext muss ueber tick unterscheidbar bleiben");
+});
+
+test("download_error maskiert den Civitai-API-Key (token=...) vor der Anzeige", () => {
+  store.startDownloadTracking();
+  const key = "abcdef1234567890abcdef1234567890";
+  fire(
+    "download_error",
+    `401 for https://civitai.com/api/download/models/1?token=${key}&type=Model`,
+  );
+  const msg = store.getDownloadSnapshot().lastError?.message ?? "";
+  assert.ok(!msg.includes(key), "der Key darf nie im Toast-Text landen");
+  assert.match(msg, /token=\*\*\*&type=Model/);
 });
 
 // --- overallProgress -------------------------------------------------

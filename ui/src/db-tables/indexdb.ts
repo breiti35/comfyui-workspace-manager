@@ -1,5 +1,7 @@
-import Dexie, { Table } from "dexie";
-import {
+import Dexie from "dexie";
+import type { Table } from "dexie";
+import { WORKSPACE_INDEXDB_NAME } from "../types/dbTypes";
+import type {
   Workflow,
   LocalCache,
   Changelog,
@@ -8,7 +10,6 @@ import {
   Model,
   Tag,
   UserSettings,
-  WORKSPACE_INDEXDB_NAME,
   WorkflowVersion,
 } from "../types/dbTypes";
 

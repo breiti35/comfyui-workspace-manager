@@ -92,12 +92,18 @@ export function Topbar({ curFlowName, setCurFlowName }: Props) {
     >
       <HStack
         style={{
-          padding: 4,
+          // Vertical padding bumped by 1px over horizontal (5px vs 4px) so
+          // the bar's total height lands at 42px, matching ComfyUI's own
+          // toolbar height - horizontal spacing is left untouched.
+          padding: "5px 4px",
           position: "fixed",
           ...positionStyle,
         }}
         backgroundColor="comfy.topbarBg"
-        borderRadius="lg"
+        // Chakra's "md" radius is 6px, matching ComfyUI's own toolbar corner
+        // radius exactly (previously "lg"/8px, which read as a mismatched,
+        // separate shape next to ComfyUI's bar).
+        borderRadius="md"
         justifyContent={"space-between"}
         alignItems={"center"}
         gap={1}

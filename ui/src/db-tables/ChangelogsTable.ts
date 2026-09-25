@@ -1,6 +1,7 @@
 import { nanoid } from "nanoid";
-import { Table, userSettingsTable } from "./WorkspaceDB";
-import { Changelog } from "../types/dbTypes";
+import { userSettingsTable } from "./WorkspaceDB";
+import type { Table } from "./WorkspaceDB";
+import type { Changelog } from "../types/dbTypes";
 import { TableBase } from "./TableBase";
 import { indexdb } from "./indexdb";
 const LIMIT = 80;

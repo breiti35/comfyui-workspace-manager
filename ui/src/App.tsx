@@ -41,7 +41,10 @@ import { api, app } from "./utils/comfyapp";
 import { loadCivitApiKey } from "./utils/civitUtils";
 import { fetchApi } from "./Api";
 import { serverInfo } from "./utils/OsPathUtils";
-import { startPreviewImageCapture } from "./gallery/previewImageStore";
+import {
+  notifyMediaSaved,
+  startPreviewImageCapture,
+} from "./gallery/previewImageStore";
 import { startDownloadTracking } from "./model-manager/install-models/downloadStore";
 import { useT } from "./i18n/LanguageContext";
 
@@ -295,7 +298,7 @@ export default function App() {
         : null,
       {
         label: "Save",
-        colorScheme: "teal",
+        colorScheme: "blue",
         onClick: async () => {
           await saveCurWorkflow();
           newIDToLoad && loadWorkflowIDImpl(newIDToLoad);
@@ -366,10 +369,16 @@ export default function App() {
     if (image.subfolder != null && image.subfolder !== "") {
       path = image.subfolder + "/" + path;
     }
-    mediaTable?.create({
-      workflowID: curFlowID.current,
-      localPath: path,
-    });
+    mediaTable
+      ?.create({
+        workflowID: curFlowID.current,
+        localPath: path,
+      })
+      .then((media) => {
+        // Only now is the record in indexdb - tell the gallery to refresh.
+        if (media) notifyMediaSaved();
+      })
+      .catch((e) => console.error("Error creating media record:", e));
   }, []);
 
   const onCloseDrawer = useCallback(() => {
@@ -421,7 +430,8 @@ export default function App() {
     api.addEventListener("executed", handleExecuted);
 
     return () => {
-      window.removeEventListener("executed", handleExecuted);
+      // Registered on ComfyUI's api (not window), so it must be removed there.
+      api.removeEventListener("executed", handleExecuted);
     };
   }, []);
 

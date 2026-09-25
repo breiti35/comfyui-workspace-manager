@@ -58,7 +58,7 @@ export default function FilesListFolderItemRightClickMenu({
       [
         // {
         //   label: "Keep and move to root directory",
-        //   colorScheme: "teal",
+        //   colorScheme: "blue",
         //   onClick: () => {
         //     onDelete(EFlowOperationType.MOVE_TO_ROOT_FOLDER);
         //   },

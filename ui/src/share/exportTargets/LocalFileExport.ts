@@ -1,11 +1,11 @@
 import JSZip from "JSZip";
 import { IconFileExport } from "@tabler/icons-react";
-import { Workflow } from "../../types/dbTypes";
+import type { Workflow } from "../../types/dbTypes";
 import { app } from "../../utils/comfyapp";
 import { COMFYSPACE_TRACKING_FIELD_NAME } from "../../const";
 import { extractAndFetchFileNames } from "../../spacejson/handleDownloadSpaceJson";
 import { downloadJsonFile } from "../../utils/downloadJsonFile";
-import { ExportTarget, ExportWorkflowOptions, ExportResult } from "./ExportTarget";
+import type { ExportTarget, ExportWorkflowOptions, ExportResult } from "./ExportTarget";
 
 async function buildExportJson(
   options: ExportWorkflowOptions,

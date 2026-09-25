@@ -4,8 +4,8 @@ import {
   getWebpMetadata,
   isVideoName,
 } from "../utils/mediaMetadataUtils.ts";
-import { FC } from "react";
-import { Media } from "../types/dbTypes.ts";
+import type { FC } from "react";
+import type { Media } from "../types/dbTypes.ts";
 
 export type MetaData<T = any> = { prompt: T; workflow: T };
 

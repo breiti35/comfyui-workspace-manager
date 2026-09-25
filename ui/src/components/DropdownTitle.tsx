@@ -224,7 +224,7 @@ export default function DropdownTitle() {
             </ModalBody>
             <ModalFooter>
               <Button
-                colorScheme="teal"
+                colorScheme="blue"
                 mr={3}
                 onClick={onSubmit}
                 isDisabled={!newFlowName || !!submitError}

@@ -1,6 +1,6 @@
 import { indexdb } from "../../db-tables/indexdb";
 import { getCivitBaseUrl } from "../../utils/civitUtils";
-import { CivitiModel } from "../types";
+import type { CivitiModel } from "../types";
 
 // Cache full model-detail responses per host+id. Bump the version if the shape
 // we rely on changes. Detail data is fairly static, so a couple of days is

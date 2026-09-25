@@ -1,6 +1,6 @@
 import React from "react";
 import { Flex, IconButton, Image } from "@chakra-ui/react";
-import { isImageFormat } from "../../utils.tsx";
+import { isImageFormat } from "../../utils.ts";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 
 type Media = {

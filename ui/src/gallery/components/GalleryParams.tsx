@@ -252,24 +252,38 @@ export default function GalleryParams({
     const positive = essentials.generic.length
       ? essentials.generic.join("\n")
       : essentials.positive;
-    const created = await addPrompt({
-      name: autoName(positive),
-      positive,
-      negative: essentials.negative,
-      model: essentials.model ? fmt(essentials.model) : undefined,
-      loras: essentials.loras,
-      sampler: essentials.sampler ? fmt(essentials.sampler) : undefined,
-      scheduler: essentials.scheduler ? fmt(essentials.scheduler) : undefined,
-      steps: essentials.steps != null ? fmt(essentials.steps) : undefined,
-      cfg: essentials.cfg != null ? fmt(essentials.cfg) : undefined,
-      seed: essentials.seed != null ? fmt(essentials.seed) : undefined,
-      size:
-        essentials.width && essentials.height
-          ? `${fmt(essentials.width)} × ${fmt(essentials.height)}`
-          : undefined,
-      tags: [],
-      thumbnail: media?.localPath,
-    });
+    let created;
+    try {
+      created = await addPrompt({
+        name: autoName(positive),
+        positive,
+        negative: essentials.negative,
+        model: essentials.model ? fmt(essentials.model) : undefined,
+        loras: essentials.loras,
+        sampler: essentials.sampler ? fmt(essentials.sampler) : undefined,
+        scheduler: essentials.scheduler ? fmt(essentials.scheduler) : undefined,
+        steps: essentials.steps != null ? fmt(essentials.steps) : undefined,
+        cfg: essentials.cfg != null ? fmt(essentials.cfg) : undefined,
+        seed: essentials.seed != null ? fmt(essentials.seed) : undefined,
+        size:
+          essentials.width && essentials.height
+            ? `${fmt(essentials.width)} × ${fmt(essentials.height)}`
+            : undefined,
+        tags: [],
+        thumbnail: media?.localPath,
+      });
+    } catch (e) {
+      // Load or write failed (e.g. flaky proxy) - nothing was saved, say so
+      // instead of flashing the "saved" state.
+      toast({
+        title: t("prompts.saveError"),
+        description: e instanceof Error ? e.message : String(e),
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
     setSaved(true);
     setTimeout(() => setSaved(false), 1600);
     toast({

@@ -5,7 +5,7 @@ import { MediaTable } from "./MediaTable";
 import { UserSettingsTable } from "./UserSettingsTable";
 import { TagsTable } from "./tagsTable";
 import { indexdb } from "./indexdb";
-import { Folder, Workflow } from "../types/dbTypes";
+import type { Folder, Workflow } from "../types/dbTypes";
 import { WorkflowVersionsTable } from "./WorkflowVersionsTable";
 
 export type Table =

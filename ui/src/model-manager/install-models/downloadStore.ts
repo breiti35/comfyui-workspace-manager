@@ -1,10 +1,12 @@
 import { cancelDownload } from "../../Api";
 import { api } from "../../utils/comfyapp";
+import { maskSecrets } from "../../utils/maskSecrets";
 
 /**
  * App-level store for model downloads.
  *
- * The download state used to live inside InstallModelsModal, which meant it was
+ * The download state used to live inside the install panel (now
+ * InstallModelsPanelContent), which meant it was
  * created and torn down with that panel: closing the panel dropped the progress
  * listeners and the state, even though the backend worker kept downloading. You
  * then had to reopen the panel and navigate back to the model to see anything -
@@ -155,7 +157,9 @@ export function startDownloadTracking(): void {
     // entries in `active`, which is deliberately left untouched.
     setState({
       pending: [],
-      lastError: { message: String(e.detail), tick: errorTick },
+      // The backend echoes the download URL, which carries the Civitai API
+      // key as ?token=... - never show that in a toast.
+      lastError: { message: maskSecrets(String(e.detail)), tick: errorTick },
     });
   });
 }

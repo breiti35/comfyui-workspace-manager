@@ -1,6 +1,7 @@
-import { Table, workflowsTable } from "./WorkspaceDB";
+import { workflowsTable } from "./WorkspaceDB";
+import type { Table } from "./WorkspaceDB";
 import { TableBase } from "./TableBase";
-import { Media } from "../types/dbTypes";
+import type { Media } from "../types/dbTypes";
 import { indexdb } from "./indexdb";
 
 export class MediaTable extends TableBase<Media> {
@@ -33,8 +34,9 @@ export class MediaTable extends TableBase<Media> {
     await workflowsTable?.updateMetaInfo(input.workflowID, {
       latestImage: md.localPath,
     });
-    // save indexdb
-    indexdb.media.put(md);
+    // save indexdb - awaited, so "created" really means stored (the
+    // gallery refresh triggered after this must find the record).
+    await indexdb.media.put(md);
     return md;
   }
 

@@ -42,3 +42,23 @@ if (typeof globalThis.localStorage === "undefined") {
   };
   globalThis.window.localStorage = globalThis.localStorage;
 }
+
+// utils/comfyapp.ts liest auf Modulebene `location.pathname`, um daraus den
+// API-Praefix zu bilden: `pathname.split("/").slice(0, -1).join("/")`. Node
+// kennt `location` nicht.
+//
+// Gewaehlter Pfad: "/" - ComfyUI wird standardmaessig direkt auf dem
+// Server-Root ausgeliefert (kein Sub-Pfad). Das deckt sich mit
+// entry/entry.js, dem tatsaechlichen Einstiegspunkt im Browser: das
+// importiert ebenfalls fest "/scripts/api.js" und laedt den Bundle-Code
+// ueber "/workspace_web/input.js", jeweils ohne einen Praefix
+// mitzufuehren. Bei pathname "/" liefert obiger Split-Ausdruck einen leeren
+// api_base (""), genau das Verhalten, von dem entry.js ausgeht.
+if (typeof globalThis.location === "undefined") {
+  globalThis.location = { pathname: "/" };
+}
+// Code, der ueber `window.location` statt dem globalen `location` geht,
+// soll denselben Wert sehen.
+if (typeof globalThis.window.location === "undefined") {
+  globalThis.window.location = globalThis.location;
+}
