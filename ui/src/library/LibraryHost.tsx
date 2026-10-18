@@ -40,9 +40,7 @@ import {
 import LibrarySidebar from "./LibrarySidebar";
 import "./library.css";
 
-const RecentFilesDrawer = lazy(
-  () => import("../RecentFilesDrawer/RecentFilesDrawer"),
-);
+const WorkflowsSection = lazy(() => import("./WorkflowsSection"));
 const GalleryModal = lazy(() => import("../gallery/GalleryModal"));
 const PromptLibraryModal = lazy(
   () => import("../prompt-library/PromptLibraryModal"),
@@ -231,10 +229,7 @@ export default function LibraryHost({ ready, onClickNewFlow }: Props) {
               </div>
             )}
             {isOpen && ready && section === "recentFlows" && (
-              <RecentFilesDrawer
-                onClose={closeRoute}
-                onClickNewFlow={onClickNewFlow}
-              />
+              <WorkflowsSection onClickNewFlow={onClickNewFlow} />
             )}
             {isOpen && section === "gallery" && (
               <GalleryModal onclose={closeRoute} />

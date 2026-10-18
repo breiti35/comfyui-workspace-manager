@@ -142,3 +142,33 @@
 .lib-root .lib-seg button.on { background: var(--lib-amber); color: var(--lib-on-amber); font-weight: 600; }
 /* gallery tiles in index-card style */
 .lib-root .lib-gal-tile { border: 1px solid var(--lib-line); border-radius: var(--lib-radius); overflow: hidden; background: var(--lib-card); }
+
+/* workflows: rich cards + dense list */
+.lib-root .lib-kbd { font: 11px var(--lib-mono); padding: 1px 5px; border: 1px solid var(--lib-line); border-radius: var(--lib-radius); color: var(--lib-text-2); margin-left: 4px; }
+.lib-root .lib-btn.icon-sm { width: 28px; padding: 0; justify-content: center; }
+.lib-root .lib-wf-selbar { padding: 8px 24px; border-bottom: 1px solid var(--lib-line-soft); }
+.lib-root .lib-wf-card { cursor: pointer; }
+.lib-root .lib-wf-card.act, .lib-root .lib-wf-row.act { outline: 2px solid var(--lib-amber); outline-offset: -2px; }
+.lib-root .lib-wf-card.sel, .lib-root .lib-wf-row.sel { background: color-mix(in srgb, var(--lib-card) 80%, var(--lib-amber) 20%); }
+.lib-root .lib-wf-thumb { position: relative; flex: 1; min-height: 0; background: var(--lib-input); overflow: hidden; }
+.lib-root .lib-wf-thumb img, .lib-root .lib-wf-thumb video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.lib-root .lib-wf-tags { font-size: 12px; color: var(--lib-text-2); padding: 0 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 16px; }
+.lib-root .lib-wf-acts { position: absolute; top: 4px; right: 4px; display: none; background: var(--lib-card); border: 1px solid var(--lib-line); border-radius: var(--lib-radius); }
+.lib-root .lib-wf-card:hover .lib-wf-acts, .lib-root .lib-wf-card:focus-within .lib-wf-acts { display: flex; }
+.lib-root .lib-wf-check { position: absolute; top: 8px; left: 8px; width: 16px; height: 16px; accent-color: var(--lib-amber); z-index: 1; }
+.lib-root .lib-grid.lib-wf-grid .lib-card { height: 260px; }
+.lib-root .lib-grid.lib-wf-grid.list { display: flex; flex-direction: column; gap: 0; padding: 6px 24px; }
+.lib-root .lib-wf-row { display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 8px; border-bottom: 1px solid var(--lib-line-soft); cursor: pointer; position: relative; font-size: 13px; }
+.lib-root .lib-wf-row:hover { background: color-mix(in srgb, var(--lib-card) 55%, transparent); }
+.lib-root .lib-wf-row .lib-wf-check { position: static; }
+.lib-root .lib-wf-rthumb { width: 36px; height: 36px; flex: none; background: var(--lib-input); overflow: hidden; }
+.lib-root .lib-wf-rname { flex: 2; min-width: 0; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: flex; align-items: center; }
+.lib-root .lib-wf-rfolder, .lib-root .lib-wf-rtags { flex: 1; min-width: 0; color: var(--lib-text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lib-root .lib-wf-rdate { width: 130px; flex: none; color: var(--lib-text-2); font-family: var(--lib-mono); font-size: 12px; }
+.lib-root .lib-wf-row .lib-wf-acts { position: static; display: none; }
+.lib-root .lib-wf-row:hover .lib-wf-acts, .lib-root .lib-wf-row:focus-within .lib-wf-acts { display: flex; }
+
+.lib-root .lib-wf-dropstrip { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 8px 16px; border-bottom: 1px solid var(--lib-line, currentColor); }
+.lib-root .lib-wf-drophint { color: var(--lib-text-2); font-size: 12px; }
+.lib-root .lib-wf-drop { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border: 1px dashed var(--lib-text-2); border-radius: 4px; font-size: 12px; }
+.lib-root .lib-wf-drop.on { border-style: solid; background: var(--lib-hover, rgba(128,128,128,.18)); }
