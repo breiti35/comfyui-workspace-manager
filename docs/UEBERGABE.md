@@ -5,9 +5,9 @@
 Ablauf über `/impeccable` (Plugin): `PRODUCT.md` (Produkt), `docs/superpowers/specs/2026-10-18-navigation-redesign-brief.md`
 (Menüführung, freigegeben), `.impeccable/surfaces/ui-src.md` (Richtung + Direction contract), gewählte Skizze
 `.impeccable/mocks/decision/kartei-warm.html` = **Karteikatalog hell-warm**, folgt dem ComfyUI-Theme (dunkel = warmes Dunkel).
-**Stand 18.10.:** Schritt 4 (Prompts: Karten, Werkzeugzeile mit Suche/Tags/Sortierung/Ansicht, Editor im Bibliotheksstil) fertig, lokal committet. Schritt 3 (Galerie: Segmentschalter, Werkzeugzeile, Fuß, Karteistil-Kacheln) fertig und lokal committet. Schritt 1 fertig und lokal committet (nicht gepusht): Rahmen `ui/src/library/`, Topbar eingebettet in ComfyUIs
+**Stand 18.10.:** Schritt 5 (Workflows: Karten, Ordner-Drop-Leiste) fertig, lokal committet. Schritt 4 (Prompts: Karten, Werkzeugzeile mit Suche/Tags/Sortierung/Ansicht, Editor im Bibliotheksstil) fertig, lokal committet. Schritt 3 (Galerie: Segmentschalter, Werkzeugzeile, Fuß, Karteistil-Kacheln) fertig und lokal committet. Schritt 1 fertig und lokal committet (nicht gepusht): Rahmen `ui/src/library/`, Topbar eingebettet in ComfyUIs
 `.actionbar`, Dock links/rechts, Bereich Modelle im neuen Stil, übrige Bereiche (Workflows/Galerie/Prompts/Einstellungen) mit altem Inhalt
-im Rahmen, neu: Downloads. Review + `DESIGN.md` erledigt. **Nächste Schritte (Brief §10):** 5 Workflows (reiche Karten),
+im Rahmen, neu: Downloads. Review + `DESIGN.md` erledigt. **Nächste Schritte (Brief §10):** (5 erledigt)
 6 Downloads+Einstellungen, 7 Kompaktleiste. **Offene Review-Punkte:** Hell-Theme-Werte (Karte/Grund, nur gerechnet), Kürzel für die Bibliothek,
 farbiger border-left >1px im alten Inhalt (WorkflowListItem, ModelDetailView, InstallDetailView, GallerySidebar), Fokus-Trap im Fenster,
 Kartentitel einzeilig abgeschnitten. Test: ComfyUI `venv/Scripts/python.exe main.py --port 8189 --cpu`, im Browser per Chrome-Erweiterung.
