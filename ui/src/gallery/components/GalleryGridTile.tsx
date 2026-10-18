@@ -38,7 +38,7 @@ export default function GalleryGridTile({
           onDeleted={onDeleted}
         />
       ) : (
-        <Box w={"100%"} h={"100%"} borderRadius={"lg"} bg={"galleryPanelBg"} />
+        <Box w={"100%"} h={"100%"} className={"lib-gal-tile"} />
       )}
     </Box>
   );

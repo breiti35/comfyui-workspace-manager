@@ -72,9 +72,7 @@ export default function GalleryMediaItem({
       position={"relative"}
       w={"100%"}
       sx={{ aspectRatio: "1 / 1" }}
-      borderRadius={"lg"}
-      overflow={"hidden"}
-      bg={"galleryPanelBg"}
+      className={"lib-gal-tile"}
       cursor={"pointer"}
       onClick={() => onClickMedia(media)}
     >
@@ -151,7 +149,9 @@ export default function GalleryMediaItem({
         <Button
           alignSelf={"flex-start"}
           size={"xs"}
-          colorScheme={"blue"}
+          bg={"var(--lib-amber)"}
+          color={"var(--lib-on-amber)"}
+          _hover={{ bg: "var(--lib-amber)" }}
           onClick={(e) => {
             e.stopPropagation();
             onLoad();

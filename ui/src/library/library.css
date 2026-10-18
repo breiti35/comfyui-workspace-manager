@@ -133,3 +133,12 @@
 
 /* amber is also used by the topbar, which lives outside .lib-root */
 .workspace_manager { --lib-amber: #c77a12; --lib-on-amber: #1d1a17; }
+
+/* segment switch (sub-areas in the tool row, not a second navigation) */
+.lib-root .lib-seg { display: inline-flex; border: 1px solid var(--lib-line); border-radius: var(--lib-radius); overflow: hidden; }
+.lib-root .lib-seg button { appearance: none; border: 0; height: 28px; padding: 0 12px; background: var(--lib-input); color: var(--lib-text); font: inherit; font-size: 13px; cursor: pointer; white-space: nowrap; }
+.lib-root .lib-seg button + button { border-left: 1px solid var(--lib-line); }
+.lib-root .lib-seg button:hover { background: var(--lib-card); }
+.lib-root .lib-seg button.on { background: var(--lib-amber); color: var(--lib-on-amber); font-weight: 600; }
+/* gallery tiles in index-card style */
+.lib-root .lib-gal-tile { border: 1px solid var(--lib-line); border-radius: var(--lib-radius); overflow: hidden; background: var(--lib-card); }

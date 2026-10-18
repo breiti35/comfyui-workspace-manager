@@ -12,13 +12,16 @@ import { Media } from "../types/dbTypes";
 import { GalleryCarouselImageViewer } from "./components/GalleryCarouselImageViewer.tsx";
 import GalleryGridView from "./components/GalleryGridView.tsx";
 import { useDebounce } from "../customHooks/useDebounce.ts";
-import SearchInput from "../components/SearchInput.tsx";
 import { GalleryContext, GallerySection } from "./GalleryContext.ts";
-import { GallerySidebar } from "./components/GallerySidebar.tsx";
 import { GalleryPreviewImage } from "./components/GalleryPreviewImage.tsx";
 import { usePreviewImage } from "./usePreviewImage.ts";
 import { useT } from "../i18n/LanguageContext";
-import { LibraryHeader } from "../library/primitives";
+import {
+  LibraryFooter,
+  LibraryHeader,
+  LibrarySelectionBar,
+  LibraryToolbar,
+} from "../library/primitives";
 import { useLibrarySubLevel } from "../library/libraryContext";
 
 export default function GalleryModal(_props: {
@@ -165,44 +168,62 @@ export default function GalleryModal(_props: {
               </Tooltip>
             ) : undefined
           }
-          actions={
-            section !== "preview" && !detailOpen ? (
-              <SearchInput
-                searchValue={searchValue}
-                onUpdateSearchValue={setSearchValue}
-                placeholder={t("gallery.searchPlaceholder")}
-                variant={"filled"}
-                borderRadius={"sm"}
-                mb={0}
-                style={{ width: "300px" }}
-              />
-            ) : undefined
-          }
         />
-        <Flex flex={1} minH={0} overflow={"hidden"}>
-            <GallerySidebar
-              section={section}
-              onSelect={selectSection}
-              workflowCount={workflowMedia.length}
-              allCount={allMedia.length}
-              previewCount={previewFrames.length}
+        {!detailOpen && (
+          <LibraryToolbar>
+            <input
+              className="lib-input"
+              style={{ width: 300 }}
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              placeholder={t("gallery.searchPlaceholder")}
+              aria-label={t("gallery.searchPlaceholder")}
+              disabled={section === "preview"}
+            />
+            <div className="lib-seg" role="tablist">
+              {(
+                [
+                  ["workflow", t("gallery.sidebar.thisWorkflow"), workflowMedia.length],
+                  ["all", t("gallery.sidebar.allImages"), allMedia.length],
+                  ["preview", "Preview Image", previewFrames.length],
+                ] as [GallerySection, string, number][]
+              ).map(([key, label, count]) => (
+                <button
+                  key={key}
+                  type="button"
+                  role="tab"
+                  aria-selected={section === key}
+                  className={section === key ? "on" : undefined}
+                  onClick={() => selectSection(key)}
+                >
+                  {label}
+                  {key === "preview" && isGenerating ? " ●" : count > 0 ? ` ${count}` : ""}
+                </button>
+              ))}
+            </div>
+          </LibraryToolbar>
+        )}
+        <LibrarySelectionBar />
+        <Box flex={1} minH={0} overflowY={"auto"} p={"16px 24px"}>
+          {section === "preview" ? (
+            <GalleryPreviewImage
+              frames={previewFrames}
               isGenerating={isGenerating}
             />
-            <Flex direction={"column"} flex={1} minW={0} p={4} gap={3}>
-              <Box flex={1} minH={0} overflowY={"auto"}>
-                {section === "preview" ? (
-                  <GalleryPreviewImage
-                    frames={previewFrames}
-                    isGenerating={isGenerating}
-                  />
-                ) : detailOpen && curMedia ? (
-                  <GalleryCarouselImageViewer mediaList={filteredList} />
-                ) : (
-                  <GalleryGridView medias={filteredList} />
-                )}
-              </Box>
-            </Flex>
-        </Flex>
+          ) : detailOpen && curMedia ? (
+            <GalleryCarouselImageViewer mediaList={filteredList} />
+          ) : (
+            <GalleryGridView medias={filteredList} />
+          )}
+        </Box>
+        <LibraryFooter
+          left={
+            section === "preview"
+              ? undefined
+              : `${filteredList.length} / ${baseList.length}`
+          }
+          right={workflowName}
+        />
       </div>
     </GalleryContext.Provider>
   );
