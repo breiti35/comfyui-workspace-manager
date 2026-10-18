@@ -1,19 +1,7 @@
-import {
-  Box,
-  Button,
-  Flex,
-  Grid,
-  HStack,
-  IconButton,
-  Input,
-  Textarea,
-  Tooltip,
-  Text,
-} from "@chakra-ui/react";
 import { IconArrowLeft, IconTrash } from "@tabler/icons-react";
 import { useState } from "react";
-import { hideScrollbarSx } from "../model-manager/utils";
 import { useT } from "../i18n/LanguageContext";
+import { LibraryHeader } from "../library/primitives";
 import type { PromptRecipe } from "./promptsStore";
 
 interface Props {
@@ -75,65 +63,73 @@ export default function PromptEditor({
     set: (s: string) => void,
     placeholder?: string,
   ) => (
-    <Box>
-      <Text fontSize={"xs"} color={"gray.500"} mb={1}>
-        {label}
-      </Text>
-      <Input
-        size={"sm"}
+    <label className="lib-field">
+      <span>{label}</span>
+      <input
+        className="lib-input"
         value={v}
         placeholder={placeholder}
         onChange={(e) => set(e.target.value)}
       />
-    </Box>
+    </label>
+  );
+
+  const area = (
+    label: string,
+    v: string,
+    set: (s: string) => void,
+    rows: number,
+  ) => (
+    <label className="lib-field">
+      <span>{label}</span>
+      <textarea
+        className="lib-input"
+        rows={rows}
+        value={v}
+        onChange={(e) => set(e.target.value)}
+      />
+    </label>
   );
 
   return (
-    <Flex direction={"column"} h={"100%"} minH={0}>
-      <Flex
-        align={"center"}
-        gap={2}
-        px={4}
-        py={2}
-        pr={12}
-        flexShrink={0}
-        bg={"galleryPanelBg"}
-        borderBottom={"1px solid"}
-        borderColor={"rowBorderColor"}
-      >
-        <Tooltip label={t("prompts.back")}>
-          <IconButton
-            size={"sm"}
-            variant={"ghost"}
-            icon={<IconArrowLeft size={19} />}
-            aria-label={t("prompts.back")}
-            onClick={onCancel}
-          />
-        </Tooltip>
-        <Text fontWeight={600} fontSize={"sm"} noOfLines={1}>
-          {value ? t("prompts.editTitle") : t("prompts.newTitle")}
-        </Text>
-        <Box flex={1} />
-        {onDelete && (
-          <Tooltip label={t("prompts.delete")}>
-            <IconButton
-              size={"sm"}
-              variant={"outline"}
-              colorScheme={"red"}
-              icon={<IconTrash size={16} />}
-              aria-label={t("prompts.delete")}
-              onClick={onDelete}
-            />
-          </Tooltip>
-        )}
-        <Button size={"sm"} colorScheme={"blue"} onClick={submit}>
-          {t("prompts.save")}
-        </Button>
-      </Flex>
-
-      <Box flex={1} minH={0} overflowY={"auto"} p={4} sx={hideScrollbarSx}>
-        <Flex direction={"column"} gap={4} maxW={"900px"}>
-          <Grid templateColumns={"repeat(auto-fit, minmax(240px, 1fr))"} gap={3}>
+    <>
+      <LibraryHeader
+        title={value ? t("prompts.editTitle") : t("prompts.newTitle")}
+        back={
+          <div className="lib-crumb">
+            <button
+              type="button"
+              className="lib-btn sm"
+              onClick={onCancel}
+              aria-label={t("prompts.back")}
+            >
+              <IconArrowLeft size={14} />
+              {t("prompts.back")}
+            </button>
+          </div>
+        }
+        actions={
+          <>
+            {onDelete && (
+              <button
+                type="button"
+                className="lib-btn icon"
+                title={t("prompts.delete")}
+                aria-label={t("prompts.delete")}
+                onClick={onDelete}
+              >
+                <IconTrash size={16} />
+              </button>
+            )}
+            <button type="button" className="lib-btn primary" onClick={submit}>
+              {t("prompts.save")}
+            </button>
+          </>
+        }
+      />
+      <div className="lib-edit">
+        <div className="lib-edit-in">
+          <div className="lib-fields wide">
             {field(t("prompts.field.name"), name, setName)}
             {field(
               t("prompts.field.tags"),
@@ -141,40 +137,11 @@ export default function PromptEditor({
               setTags,
               t("prompts.field.tagsPlaceholder"),
             )}
-          </Grid>
-
-          <Box>
-            <Text fontSize={"xs"} color={"gray.500"} mb={1}>
-              {t("prompts.field.positive")}
-            </Text>
-            <Textarea
-              size={"sm"}
-              rows={5}
-              value={positive}
-              onChange={(e) => setPositive(e.target.value)}
-            />
-          </Box>
-          <Box>
-            <Text fontSize={"xs"} color={"gray.500"} mb={1}>
-              {t("prompts.field.negative")}
-            </Text>
-            <Textarea
-              size={"sm"}
-              rows={3}
-              value={negative}
-              onChange={(e) => setNegative(e.target.value)}
-            />
-          </Box>
-
-          <Text
-            fontSize={"xs"}
-            textTransform={"uppercase"}
-            letterSpacing={"wider"}
-            color={"gray.500"}
-          >
-            {t("prompts.section.recipe")}
-          </Text>
-          <Grid templateColumns={"repeat(auto-fit, minmax(200px, 1fr))"} gap={3}>
+          </div>
+          {area(t("prompts.field.positive"), positive, setPositive, 5)}
+          {area(t("prompts.field.negative"), negative, setNegative, 3)}
+          <h2>{t("prompts.section.recipe")}</h2>
+          <div className="lib-fields narrow">
             {field(t("prompts.field.model"), model, setModel)}
             {field(
               t("prompts.field.loras"),
@@ -188,18 +155,17 @@ export default function PromptEditor({
             {field(t("prompts.field.cfg"), String(cfg), setCfg)}
             {field(t("prompts.field.seed"), String(seed), setSeed)}
             {field(t("prompts.field.size"), size, setSize)}
-          </Grid>
-
-          <HStack justify={"flex-end"} pt={2}>
-            <Button size={"sm"} variant={"ghost"} onClick={onCancel}>
+          </div>
+          <div className="lib-edit-foot">
+            <button type="button" className="lib-btn" onClick={onCancel}>
               {t("prompts.cancel")}
-            </Button>
-            <Button size={"sm"} colorScheme={"blue"} onClick={submit}>
+            </button>
+            <button type="button" className="lib-btn primary" onClick={submit}>
               {t("prompts.save")}
-            </Button>
-          </HStack>
-        </Flex>
-      </Box>
-    </Flex>
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }
