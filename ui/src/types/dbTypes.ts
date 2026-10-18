@@ -120,6 +120,9 @@ export type UserSettings = {
   disableUnsavedWarning: boolean;
   // UI language. Defaults to English when unset.
   language?: "de" | "en";
+  // Areas shown in the docked bar's cabinet column (CompactSection keys).
+  // Unset = all areas.
+  dockSections?: string[];
 };
 
 export interface PanelPosition {

@@ -66,7 +66,7 @@ export default function CivitaiApiKeySetting() {
           <InputRightElement>
             <IconButton
               size={"xs"}
-              variant={"ghost"}
+              variant={"ghost"} className="lib-ghost"
               aria-label={"toggle key visibility"}
               icon={show ? <IconEyeOff size={15} /> : <IconEye size={15} />}
               onClick={() => setShow((s) => !s)}
@@ -75,14 +75,14 @@ export default function CivitaiApiKeySetting() {
         </InputGroup>
         <Button
           size={"sm"}
-          colorScheme={"blue"}
+          className="lib-on"
           onClick={save}
           isDisabled={!value.trim()}
         >
           {saved ? t("apikey.saved") : t("apikey.save")}
         </Button>
         {hasKey && (
-          <Button size={"sm"} variant={"ghost"} onClick={clear}>
+          <Button size={"sm"} variant={"ghost"} className="lib-ghost" onClick={clear}>
             {t("apikey.delete")}
           </Button>
         )}

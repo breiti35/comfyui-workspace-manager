@@ -9,6 +9,7 @@ import {
   LibraryToolbar,
 } from "../library/primitives";
 import { useLibrarySubLevel } from "../library/libraryContext";
+import { useLibraryIntent } from "../library/compact/libraryIntent";
 import {
   LibSearch,
   ViewToggle,
@@ -154,6 +155,12 @@ export default function PromptLibraryModal(_props: Partial<Props>) {
     window.addEventListener(PROMPTS_CHANGED_EVENT, refresh);
     return () => window.removeEventListener(PROMPTS_CHANGED_EVENT, refresh);
   }, [refresh]);
+
+  // "Open in library" from the compact bar: open this recipe's editor.
+  useLibraryIntent("promptLibrary", items.length > 0, (key) => {
+    const hit = items.find((p) => p.id === key);
+    if (hit) setEditing(hit);
+  });
 
   const tags = useMemo(() => collectTags(items), [items]);
 

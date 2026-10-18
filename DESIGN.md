@@ -123,7 +123,7 @@ Knopf 28 px, Eingabe-Fläche, Linie, Hover: Bernstein-Rand. Hauptknopf 34 px Ber
 In ComfyUIs Leiste eingehängt (Portal), Schrift wie Host. Zwei Gruppen mit 1-px-Trenner: links Workflow (Titel-Menü, Galerie), rechts Bibliothek (Knopf Bernstein wenn offen, sonst Grau 18 %), Modell-Download-Ring, Andocken (offen = Bernstein 40 %), Einstellungen. Freischwebend: 42 px, Hintergrund Menü + 8 % Warmton, 2 px Radius, Ziehgriff mit Deckkraft .45.
 
 ### Dock-Modus
-Fixiert rechts (oder links ab 60 px) unter der Leiste (Standard top 52 px), Breite ziehbar über 6-px-Griff (Hover Bernstein), keine Abdunklung, Linie + Schatten zur Leinwand. Schrank schmal, Titel 24 px, Umschalter oben (Seite wechseln, Fenster). Topbar tritt zurück, solange offen.
+Fixiert rechts (oder links ab 60 px) unter der Leiste (Standard top 52 px), Breite ziehbar über 6-px-Griff (Hover Bernstein), keine Abdunklung, Linie + Schatten zur Leinwand. Topbar tritt zurück, solange offen. Oben links die Knöpfe Fenster / Seite wechseln / Schließen. Darunter die **Schrank-Spalte** (52 px, Schrank-Ton, Linie rechts): vier Laschen-Zeilen (34 px) nur mit Symbol: Live-Vorschau, Modelle (Trigger-Words), Prompts, Downloads; aktiv = Karte-Fläche und 16-px-Bernstein-Lasche wie im Fenster, Name als Tooltip und `aria-label`, Pfeiltasten wechseln die Zeile. Keine Reiter oben. Rechts davon ein Bereich: Kopf (Titel 24 px, Zahl Mono 12 px), Suchfeld (außer Live/Downloads), scrollende **Zeilen** statt Karten (Vorschau 40 px, Name 14/600, Signatur Mono 11 px, Aktionen als 28-px-Icon-Knöpfe in einer Spalte rechts). Trigger-Words sind Ocker-Chips (24 px) und werden per Klick kopiert (Chip wird kurz Bernstein, "Kopiert"); Prompts und Live-Parameter haben einen Kopierknopf. Live: jüngste Ausgabe groß, Parameter als Liste darunter. Downloads: Bernstein-Balken 5 px mit Abbrechen. Jeder Eintrag hat "In Bibliothek öffnen": dockt ab und springt auf die Detailseite (Modell, Prompt) bzw. den Bereich. Bereich, Suche und Scrollposition je Bereich bleiben im Modul-Speicher erhalten (`library/compact/compactState.ts`). Quelle: `ui/src/library/compact/`.
 
 ## Bewegung
 
@@ -148,4 +148,3 @@ Einzige Signatur: Lasche 8 auf 16 px, 120 ms, `cubic-bezier(.16,1,.3,1)`. Topbar
 - Topbar-Knöpfe nutzen feste Werte (#c77a12, #1d1a17, rgba grau) statt `--lib-*`, da außerhalb `.lib-root`.
 - Hell-Werte aus dem Contract (#e9e6e1 usw.) sind im Bau nur als Ableitung vorhanden, nicht als Festwerte.
 - NSFW-Vorschauen nutzen `blur(20px)` als Inhaltsschutz; das ist keine Chrome-Unschärfe und kein Systemmuster.
-- Kompaktleisten-Reiter (schmal) laut Contract noch offen.

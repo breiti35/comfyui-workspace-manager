@@ -172,7 +172,7 @@ export default function SelectMyWorkflowsDir() {
         mb={2}
       />
       <Button
-        colorScheme="blue"
+        className="lib-on"
         mr={3}
         size="sm"
         onClick={() => {
@@ -235,7 +235,7 @@ export default function SelectMyWorkflowsDir() {
                 ml={2}
                 icon={<IconEdit size={19} />}
                 onClick={onOpenEnter}
-                variant={"ghost"}
+                variant={"ghost"} className="lib-ghost"
               />
             </Tooltip>
           </Flex>
@@ -248,7 +248,7 @@ export default function SelectMyWorkflowsDir() {
                 <span key={dir}>
                   {index > 0 && slash}
                   <Button
-                    colorScheme="blue"
+                    className="lib-link"
                     variant="link"
                     minW={1}
                     key={`${dir}-${index}`}
@@ -293,7 +293,7 @@ export default function SelectMyWorkflowsDir() {
             </SimpleGrid>
             <Box w="100%" textAlign="end">
               <Button
-                colorScheme="blue"
+                className="lib-on"
                 size="sm"
                 onClick={() => {
                   onSubmit();
@@ -326,7 +326,7 @@ export default function SelectMyWorkflowsDir() {
                 <Text fontWeight={500}>
                   {t("workflowsDir.noPermission.macIntro")}
                   <Button
-                    colorScheme="blue"
+                    className="lib-link"
                     variant="link"
                     as="a"
                     ml={2}

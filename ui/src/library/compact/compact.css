@@ -1,0 +1,94 @@
+/* Compact (docked) bar. Scope .lib-root; tokens --lib-* only. The rail reuses
+   .lib-cabinet.narrow / .lib-row from library.css (amber tab = active). */
+.lib-root .lib-cmp { min-width: 0; }
+.lib-root .lib-cmp-frame { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.lib-root .lib-cmp-head {
+  flex: none; display: flex; align-items: baseline; gap: 8px; min-width: 0;
+  padding: 14px 14px 10px; border-bottom: 1px solid var(--lib-line);
+}
+.lib-root .lib-cmp-head h1 {
+  margin: 0; min-width: 0; font-size: 24px; line-height: 1.1; font-weight: 700; letter-spacing: -.015em;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.lib-root .lib-cmp-head small { flex: none; font: 12px var(--lib-mono); color: var(--lib-text-2); }
+.lib-root .lib-cmp-tools { flex: none; padding: 8px 14px; border-bottom: 1px solid var(--lib-line-soft); }
+.lib-root .lib-cmp-tools .lib-input { width: 100%; box-sizing: border-box; }
+.lib-root .lib-cmp-scroll { flex: 1; min-height: 0; overflow-y: auto; }
+.lib-root .lib-cmp-foot { flex: none; padding: 6px 14px; border-top: 1px solid var(--lib-line); font: 12px var(--lib-mono); color: var(--lib-text-2); }
+
+/* rows instead of cards */
+.lib-root .lib-cmp-row {
+  display: flex; align-items: flex-start; gap: 10px; padding: 8px 14px;
+  border-bottom: 1px solid var(--lib-line-soft);
+}
+.lib-root .lib-cmp-row:hover { background: color-mix(in srgb, var(--lib-card) 55%, transparent); }
+.lib-root .lib-cmp-thumb {
+  width: 40px; height: 40px; flex: none; overflow: hidden; display: flex; align-items: center; justify-content: center;
+  background: var(--lib-input); border: 1px solid var(--lib-line-soft); border-radius: var(--lib-radius); color: var(--lib-text-2);
+}
+.lib-root .lib-cmp-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.lib-root .lib-cmp-thumb.nsfw { cursor: pointer; }
+.lib-root .lib-cmp-body { flex: 1; min-width: 0; }
+.lib-root .lib-cmp-name { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lib-root .lib-cmp-sig {
+  font: 600 11px var(--lib-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--lib-text-2);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.lib-root .lib-cmp-text {
+  font-size: 13px; color: var(--lib-text-2); margin: 2px 0;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere;
+}
+.lib-root .lib-cmp-muted { font-size: 12px; color: var(--lib-text-2); margin-top: 4px; }
+.lib-root .lib-cmp-acts { flex: none; display: flex; flex-direction: column; gap: 4px; }
+.lib-root .lib-cmp-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.lib-root .lib-cmp-tag {
+  appearance: none; height: 24px; max-width: 100%; padding: 0 8px; cursor: pointer;
+  background: var(--lib-ochre); border: 1px solid var(--lib-ochre-line); border-radius: var(--lib-radius);
+  color: var(--lib-text); font: inherit; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.lib-root .lib-cmp-tag:hover { border-color: var(--lib-amber); }
+.lib-root .lib-cmp-tag.done { background: var(--lib-amber); border-color: var(--lib-amber); color: var(--lib-on-amber); font-weight: 600; }
+.lib-root .lib-cmp-tag.more { background: transparent; border-color: var(--lib-line); color: var(--lib-text-2); }
+.lib-root .lib-btn.lib-cmp-copy.done { background: var(--lib-amber); border-color: var(--lib-amber); color: var(--lib-on-amber); }
+.lib-root .lib-cmp-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.lib-root .lib-cmp-copy { position: relative; }
+
+.lib-root .lib-cmp-empty {
+  display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center;
+  padding: 32px 20px; color: var(--lib-text-2); font-size: 13px; overflow-wrap: anywhere;
+}
+.lib-root .lib-cmp-empty strong { color: var(--lib-text); font-size: 14px; }
+.lib-root .lib-cmp-more { padding: 12px 14px; display: flex; }
+.lib-root .lib-cmp-more .lib-btn { flex: 1; justify-content: center; }
+.lib-root .lib-btn.lib-cmp-wide { height: auto; min-height: 28px; padding: 4px 12px; white-space: normal; text-align: center; justify-content: center; }
+.lib-root .lib-cmp-alert { padding: 10px 14px; font-size: 13px; color: var(--lib-amber-text); background: var(--lib-card); border-bottom: 1px solid var(--lib-line-soft); overflow-wrap: anywhere; }
+
+/* live */
+.lib-root .lib-cmp-live { padding: 12px 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.lib-root .lib-cmp-shot {
+  background: var(--lib-input); border: 1px solid var(--lib-line-soft); border-radius: var(--lib-radius);
+  display: flex; justify-content: center; overflow: hidden;
+}
+.lib-root .lib-cmp-shot img { display: block; max-width: 100%; max-height: 52vh; object-fit: contain; }
+.lib-root .lib-cmp-strip { display: flex; flex-wrap: wrap; gap: 6px; }
+.lib-root .lib-cmp-strip button {
+  appearance: none; padding: 0; width: 44px; height: 44px; overflow: hidden; cursor: pointer;
+  background: var(--lib-input); border: 1px solid var(--lib-line); border-radius: var(--lib-radius);
+}
+.lib-root .lib-cmp-strip button.on { border-color: var(--lib-amber); outline: 1px solid var(--lib-amber); }
+.lib-root .lib-cmp-strip img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.lib-root .lib-cmp-sigline { font: 600 11px var(--lib-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--lib-text-2); }
+.lib-root .lib-cmp-params { margin: 0; display: flex; flex-direction: column; border-top: 1px solid var(--lib-line-soft); }
+.lib-root .lib-cmp-params > div { display: flex; gap: 10px; padding: 5px 0; border-bottom: 1px solid var(--lib-line-soft); font-size: 13px; }
+.lib-root .lib-cmp-params dt { flex: none; width: 64px; color: var(--lib-text-2); font-size: 12px; }
+.lib-root .lib-cmp-params dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.lib-root .lib-cmp-prompt-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.lib-root .lib-cmp-prompt p {
+  margin: 2px 0 0; font-size: 13px; color: var(--lib-text-2); overflow-wrap: anywhere;
+  display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden;
+}
+
+/* downloads */
+.lib-root .lib-cmp-track { height: 5px; margin-top: 6px; background: var(--lib-input); border: 1px solid var(--lib-line-soft); border-radius: var(--lib-radius); overflow: hidden; box-sizing: content-box; }
+.lib-root .lib-cmp-track > div { height: 100%; background: var(--lib-amber); }
+.lib-root .lib-cmp-dlmeta { display: flex; justify-content: space-between; gap: 8px; margin-top: 4px; font: 12px var(--lib-mono); color: var(--lib-text-2); }

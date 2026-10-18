@@ -23,6 +23,7 @@ import {
   LibraryToolbar,
 } from "../library/primitives";
 import { useLibrarySubLevel } from "../library/libraryContext";
+import { useLibraryIntent } from "../library/compact/libraryIntent";
 
 export default function GalleryModal(_props: {
   onclose?: () => void;
@@ -76,6 +77,13 @@ export default function GalleryModal(_props: {
   // appears under "Dieser Workflow".
   const { frames: previewFrames, isGenerating } = usePreviewImage({
     onSavedMediaChanged: refreshLists,
+  });
+
+  // "Open in library" from the compact bar's live preview.
+  useLibraryIntent("gallery", true, (key) => {
+    if (key !== "preview") return;
+    setSection("preview");
+    setDetailOpen(false);
   });
 
   if (curFlowID == null) {

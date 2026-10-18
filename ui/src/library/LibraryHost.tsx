@@ -38,6 +38,7 @@ import {
   useLibraryDockWidth,
 } from "./libraryState";
 import LibrarySidebar from "./LibrarySidebar";
+import { setLibraryIntent } from "./compact/libraryIntent";
 import "./library.css";
 
 const WorkflowsSection = lazy(() => import("./WorkflowsSection"));
@@ -50,6 +51,7 @@ const WorkspaceSettingsModal = lazy(
 );
 const ModelsPanel = lazy(() => import("../model-manager/ModelsPanel"));
 const DownloadsSection = lazy(() => import("./sections/DownloadsSection"));
+const CompactView = lazy(() => import("./compact/CompactView"));
 
 // Elements that handle Esc themselves (menus, popovers, dialogs opened from a
 // section). The library must not also back out when Esc was meant for them.
@@ -71,7 +73,7 @@ interface Props {
  */
 export default function LibraryHost({ ready, onClickNewFlow }: Props) {
   const { t } = useT();
-  const { route, routeStack, closeRoute, resetRoutes, curFlowID } =
+  const { route, routeStack, closeRoute, resetRoutes, curFlowID, openRoute } =
     useContext(WorkspaceContext);
   const docked = useLibraryDocked();
   const dockWidth = useLibraryDockWidth();
@@ -199,6 +201,21 @@ export default function LibraryHost({ ready, onClickNewFlow }: Props) {
     window.addEventListener("pointerup", up);
   };
 
+  const openFromCompact = useCallback(
+    (target: LibrarySection, key?: string) => {
+      if (
+        key &&
+        (target === "modelList" ||
+          target === "promptLibrary" ||
+          target === "gallery")
+      )
+        setLibraryIntent({ section: target, key });
+      setLibraryDocked(false);
+      openRoute(target);
+    },
+    [openRoute],
+  );
+
   const ctx = useMemo(
     () => ({ docked, closeAll: resetRoutes, setSubLevel }),
     [docked, resetRoutes, setSubLevel],
@@ -207,7 +224,7 @@ export default function LibraryHost({ ready, onClickNewFlow }: Props) {
   if (!everOpened) return null;
 
   const section = active ?? "modelList";
-  const body = (
+  const windowBody = (
     <>
       <LibrarySidebar active={section} narrow={docked} counts={allCounts} />
       <div className="lib-main">
@@ -245,6 +262,22 @@ export default function LibraryHost({ ready, onClickNewFlow }: Props) {
         </ErrorBoundary>
       </div>
     </>
+  );
+
+  // Compact bar: "open in library" undocks to the window, on the section and
+  // (where the section supports it) straight on the entry's detail page.
+  const body = docked ? (
+    <Suspense fallback={null}>
+      <CompactView
+        onOpenInLibrary={openFromCompact}
+        errorLabel={t("library.errorBoundary")}
+        workflowsReady={ready}
+        onClickNewFlow={onClickNewFlow}
+        onClose={closeRoute}
+      />
+    </Suspense>
+  ) : (
+    windowBody
   );
 
   const dockToggle = (

@@ -45,4 +45,4 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 
 ## Offen
 - Genaue Warmton-Ableitung für das dunkle Theme (color-mix-Anteile) beim Bau festlegen und an hell/dunkel prüfen.
-- Kennzeichen/Reiter in der angedockten Leiste (schmal) – beim Schritt Kompaktleiste.
+- Angedockte Leiste: gelöst als Schrank-Spalte (Symbole, Bernstein-Lasche), siehe DESIGN.md "Dock-Modus".

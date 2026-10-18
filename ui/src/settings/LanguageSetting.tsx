@@ -34,7 +34,7 @@ export default function LanguageSetting() {
             <Button
               key={o.key}
               onClick={() => choose(o.key)}
-              colorScheme={active ? "blue" : "gray"}
+              className={active ? "lib-on" : undefined}
               variant={active ? "solid" : "outline"}
             >
               {o.label}

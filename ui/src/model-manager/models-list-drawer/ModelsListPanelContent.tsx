@@ -27,6 +27,7 @@ import { type Model } from "../../types/dbTypes";
 import ModelDropEventListener from "../topbar/ModelDropEventListener";
 import { MODELS_DB_SYNCED_EVENT, modelDbId } from "../syncModelsToDb";
 import { useT } from "../../i18n/LanguageContext";
+import { useLibraryIntent } from "../../library/compact/libraryIntent";
 
 interface Props {
   // Bubbles up whenever this tab's detail view opens/closes, so the shared
@@ -82,6 +83,14 @@ const ModelsListPanelContent = forwardRef<ModelsListPanelHandle, Props>(
       null,
     );
     const closeDetail = () => setDetailItem(null);
+
+    // "Open in library" from the compact bar: jump straight to this model.
+    useLibraryIntent("modelList", !loading && modelsList.length > 0, (key) => {
+      const hit = modelsList.find(
+        (m) => m.model_name + "@" + m.model_type === key,
+      );
+      if (hit) setDetailItem(hit);
+    });
 
     useEffect(() => {
       onDetailOpenChange(detailItem !== null);

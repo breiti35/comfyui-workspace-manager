@@ -1,0 +1,89 @@
+/* Bereich Einstellungen im Karteikatalog-Stil. Chakra-Tokens und Bedienelemente
+   werden im Bereich auf die --lib-* Tokens umgebogen (Muster wie models.css). */
+.lib-root .lib-settings {
+  --chakra-colors-galleryPanelBg: var(--lib-card);
+  --chakra-colors-rowBorderColor: var(--lib-line);
+  --chakra-colors-chakra-body-text: var(--lib-text);
+  --chakra-colors-chakra-body-bg: var(--lib-ground);
+  --chakra-colors-blue-200: var(--lib-amber-text);
+  --chakra-colors-blue-300: var(--lib-amber-text);
+  --chakra-colors-blue-400: var(--lib-amber);
+  --chakra-colors-blue-500: var(--lib-amber);
+  --chakra-colors-blue-600: color-mix(in srgb, var(--lib-amber) 85%, #000 15%);
+  --chakra-colors-gray-300: var(--lib-text);
+  --chakra-colors-gray-400: var(--lib-text-2);
+  --chakra-colors-gray-500: var(--lib-text-2);
+  --chakra-colors-red-300: var(--lib-amber-text);
+  --chakra-radii-md: var(--lib-radius);
+  --chakra-radii-lg: var(--lib-radius);
+  --chakra-radii-full: var(--lib-radius);
+  color: var(--lib-text);
+  padding: 16px 24px 24px;
+}
+/* breit: zwei Spalten; angedockt: eine */
+.lib-root .lib-settings-grid {
+  display: grid; gap: 14px 16px; align-items: start; max-width: 1200px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr));
+}
+.lib-root .lib-docked .lib-settings-grid { grid-template-columns: minmax(0, 1fr); }
+.lib-root .lib-settings-grid > * { min-width: 0; }
+.lib-root .lib-settings-grid > .wide { grid-column: 1 / -1; }
+
+/* Gruppe = Karteikarte */
+.lib-root .lib-set-card {
+  background: var(--lib-card); border: 1px solid var(--lib-line); border-radius: var(--lib-radius);
+}
+.lib-root .lib-set-title {
+  margin: 0; padding: 6px 12px; border-bottom: 1px solid var(--lib-line-soft);
+  font: 600 11px var(--lib-mono); letter-spacing: .08em; text-transform: uppercase;
+  color: var(--lib-text-2); display: flex; align-items: center; width: 100%;
+  overflow-wrap: anywhere;
+}
+.lib-root .lib-set-body { padding: 12px; display: flex; flex-direction: column; gap: 14px; }
+.lib-root button.lib-set-title { appearance: none; border-top: 0; border-left: 0; border-right: 0; background: transparent; cursor: pointer; text-align: left; height: 30px; }
+.lib-root button.lib-set-title:hover { color: var(--lib-text); }
+.lib-root .lib-set-title .caret { margin-left: auto; font-size: 12px; }
+
+/* Text darf umbrechen, nie abschneiden */
+.lib-root .lib-settings p, .lib-root .lib-settings label { overflow-wrap: anywhere; }
+.lib-root .lib-settings .chakra-text { font-size: 13px; }
+
+/* Schalter */
+.lib-root .lib-settings .chakra-switch__track { border-radius: var(--lib-radius); background: var(--lib-line); box-shadow: none; }
+.lib-root .lib-settings .chakra-switch__thumb { border-radius: var(--lib-radius); background: var(--lib-text); }
+.lib-root .lib-settings .chakra-switch__track[data-checked] { background: var(--lib-amber); }
+.lib-root .lib-settings .chakra-switch__track[data-checked] .chakra-switch__thumb { background: var(--lib-on-amber); }
+.lib-root .lib-settings .chakra-switch__track[data-focus] { box-shadow: 0 0 0 2px var(--lib-amber); }
+
+/* Eingaben 30 px */
+.lib-root .lib-settings .chakra-input, .lib-root .lib-settings .chakra-numberinput__field, .lib-root .lib-settings .chakra-select {
+  height: 30px; min-height: 30px; background: var(--lib-input); border: 1px solid var(--lib-line);
+  border-radius: var(--lib-radius); color: var(--lib-text); font-size: 13px; padding-inline: 10px; box-shadow: none;
+}
+.lib-root .lib-settings .chakra-input:hover, .lib-root .lib-settings .chakra-numberinput__field:hover { border-color: var(--lib-line); }
+.lib-root .lib-settings .chakra-input:focus, .lib-root .lib-settings .chakra-input:focus-visible,
+.lib-root .lib-settings .chakra-numberinput__field:focus, .lib-root .lib-settings .chakra-numberinput__field:focus-visible {
+  border-color: var(--lib-amber); box-shadow: 0 0 0 1px var(--lib-amber); outline: none;
+}
+
+/* Knoepfe 28 px, Hauptknopf 34 px; Bernstein statt Chakra-Blau */
+.lib-root .lib-settings .chakra-button {
+  height: 28px; min-height: 28px; padding: 0 12px; font-size: 13px; font-weight: 400;
+  border-radius: var(--lib-radius); white-space: nowrap;
+  background: var(--lib-input); border: 1px solid var(--lib-line); color: var(--lib-text);
+}
+.lib-root .lib-settings .chakra-button:hover:not(:disabled) { border-color: var(--lib-amber); background: var(--lib-input); }
+.lib-root .lib-settings .chakra-button:focus-visible { box-shadow: 0 0 0 2px var(--lib-amber); outline: none; }
+.lib-root .lib-settings .chakra-button:disabled { opacity: .5; }
+.lib-root .lib-settings .chakra-button.lib-on,
+.lib-root .lib-settings .chakra-button.lib-main {
+  background: var(--lib-amber); border-color: var(--lib-amber); color: var(--lib-on-amber); font-weight: 600;
+}
+.lib-root .lib-settings .chakra-button.lib-main { height: 34px; }
+.lib-root .lib-settings .chakra-button.lib-ghost { background: transparent; border-color: transparent; }
+.lib-root .lib-settings .chakra-button.lib-link { height: auto; min-height: 0; padding: 0; background: transparent; border: 0; color: var(--lib-amber-text); text-decoration: underline; white-space: normal; text-align: left; }
+.lib-root .lib-settings .chakra-button__group { flex-wrap: wrap; }
+
+/* Hinweise ohne Rot und ohne Kantenstreifen */
+.lib-root .lib-settings .chakra-alert { background: var(--lib-input); border: 1px solid var(--lib-ochre-line); border-radius: var(--lib-radius); color: var(--lib-text); }
+.lib-root .lib-settings code, .lib-root .lib-settings .chakra-kbd { font-family: var(--lib-mono); font-size: 11px; background: var(--lib-input); border: 1px solid var(--lib-line); border-radius: var(--lib-radius); color: var(--lib-text-2); }
