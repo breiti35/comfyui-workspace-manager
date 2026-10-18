@@ -1,15 +1,7 @@
 import {
-  Badge,
   Box,
   Flex,
-  Heading,
-  HStack,
   IconButton,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalOverlay,
   Tooltip,
 } from "@chakra-ui/react";
 import { useCallback, useContext, useEffect, useState } from "react";
@@ -26,11 +18,14 @@ import { GallerySidebar } from "./components/GallerySidebar.tsx";
 import { GalleryPreviewImage } from "./components/GalleryPreviewImage.tsx";
 import { usePreviewImage } from "./usePreviewImage.ts";
 import { useT } from "../i18n/LanguageContext";
-import { useModalSubLevelDismiss } from "../customHooks/useModalSubLevelDismiss";
+import { LibraryHeader } from "../library/primitives";
+import { useLibrarySubLevel } from "../library/libraryContext";
 
-export default function GalleryModal({ onclose }: { onclose: () => void }) {
+export default function GalleryModal(_props: {
+  onclose?: () => void;
+}) {
   const { t } = useT();
-  const { curFlowID } = useContext(WorkspaceContext);
+  const { curFlowID, openRoute } = useContext(WorkspaceContext);
   const [workflowName, setWorkflowName] = useState("");
   const [section, setSection] = useState<GallerySection>("workflow");
   const [curMedia, setCurMedia] = useState<Media | null>(null);
@@ -41,14 +36,8 @@ export default function GalleryModal({ onclose }: { onclose: () => void }) {
   const debounceSearchValue = useDebounce(searchValue, 300);
   // setDetailOpen is a stable state setter, so this never changes identity.
   const closeDetail = useCallback(() => setDetailOpen(false), []);
-  // Esc/overlay click should only back out of the detail view when it's
-  // open, not blow away the section/search/scroll state underneath it. Must
-  // run before the `curFlowID == null` early return below (Rules of Hooks).
-  const modalDismissProps = useModalSubLevelDismiss(
-    detailOpen,
-    closeDetail,
-    onclose,
-  );
+  // Esc backs out of the detail view first, then closes the library.
+  useLibrarySubLevel("gallery", detailOpen, closeDetail);
 
   const refreshLists = async () => {
     if (curFlowID == null) return;
@@ -87,7 +76,31 @@ export default function GalleryModal({ onclose }: { onclose: () => void }) {
   });
 
   if (curFlowID == null) {
-    return null;
+    return (
+      <div className="lib-section">
+        <LibraryHeader title={t("gallery.sidebar.allImages")} />
+        <Flex
+          flex={1}
+          direction={"column"}
+          align={"center"}
+          justify={"center"}
+          gap={3}
+          p={8}
+          textAlign={"center"}
+        >
+          <Box maxW={"420px"} color={"var(--lib-text-2)"}>
+            {t("lib.gallery.empty")}
+          </Box>
+          <button
+            type="button"
+            className="lib-btn primary"
+            onClick={() => openRoute("recentFlows")}
+          >
+            {t("lib.toWorkflows")}
+          </button>
+        </Flex>
+      </div>
+    );
   }
 
   const removeMedia = (id: string) => {
@@ -133,28 +146,40 @@ export default function GalleryModal({ onclose }: { onclose: () => void }) {
         removeMedia,
       }}
     >
-      <Modal
-        isOpen={true}
-        onClose={onclose}
-        blockScrollOnMount={true}
-        {...modalDismissProps}
-      >
-        <ModalOverlay />
-        <ModalContent width={"90%"} maxWidth={"90vw"} height={"90vh"}>
-          <ModalCloseButton
-            zIndex={3}
-            top={3}
-            right={4}
-            size={"md"}
-            borderRadius={"md"}
-            border={"1px solid"}
-            borderColor={"red.400"}
-            color={"red.300"}
-            bg={"rgba(245, 101, 101, 0.14)"}
-            _hover={{ bg: "rgba(245, 101, 101, 0.3)", color: "white" }}
-            _active={{ bg: "rgba(245, 101, 101, 0.42)" }}
-          />
-          <ModalBody p={0} display={"flex"} overflow={"hidden"}>
+      <div className="lib-section">
+        <LibraryHeader
+          title={sectionTitle}
+          subtitle={
+            section !== "preview" ? String(filteredList.length) : undefined
+          }
+          back={
+            detailOpen ? (
+              <Tooltip label={t("gallery.backToOverview")}>
+                <IconButton
+                  size={"xs"}
+                  variant={"ghost"}
+                  icon={<IconArrowLeft size={16} />}
+                  aria-label={"back to grid"}
+                  onClick={closeDetail}
+                />
+              </Tooltip>
+            ) : undefined
+          }
+          actions={
+            section !== "preview" && !detailOpen ? (
+              <SearchInput
+                searchValue={searchValue}
+                onUpdateSearchValue={setSearchValue}
+                placeholder={t("gallery.searchPlaceholder")}
+                variant={"filled"}
+                borderRadius={"sm"}
+                mb={0}
+                style={{ width: "300px" }}
+              />
+            ) : undefined
+          }
+        />
+        <Flex flex={1} minH={0} overflow={"hidden"}>
             <GallerySidebar
               section={section}
               onSelect={selectSection}
@@ -164,51 +189,6 @@ export default function GalleryModal({ onclose }: { onclose: () => void }) {
               isGenerating={isGenerating}
             />
             <Flex direction={"column"} flex={1} minW={0} p={4} gap={3}>
-              <HStack
-                justify={"space-between"}
-                gap={3}
-                align={"center"}
-                pr={12}
-              >
-                <HStack gap={2} minW={0}>
-                  {detailOpen && (
-                    <Tooltip label={t("gallery.backToOverview")}>
-                      <IconButton
-                        size={"sm"}
-                        variant={"ghost"}
-                        icon={<IconArrowLeft size={19} />}
-                        aria-label={"back to grid"}
-                        onClick={closeDetail}
-                      />
-                    </Tooltip>
-                  )}
-                  <Heading size={"md"} noOfLines={1}>
-                    {sectionTitle}
-                  </Heading>
-                  {section !== "preview" && (
-                    <Badge
-                      colorScheme={"gray"}
-                      borderRadius={"full"}
-                      px={2}
-                      flexShrink={0}
-                    >
-                      {filteredList.length}
-                    </Badge>
-                  )}
-                </HStack>
-                {section !== "preview" && !detailOpen && (
-                  <SearchInput
-                    searchValue={searchValue}
-                    onUpdateSearchValue={setSearchValue}
-                    placeholder={t("gallery.searchPlaceholder")}
-                    variant={"filled"}
-                    borderRadius={"full"}
-                    mb={0}
-                    style={{ width: "300px" }}
-                  />
-                )}
-              </HStack>
-
               <Box flex={1} minH={0} overflowY={"auto"}>
                 {section === "preview" ? (
                   <GalleryPreviewImage
@@ -222,9 +202,8 @@ export default function GalleryModal({ onclose }: { onclose: () => void }) {
                 )}
               </Box>
             </Flex>
-          </ModalBody>
-        </ModalContent>
-      </Modal>
+        </Flex>
+      </div>
     </GalleryContext.Provider>
   );
 }

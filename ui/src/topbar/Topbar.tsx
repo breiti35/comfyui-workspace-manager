@@ -1,13 +1,13 @@
+import { createPortal } from "react-dom";
 import { Button, HStack, IconButton, Tooltip } from "@chakra-ui/react";
 import Draggable from "../components/Draggable";
 import {
-  IconBook2,
+  IconBooks,
   IconDeviceFloppy,
-  IconFolder,
   IconGripVertical,
+  IconLayoutSidebarRight,
   IconPhoto,
   IconSettings,
-  IconTriangleInvertedFilled,
   IconLock,
 } from "@tabler/icons-react";
 import DropdownTitle from "../components/DropdownTitle";
@@ -25,29 +25,80 @@ import { PanelPosition } from "../types/dbTypes";
 import "./Topbar.css";
 import VersionNameTopbar from "./VersionNameTopbar";
 import { userSettingsTable, workflowsTable } from "../db-tables/WorkspaceDB";
-import { TOPBAR_BUTTON_HEIGHT } from "../const";
 import TopbarNewWorkflowButton from "./TopbarNewWorkflowButton";
 import { useT } from "../i18n/LanguageContext";
+import { isLibrarySection } from "../library/libraryContext";
+import {
+  getLastLibrarySection,
+  setLibraryDocked,
+  useLibraryDocked,
+} from "../library/libraryState";
 const AppIsDirtyEventListener = lazy(() => import("./AppIsDirtyEventListener"));
 const ModelManagerTopbar = lazy(
   () => import("../model-manager/topbar/ModelManagerTopbar"),
 );
 const SpotlightSearch = lazy(() => import("../components/SpotlightSearch"));
-const WorkspaceSettingsModal = lazy(
-  () => import("../RecentFilesDrawer/WorkspaceSettingsModal"),
-);
-const PromptLibraryModal = lazy(
-  () => import("../prompt-library/PromptLibraryModal"),
-);
 
 interface Props {
   curFlowName: string | null;
   setCurFlowName: (newName: string) => void;
 }
+// Matches the buttons of ComfyUI's own action bar next to it (32px, 6px radius,
+// theme text colour, subtle hover) so the bar reads as one piece.
+const BAR_BTN = {
+  variant: "ghost",
+  height: "32px",
+  minWidth: "32px",
+  borderRadius: "6px",
+  color: "var(--fg-color, #fff)",
+  _hover: { bg: "rgba(128,128,128,0.22)" },
+  _focus: { boxShadow: "none" },
+  _focusVisible: { boxShadow: "0 0 0 2px #c77a12" },
+} as const;
+
 export function Topbar({ curFlowName, setCurFlowName }: Props) {
   const { t } = useT();
-  const { isDirty, saveCurWorkflow, openRoute, closeRoute, curFlowID, route } =
-    useContext(WorkspaceContext);
+  const {
+    isDirty,
+    saveCurWorkflow,
+    openRoute,
+    resetRoutes,
+    curFlowID,
+    route,
+    routeStack,
+  } = useContext(WorkspaceContext);
+  const docked = useLibraryDocked();
+  // Embedded mode: live inside ComfyUI's own action bar (the row with the Run
+  // button), where other add-ons (e.g. resource monitors) dock too, so none
+  // of them can cover another. Falls back to the saved, draggable floating
+  // bar when that container can't be found (other ComfyUI frontend versions).
+  const [host, setHost] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    const ensure = () => {
+      setHost((cur) => {
+        if (cur && cur.isConnected) return cur;
+        const row = document.querySelector(
+          ".actionbar .p-panel-content > div",
+        );
+        if (!row) return cur ? null : cur;
+        const el = document.createElement("div");
+        el.className = "workspaceManagerHost";
+        el.style.display = "contents";
+        row.insertBefore(el, row.firstChild);
+        return el;
+      });
+    };
+    ensure();
+    const id = window.setInterval(ensure, 500);
+    return () => {
+      window.clearInterval(id);
+      setHost((cur) => {
+        cur?.remove();
+        return null;
+      });
+    };
+  }, []);
+  const libraryOpen = routeStack.some(isLibrarySection);
   const [positionStyle, setPositionStyle] = useState<PanelPosition>();
   const updatePanelPosition: (
     position?: PanelPosition,
@@ -83,6 +134,138 @@ export function Topbar({ curFlowName, setCurFlowName }: Props) {
   if (!positionStyle) {
     return null;
   }
+  const groups = (
+    <>
+        {/* Group 1: the current workflow */}
+        <HStack gap={1} role="group" aria-label={t("library.workflowGroup")}>
+          <TopbarNewWorkflowButton />
+          <EditFlowName
+            isDirty={isDirty}
+            displayName={curFlowName ?? ""}
+            updateFlowName={(newName) => {
+              setCurFlowName(newName);
+              requestAnimationFrame(() => {
+                updatePanelPosition();
+              });
+            }}
+          />
+          {workflowsTable?.curWorkflow?.saveLock && (
+            <Tooltip label={t("topbar.workflowLockedTooltip")}>
+              <IconLock size={18} color="var(--fg-color, #fff)" />
+            </Tooltip>
+          )}
+          {curFlowID && isDirty && (
+            <Tooltip label={t("topbar.saveWorkflowTooltip")}>
+              <IconButton
+                onClick={() => saveCurWorkflow()}
+                icon={<IconDeviceFloppy size={18} />}
+                {...BAR_BTN}
+                aria-label={t("topbar.saveWorkspaceAria")}
+                variant={"ghost"}
+              />
+            </Tooltip>
+          )}
+          <VersionNameTopbar />
+          <AppIsDirtyEventListener />
+          {curFlowID && (
+            <HStack gap={"4px"}>
+              <DropdownTitle />
+              <Tooltip label={t("library.galleryOfWorkflow")}>
+                <Button
+                  onClick={() => openRoute("gallery")}
+                  leftIcon={<IconPhoto size={18} />}
+                  {...BAR_BTN}
+                  aria-label={t("topbar.openGalleryAria")}
+                  px={3}
+                  fontWeight={500}
+                >
+                  {t("library.nav.gallery")}
+                </Button>
+              </Tooltip>
+            </HStack>
+          )}
+        </HStack>
+        <div
+          aria-hidden
+          style={{
+            width: 1,
+            alignSelf: "stretch",
+            background: "rgba(128,128,128,0.35)",
+          }}
+        />
+        {/* Group 2: the library */}
+        <HStack gap={1} role="group" aria-label={t("library.title")}>
+          <Tooltip label={t("library.openTooltip")}>
+            <Button
+              onClick={() =>
+                libraryOpen ? resetRoutes() : openRoute(getLastLibrarySection())
+              }
+              leftIcon={<IconBooks size={18} />}
+              {...BAR_BTN}
+              px={3}
+              fontWeight={600}
+              bg={libraryOpen ? "var(--lib-amber, #c77a12)" : "rgba(128,128,128,0.18)"}
+              color={libraryOpen ? "var(--lib-on-amber, #1d1a17)" : "var(--fg-color, #fff)"}
+              _hover={{ bg: libraryOpen ? "#d98a1c" : "rgba(128,128,128,0.32)" }}
+              aria-pressed={libraryOpen}
+            >
+              {t("library.openButton")}
+            </Button>
+          </Tooltip>
+          <Suspense fallback={<div style={{ width: "28px" }} />}>
+            <ModelManagerTopbar />
+          </Suspense>
+          <Tooltip label={docked ? t("library.undock") : t("library.dock")}>
+            <IconButton
+              onClick={() => setLibraryDocked(!docked)}
+              icon={<IconLayoutSidebarRight size={18} />}
+              {...BAR_BTN}
+              aria-label={docked ? t("library.undock") : t("library.dock")}
+              aria-pressed={docked}
+              bg={docked ? "rgba(199,122,18,0.4)" : undefined}
+            />
+          </Tooltip>
+          <Tooltip label={t("topbar.settingsTooltip")}>
+            <IconButton
+              onClick={() => openRoute("settings")}
+              icon={<IconSettings size={18} />}
+              {...BAR_BTN}
+              aria-label={t("topbar.settingsAria")}
+            />
+          </Tooltip>
+          {!host && (
+            <Tooltip label={t("topbar.dragToolbarTooltip")}>
+              <IconGripVertical
+                id="dragPanelIcon"
+                className="dragPanelIcon"
+                cursor="move"
+                size={15}
+                color="white"
+              />
+            </Tooltip>
+          )}
+        </HStack>
+        {route === "spotlightSearch" && <SpotlightSearch />}
+    </>
+  );
+  if (host) {
+    return createPortal(
+      <HStack
+        gap={3}
+        alignItems="center"
+        id="workspaceManagerPanel"
+        // "workspace_manager" brings the scoped CSS reset along: this subtree
+        // lives in ComfyUI's DOM, outside the app root that normally carries it.
+        className="workspace_manager workspaceManagerPanel"
+        // docked library is already open: the bar steps aside (kept mounted,
+        // it hosts the dirty-state listener) and returns when it closes
+        style={{ display: docked && libraryOpen ? "none" : undefined }}
+      >
+        {groups}
+      </HStack>,
+      host,
+    );
+  }
   return (
     <Draggable
       onDragEnd={(position: { x: number; y: number }) => {
@@ -92,127 +275,27 @@ export function Topbar({ curFlowName, setCurFlowName }: Props) {
     >
       <HStack
         style={{
-          // Vertical padding bumped by 1px over horizontal (5px vs 4px) so
-          // the bar's total height lands at 42px, matching ComfyUI's own
-          // toolbar height - horizontal spacing is left untouched.
-          padding: "5px 4px",
+          // 5px vertical padding lands the bar at 42px, ComfyUI's toolbar height.
+          padding: "5px 8px",
           position: "fixed",
+          // above the library's dimmed canvas, so the bar stays usable
+          zIndex: 3,
+          // Docked library is already open: the bar steps aside (kept mounted,
+          // it hosts the dirty-state listener) and returns when the library closes.
+          display: docked && libraryOpen ? "none" : undefined,
           ...positionStyle,
         }}
-        backgroundColor="comfy.topbarBg"
-        // Chakra's "md" radius is 6px, matching ComfyUI's own toolbar corner
-        // radius exactly (previously "lg"/8px, which read as a mismatched,
-        // separate shape next to ComfyUI's bar).
-        borderRadius="md"
+        // Warm-tinted ComfyUI menu colour: same family as the library.
+        backgroundColor="color-mix(in srgb, var(--comfy-menu-bg, #262729) 92%, #b07a3a 8%)"
+        borderRadius="2px"
         justifyContent={"space-between"}
         alignItems={"center"}
-        gap={1}
+        gap={3}
         draggable={false}
         id="workspaceManagerPanel"
         className="workspaceManagerPanel"
       >
-        <Tooltip label={t("topbar.recentFilesTooltip")}>
-          <Button
-            size={"sm"}
-            variant={"ghost"}
-            aria-label={t("topbar.workspaceFolderAria")}
-            height={TOPBAR_BUTTON_HEIGHT + "px"}
-            onClick={() => openRoute("recentFlows")}
-            px={2}
-          >
-            <HStack gap={1}>
-              <IconFolder size={21} />
-              <IconTriangleInvertedFilled size={8} />
-            </HStack>
-          </Button>
-        </Tooltip>
-        <Suspense fallback={<div style={{ width: "60px" }} />}>
-          <ModelManagerTopbar />
-        </Suspense>
-        <TopbarNewWorkflowButton />
-        <EditFlowName
-          isDirty={isDirty}
-          displayName={curFlowName ?? ""}
-          updateFlowName={(newName) => {
-            setCurFlowName(newName);
-            requestAnimationFrame(() => {
-              updatePanelPosition();
-            });
-          }}
-        />
-        {workflowsTable?.curWorkflow?.saveLock && (
-          <Tooltip label={t("topbar.workflowLockedTooltip")}>
-            <IconLock color="white" size={20} />
-          </Tooltip>
-        )}
-        {curFlowID && (
-          <HStack gap={"4px"}>
-            <Tooltip label={t("topbar.openGalleryTooltip")}>
-              <IconButton
-                onClick={() => openRoute("gallery")}
-                icon={<IconPhoto size={22} color="white" />}
-                size={"sm"}
-                aria-label={t("topbar.openGalleryAria")}
-                variant={"ghost"}
-              />
-            </Tooltip>
-            <DropdownTitle />
-          </HStack>
-        )}
-        {curFlowID && isDirty ? (
-          <Tooltip label={t("topbar.saveWorkflowTooltip")}>
-            <IconButton
-              onClick={() => saveCurWorkflow()}
-              icon={<IconDeviceFloppy size={23} color="white" />}
-              size={"xs"}
-              paddingY={4}
-              aria-label={t("topbar.saveWorkspaceAria")}
-              variant={"ghost"}
-            />
-          </Tooltip>
-        ) : (
-          <div style={{ width: 1 }} />
-        )}
-        <VersionNameTopbar />
-        <AppIsDirtyEventListener />
-        <Tooltip label={t("topbar.promptLibraryTooltip")}>
-          <IconButton
-            onClick={() => openRoute("promptLibrary")}
-            icon={<IconBook2 size={20} color="white" />}
-            size={"sm"}
-            aria-label={t("topbar.promptLibraryAria")}
-            variant={"ghost"}
-          />
-        </Tooltip>
-        <Tooltip label={t("topbar.settingsTooltip")}>
-          <IconButton
-            onClick={() => openRoute("settings")}
-            icon={<IconSettings size={20} color="white" />}
-            size={"sm"}
-            aria-label={t("topbar.settingsAria")}
-            variant={"ghost"}
-          />
-        </Tooltip>
-        <Tooltip label={t("topbar.dragToolbarTooltip")}>
-          <IconGripVertical
-            id="dragPanelIcon"
-            className="dragPanelIcon"
-            cursor="move"
-            size={15}
-            color="white"
-          />
-        </Tooltip>
-        {route === "spotlightSearch" && <SpotlightSearch />}
-        {route === "settings" && (
-          <Suspense fallback={null}>
-            <WorkspaceSettingsModal onClose={closeRoute} />
-          </Suspense>
-        )}
-        {route === "promptLibrary" && (
-          <Suspense fallback={null}>
-            <PromptLibraryModal onClose={closeRoute} />
-          </Suspense>
-        )}
+        {groups}
       </HStack>
     </Draggable>
   );

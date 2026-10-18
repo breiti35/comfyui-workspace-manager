@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-18T00:00:00Z",
+  "title": "Design System: Workspace Manager Bibliothek",
+  "extensions": {
+    "colorMeta": {
+      "bernstein": { "role": "primary", "displayName": "Bernstein", "canonical": "#c77a12", "tonalRamp": ["#2e1b03", "#4d2d05", "#703f08", "#945409", "#c77a12", "#e0a04a", "#efc78c", "#f8e6c8"] },
+      "ocker": { "role": "secondary", "displayName": "Ocker", "canonical": "color-mix(in srgb, #e8c27a 28%, grund 72%)", "tonalRamp": ["#3d3118", "#5c4a22", "#7d642c", "#a3833a", "#d3ab5c", "#e8c27a", "#f1d9a6", "#f8ecd0"] },
+      "grund": { "role": "neutral", "displayName": "Warmes Steingrau", "canonical": "color-mix(in srgb, var(--comfy-menu-bg, #262729) 90%, #b07a3a 10%)", "tonalRamp": ["#1c1b1a", "#262524", "#33302d", "#45413c", "#6b655d", "#a39c92", "#dedad3", "#f7f5f2"] }
+    },
+    "typographyMeta": {
+      "titel": { "displayName": "Titel", "purpose": "Findbuch-Kopf, 24px angedockt." },
+      "signatur": { "displayName": "Signatur", "purpose": "Mono-Katalogangabe: Kartenkopf, Zahlen, Fuss." }
+    },
+    "shadows": [
+      { "name": "fenster", "value": "0 12px 40px rgba(0,0,0,0.45)", "purpose": "Schwebendes Bibliotheksfenster." },
+      { "name": "dock", "value": "-6px 0 24px rgba(0,0,0,0.3)", "purpose": "Angedockte Leiste (gespiegelt links)." }
+    ],
+    "motion": [
+      { "name": "lasche", "value": "width 120ms cubic-bezier(.16,1,.3,1)", "purpose": "Reiter 8px auf 16px beim Bereichswechsel; reduced-motion aus." }
+    ],
+    "breakpoints": []
+  },
+  "components": [
+    {
+      "name": "Hauptknopf", "kind": "button", "refersTo": "knopf-haupt",
+      "description": "Eine Hauptaktion je Kopf.",
+      "html": "<button class=\"ds-btn-primary\">Installieren</button>",
+      "css": ".ds-btn-primary{height:34px;padding:0 12px;background:#c77a12;border:1px solid #c77a12;border-radius:2px;color:#1d1a17;font:600 13px sans-serif;cursor:pointer}.ds-btn-primary:focus-visible{outline:2px solid #c77a12;outline-offset:1px}"
+    },
+    {
+      "name": "Chip", "kind": "chip", "refersTo": "chip",
+      "description": "Filter-Chip, an = Bernstein.",
+      "html": "<button class=\"ds-chip\">LoRA</button><button class=\"ds-chip ds-on\">Checkpoint</button>",
+      "css": ".ds-chip{height:28px;padding:0 9px;background:color-mix(in srgb,#e8c27a 28%,#2c2a28 72%);border:1px solid color-mix(in srgb,#d3ab5c 45%,#2c2a28 55%);border-radius:2px;color:#eee;font:12px sans-serif;cursor:pointer;margin-right:4px}.ds-chip.ds-on{background:#c77a12;border-color:#c77a12;color:#1d1a17;font-weight:600}"
+    },
+    {
+      "name": "Schrank-Zeile", "kind": "nav", "refersTo": "schrank-zeile",
+      "description": "Schubladenzeile mit Lasche und Zahl; aktiv = breite Bernstein-Lasche.",
+      "html": "<div class=\"ds-row ds-act\"><span class=\"ds-tab\"></span><span class=\"ds-lbl\">Modelle</span><span class=\"ds-num\">128</span></div>",
+      "css": ".ds-row{height:34px;display:flex;align-items:center;gap:12px;color:#eee;font:14px sans-serif;border-bottom:1px solid #3a3836;width:220px}.ds-tab{width:8px;height:20px;background:#5a5754;border-radius:0 2px 2px 0}.ds-lbl{flex:1}.ds-num{font:12px ui-monospace,Consolas,monospace;color:#b5b0a9;padding-right:6px}.ds-act{background:#3a3836;font-weight:600}.ds-act .ds-tab{width:16px;background:#c77a12;margin-right:-4px}"
+    },
+    {
+      "name": "Karteikarte", "kind": "card", "refersTo": "karteikarte",
+      "description": "Signatur, Name, Vorschau, Meta.",
+      "html": "<div class=\"ds-card\"><div class=\"ds-sig\">LORA - SDXL</div><div class=\"ds-name\">Beispielmodell</div><div class=\"ds-pv\"></div><div class=\"ds-meta\">144 MB</div></div>",
+      "css": ".ds-card{width:216px;height:296px;display:flex;flex-direction:column;background:#3a3836;border:1px solid #5a5754;border-radius:2px;color:#eee;font-family:sans-serif}.ds-sig{font:600 11px ui-monospace,Consolas,monospace;letter-spacing:.08em;color:#b5b0a9;padding:6px 10px;border-bottom:1px solid #4a4744}.ds-name{font-size:14px;font-weight:600;padding:5px 10px 4px}.ds-pv{flex:1;margin:0 10px;border:1px solid #4a4744;border-radius:2px;background:#2c2a28}.ds-meta{font-size:12px;color:#b5b0a9;padding:4px 10px 6px}"
+    },
+    {
+      "name": "Eingabe", "kind": "input", "refersTo": "eingabe",
+      "description": "Suchfeld der Werkzeugzeile.",
+      "html": "<input class=\"ds-input\" placeholder=\"Suchen\">",
+      "css": ".ds-input{height:30px;width:240px;background:#2c2a28;border:1px solid #5a5754;border-radius:2px;color:#eee;padding:0 10px;font:13px sans-serif}.ds-input:focus-visible{outline:2px solid #c77a12;outline-offset:1px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Der Karteikatalog",
+    "overview": "Die Bibliothek ist ein Zettelkatalog: links der Schubladenschrank mit Reitern, rechts das Findbuch mit Karteikarten. Warmes Steingrau folgt dem ComfyUI-Theme per color-mix; Bernstein ist die einzige Aktionsfarbe.",
+    "keyCharacteristics": ["Tonstufen und 1-px-Linien statt Schatten oder Glas", "Eine Aktionsfarbe (Bernstein), eine Ordnungsfarbe (Ocker)", "Mono nur fuer Signaturen, Zahlen, Gruppenbeschriftung, Fuss", "Radius 2 px, Tabellenziffern"],
+    "rules": [
+      { "name": "The Eine-Aktion Rule", "body": "Bernstein markiert nur 'hier bist du', Hauptaktion oder Fortschritt.", "section": "colors" },
+      { "name": "The Host-Theme Rule", "body": "Neue Flaechen per color-mix aus --comfy-menu-bg/--fg-color, nie feste Hex-Grautoene.", "section": "colors" },
+      { "name": "The Signatur Rule", "body": "Mono ist Katalogangabe; Namen und Fliesstext nie in Mono.", "section": "typography" },
+      { "name": "The Flach-im-Fenster Rule", "body": "Im Fenster kein Schatten; Tiefe nur durch Tonstufe und Linie.", "section": "elevation" }
+    ],
+    "dos": ["Do neue Bereiche mit Schrank-Eintrag, Findbuch-Kopf, Werkzeugzeile und Karteikarten aufbauen.", "Do Fremdkomponenten im Bereich auf --lib-* umbiegen.", "Do Esc einen Schritt zurueck gehen lassen."],
+    "donts": ["Don't Unschaerfe/Glas fuer Chrome.", "Don't Pillen, Glanzkarten, Verlaeufe, Reiter oben oder Blau auf Grau.", "Don't Bernstein fuer Dekoration.", "Don't feste Hex-Grautoene statt abgeleiteter Tokens."]
+  }
+}

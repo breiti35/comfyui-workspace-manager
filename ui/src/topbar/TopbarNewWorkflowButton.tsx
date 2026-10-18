@@ -16,7 +16,7 @@ import {
 import { IconDeviceFloppy } from "@tabler/icons-react";
 import { useContext, useState } from "react";
 import { WorkspaceContext } from "../WorkspaceContext";
-import { COMFYSPACE_TRACKING_FIELD_NAME, TOPBAR_BUTTON_HEIGHT } from "../const";
+import { COMFYSPACE_TRACKING_FIELD_NAME } from "../const";
 import { app } from "../utils/comfyapp";
 import { workflowsTable } from "../db-tables/WorkspaceDB";
 import { nanoid } from "nanoid";
@@ -66,17 +66,21 @@ export default function TopbarNewWorkflowButton() {
       <Tooltip label={t("topbar.newWorkflow.saveAsLabel")}>
         <Button
           size={"sm"}
-          variant={"outline"}
-          colorScheme="blue"
+          variant={"ghost"}
           aria-label={t("topbar.newWorkflow.aria")}
-          height={TOPBAR_BUTTON_HEIGHT + "px"}
+          // same look as the other bar buttons (see BAR_BTN in Topbar.tsx)
+          height={"32px"}
+          minWidth={"32px"}
+          borderRadius={"6px"}
+          color={"var(--fg-color, #fff)"}
+          _hover={{ bg: "rgba(128,128,128,0.22)" }}
           onClick={() => {
             setWorkflowName(t("topbar.newWorkflow.defaultName"));
             setIsOpen(true);
           }}
           px={1}
         >
-          <IconDeviceFloppy size={16} color={"white"} />
+          <IconDeviceFloppy size={18} />
         </Button>
       </Tooltip>
       <Modal isOpen={isOpen} onClose={onClose}>

@@ -5,13 +5,6 @@ import {
   AccordionItem,
   AccordionPanel,
   Box,
-  Flex,
-  Heading,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalOverlay,
   VStack,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
@@ -26,11 +19,10 @@ import LanguageSetting from "../settings/LanguageSetting";
 import { hideScrollbarSx } from "../model-manager/utils";
 import { userSettingsTable } from "../db-tables/WorkspaceDB";
 import { useT } from "../i18n/LanguageContext";
+import { LibraryHeader } from "../library/primitives";
 
-export default function WorkspaceSettingsModal({
-  onClose,
-}: {
-  onClose: () => void;
+export default function WorkspaceSettingsModal(_props: {
+  onClose?: () => void;
 }) {
   const { t } = useT();
   // Adult host state drives whether the NSFW-blur toggle is meaningful.
@@ -45,34 +37,21 @@ export default function WorkspaceSettingsModal({
   }, []);
 
   return (
-    <Modal isOpen={true} onClose={onClose} size={"2xl"} scrollBehavior={"inside"}>
-      <ModalOverlay />
-      <ModalContent maxH={"85vh"}>
-        <Flex
-          align={"center"}
-          px={5}
-          py={3}
-          pr={14}
-          bg={"galleryPanelBg"}
-          borderBottom={"1px solid"}
-          borderColor={"rowBorderColor"}
-          borderTopRadius={"md"}
-        >
-          <Heading size={"md"}>{t("settings.title")}</Heading>
-        </Flex>
-        <ModalCloseButton
-          top={3}
-          right={4}
-          size={"md"}
-          borderRadius={"md"}
-          border={"1px solid"}
-          borderColor={"red.400"}
-          color={"red.300"}
-          bg={"rgba(245, 101, 101, 0.14)"}
-          _hover={{ bg: "rgba(245, 101, 101, 0.3)", color: "white" }}
-          _active={{ bg: "rgba(245, 101, 101, 0.42)" }}
-        />
-        <ModalBody py={5} sx={hideScrollbarSx}>
+    <div className="lib-section">
+      <LibraryHeader title={t("settings.title")} />
+      <Box
+        flex={1}
+        minH={0}
+        overflowY={"auto"}
+        px={6}
+        py={5}
+        sx={{
+          ...hideScrollbarSx,
+          "--chakra-colors-galleryPanelBg": "var(--lib-card)",
+          "--chakra-colors-rowBorderColor": "var(--lib-line)",
+        }}
+      >
+        <Box maxW={"720px"}>
           <VStack spacing={4} align={"stretch"}>
             <SettingsSection title={t("settings.language")}>
               <LanguageSetting />
@@ -156,8 +135,8 @@ export default function WorkspaceSettingsModal({
               </AccordionItem>
             </Accordion>
           </VStack>
-        </ModalBody>
-      </ModalContent>
-    </Modal>
+        </Box>
+      </Box>
+    </div>
   );
 }

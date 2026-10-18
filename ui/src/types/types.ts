@@ -9,4 +9,5 @@ export type WorkspaceRoute =
   | "installModels"
   | "share"
   | "promptLibrary"
+  | "downloads"
   | "settings";

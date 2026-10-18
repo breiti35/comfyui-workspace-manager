@@ -1,4 +1,3 @@
-import { Box, Grid, GridItem } from "@chakra-ui/react";
 import { useEffect, useRef, useState } from "react";
 import { ModelsListRespItem } from "../types";
 import { ModelItem } from "./ModelItem";
@@ -12,11 +11,12 @@ interface Props {
    */
   resetKey: string;
   onOpenDetail: (data: ModelsListRespItem) => void;
+  compact?: boolean;
 }
 
 const BATCH = 48;
 
-export function ModelsList({ list, resetKey, onOpenDetail }: Props) {
+export function ModelsList({ list, resetKey, onOpenDetail, compact }: Props) {
   // Dependency-free windowing: render only the first `visibleCount` cards and
   // grow the window as a bottom sentinel scrolls into view. Keeps React's
   // render + the mounted cards' work bounded no matter how big the collection.
@@ -49,18 +49,18 @@ export function ModelsList({ list, resetKey, onOpenDetail }: Props) {
 
   return (
     <>
-      <Grid
-        templateColumns="repeat(auto-fill, minmax(190px, 1fr))"
-        gap={3}
-        marginTop={2}
-      >
+      <div className={"lib-grid" + (compact ? " compact" : "")}>
         {shown.map((v) => (
-          <GridItem key={v.model_name + "@" + v.model_type}>
-            <ModelItem data={v} onOpenDetail={onOpenDetail} />
-          </GridItem>
+          <ModelItem
+            key={v.model_name + "@" + v.model_type}
+            data={v}
+            onOpenDetail={onOpenDetail}
+          />
         ))}
-      </Grid>
-      {visibleCount < list.length && <Box ref={sentinelRef} h="1px" />}
+      </div>
+      {visibleCount < list.length && (
+        <div ref={sentinelRef} style={{ height: 1 }} />
+      )}
     </>
   );
 }

@@ -10,11 +10,6 @@ import {
   Input,
   InputGroup,
   InputLeftElement,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalOverlay,
   Text,
   Tooltip,
   useToast,
@@ -28,7 +23,8 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { hideScrollbarSx } from "../model-manager/utils";
 import { useT } from "../i18n/LanguageContext";
-import { useModalSubLevelDismiss } from "../customHooks/useModalSubLevelDismiss";
+import { LibraryHeader } from "../library/primitives";
+import { useLibrarySubLevel } from "../library/libraryContext";
 import PromptEditor from "./PromptEditor";
 import {
   addPrompt,
@@ -159,7 +155,7 @@ function PromptCard({
   );
 }
 
-export default function PromptLibraryModal({ onClose }: Props) {
+export default function PromptLibraryModal(_props: Partial<Props>) {
   const { t } = useT();
   const toast = useToast();
   const [items, setItems] = useState<PromptRecipe[]>([]);
@@ -169,14 +165,9 @@ export default function PromptLibraryModal({ onClose }: Props) {
   const [editing, setEditing] = useState<PromptRecipe | null | undefined>(
     undefined,
   );
-  const closeEditing = () => setEditing(undefined);
-  // Esc/overlay click should only back out of the editor when it's open, not
-  // blow away the grid's search/tag filter underneath it.
-  const modalDismissProps = useModalSubLevelDismiss(
-    editing !== undefined,
-    closeEditing,
-    onClose,
-  );
+  const closeEditing = useCallback(() => setEditing(undefined), []);
+  // Esc backs out of the editor first, then closes the library.
+  useLibrarySubLevel("promptLibrary", editing !== undefined, closeEditing);
 
   // true when the library couldn't be read. Shown instead of the "empty
   // library" hint, and the "New" button is disabled - the store refuses
@@ -240,41 +231,34 @@ export default function PromptLibraryModal({ onClose }: Props) {
   };
 
   return (
-    <Modal
-      isOpen={true}
-      onClose={onClose}
-      blockScrollOnMount={true}
-      {...modalDismissProps}
-    >
-      <ModalOverlay />
-      <ModalContent
-        width={"90%"}
-        maxWidth={"90vw"}
-        height={"90vh"}
-        display={"flex"}
-        flexDirection={"column"}
+    <div className="lib-section">
+      <LibraryHeader
+        title={t("prompts.title")}
+        subtitle={editing === undefined ? String(shown.length) : undefined}
+        actions={
+          editing === undefined ? (
+            <button
+              type="button"
+              className="lib-btn primary"
+              disabled={loadError}
+              onClick={() => setEditing(null)}
+            >
+              <IconPlus size={16} />
+              {t("prompts.new")}
+            </button>
+          ) : undefined
+        }
+      />
+      <Flex
+        direction={"column"}
+        flex={1}
+        minH={0}
+        overflow={"hidden"}
+        sx={{
+          "--chakra-colors-galleryPanelBg": "var(--lib-card)",
+          "--chakra-colors-rowBorderColor": "var(--lib-line)",
+        }}
       >
-        <ModalCloseButton
-          zIndex={3}
-          top={2}
-          right={4}
-          size={"md"}
-          borderRadius={"md"}
-          border={"1px solid"}
-          borderColor={"red.400"}
-          color={"red.300"}
-          bg={"rgba(245, 101, 101, 0.14)"}
-          _hover={{ bg: "rgba(245, 101, 101, 0.3)", color: "white" }}
-          _active={{ bg: "rgba(245, 101, 101, 0.42)" }}
-        />
-        <ModalBody
-          p={0}
-          overflow={"hidden"}
-          display={"flex"}
-          flexDirection={"column"}
-          flex={1}
-          minHeight={0}
-        >
           {editing !== undefined ? (
             <PromptEditor
               value={editing}
@@ -297,41 +281,24 @@ export default function PromptLibraryModal({ onClose }: Props) {
                 gap={3}
                 px={4}
                 py={2}
-                pr={12}
                 flexShrink={0}
                 bg={"galleryPanelBg"}
                 borderBottom={"1px solid"}
                 borderColor={"rowBorderColor"}
                 flexWrap={"wrap"}
               >
-                <Text fontWeight={600} fontSize={"sm"} flexShrink={0}>
-                  {t("prompts.title")}
-                </Text>
                 <InputGroup size={"sm"} maxW={"280px"}>
                   <InputLeftElement pointerEvents={"none"}>
                     <IconSearch size={15} />
                   </InputLeftElement>
                   <Input
                     variant={"filled"}
-                    borderRadius={"full"}
+                    borderRadius={"sm"}
                     placeholder={t("prompts.searchPlaceholder")}
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                   />
                 </InputGroup>
-                <Text fontSize={"xs"} color={"gray.500"}>
-                  {shown.length}
-                </Text>
-                <Box flex={1} />
-                <Button
-                  size={"sm"}
-                  colorScheme={"blue"}
-                  leftIcon={<IconPlus size={16} />}
-                  isDisabled={loadError}
-                  onClick={() => setEditing(null)}
-                >
-                  {t("prompts.new")}
-                </Button>
               </Flex>
 
               {tags.length > 0 && (
@@ -428,8 +395,7 @@ export default function PromptLibraryModal({ onClose }: Props) {
               </Box>
             </>
           )}
-        </ModalBody>
-      </ModalContent>
-    </Modal>
+      </Flex>
+    </div>
   );
 }

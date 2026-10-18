@@ -1,17 +1,6 @@
-import {
-  Badge,
-  Box,
-  Button,
-  CircularProgress,
-  Flex,
-  HStack,
-  Image,
-  Spinner,
-  Text,
-  Tooltip,
-} from "@chakra-ui/react";
+import { Spinner } from "@chakra-ui/react";
 import { useEffect, useMemo, useState } from "react";
-import { IconCheck, IconDownload, IconHeart } from "@tabler/icons-react";
+import { IconDownload } from "@tabler/icons-react";
 import type { CivitiModel } from "../types";
 import { findImageFromModel } from "../../utils/findSfwImage";
 import { civitThumbUrl } from "../api/civitDetailApi";
@@ -64,198 +53,108 @@ export default function InstallModelCard({
     return () => window.removeEventListener("showNsfwModelThumbnail", update);
   }, []);
 
+  const signature = [model.type, baseModel].filter(Boolean).join(" · ");
+  const rateLine =
+    progress != null
+      ? [
+          `${progress.toFixed(0)} %`,
+          formatSpeed(stat?.speed),
+          formatEta(stat?.eta),
+        ]
+          .filter(Boolean)
+          .join(" · ")
+      : t("install.loading");
+  const statsLine = `↓ ${formatCount(model.stats?.downloadCount)} · ♥ ${formatCount(
+    model.stats?.thumbsUpCount ?? model.stats?.favoriteCount,
+  )}`;
+
   return (
-    <Box
+    <div
       ref={ref}
-      role={"group"}
-      position={"relative"}
-      w={"100%"}
-      sx={{ aspectRatio: "3 / 4" }}
-      borderRadius={"lg"}
-      overflow={"hidden"}
-      bg={"galleryPanelBg"}
-      cursor={"pointer"}
+      className="lib-card"
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
+          e.preventDefault();
+          onOpenDetail(model);
+        }
+      }}
+      style={{ cursor: "pointer" }}
       onClick={() => onOpenDetail(model)}
     >
-      {inView && picked.url ? (
-        <Image
-          src={civitThumbUrl(picked.url, 450)}
-          loading={"lazy"}
-          alt={model.name ?? "model"}
-          w={"100%"}
-          h={"100%"}
-          objectFit={"cover"}
-          filter={blurred ? NSFW_BLUR_FILTER : undefined}
-        />
-      ) : (
-        <Box w={"100%"} h={"100%"} />
-      )}
+      <div className="lib-sig" title={signature}>
+        {signature}
+      </div>
+      <div className="lib-name" title={model.name}>
+        {model.name}
+      </div>
+      <div className="lib-pv">
+        {inView && picked.url && (
+          <img
+            src={civitThumbUrl(picked.url, 450)}
+            loading="lazy"
+            alt={model.name ?? "model"}
+            style={{ filter: blurred ? NSFW_BLUR_FILTER : undefined }}
+          />
+        )}
 
-      {/* Top: Typ/Basismodell links, Stats rechts */}
-      <Flex
-        position={"absolute"}
-        top={0}
-        left={0}
-        right={0}
-        p={2}
-        gap={1}
-        justify={"space-between"}
-        align={"flex-start"}
-        bgGradient={"linear(to-b, blackAlpha.700, transparent)"}
-      >
-        <HStack gap={1} flexWrap={"wrap"}>
-          {model.type && (
-            <Badge
-              colorScheme={"blackAlpha"}
-              bg={"blackAlpha.600"}
-              color={"whiteAlpha.900"}
-              borderRadius={"full"}
-              textTransform={"none"}
-              fontSize={"10px"}
-              px={2}
+        {/* NSFW-Reveal */}
+        {blurred && (
+          <div className="ov">
+            <button
+              type="button"
+              className="lib-btn"
+              onClick={(e) => {
+                e.stopPropagation();
+                setRevealed(true);
+              }}
             >
-              {model.type}
-            </Badge>
-          )}
-          {baseModel && (
-            <Badge
-              bg={"blackAlpha.600"}
-              color={"whiteAlpha.900"}
-              borderRadius={"full"}
-              textTransform={"none"}
-              fontSize={"10px"}
-              px={2}
-            >
-              {baseModel}
-            </Badge>
-          )}
-        </HStack>
-        <HStack gap={2} color={"whiteAlpha.900"} fontSize={"11px"} flexShrink={0}>
-          <HStack gap={0.5}>
-            <IconDownload size={12} />
-            <Text>{formatCount(model.stats?.downloadCount)}</Text>
-          </HStack>
-          <HStack gap={0.5}>
-            <IconHeart size={12} />
-            <Text>
-              {formatCount(
-                model.stats?.thumbsUpCount ?? model.stats?.favoriteCount,
-              )}
-            </Text>
-          </HStack>
-        </HStack>
-      </Flex>
+              {t("install.reveal.button")}
+            </button>
+          </div>
+        )}
 
-      {/* NSFW-Reveal */}
-      {blurred && (
-        <Button
-          position={"absolute"}
-          top={"50%"}
-          left={"50%"}
-          transform={"translate(-50%, -50%)"}
-          size={"sm"}
-          bg={"rgba(237,100,166,0.16)"}
-          color={"pink.100"}
-          _hover={{ bg: "rgba(237,100,166,0.3)" }}
-          onClick={(e) => {
-            e.stopPropagation();
-            setRevealed(true);
-          }}
-        >
-          {t("install.reveal.button")}
-        </Button>
-      )}
-
-      {/* Bottom: Name + Install/Installiert */}
-      <Flex
-        position={"absolute"}
-        bottom={0}
-        left={0}
-        right={0}
-        direction={"column"}
-        gap={1}
-        p={2}
-        bgGradient={"linear(to-t, blackAlpha.800, transparent)"}
-      >
-        <Text color={"white"} fontWeight={600} fontSize={"sm"} noOfLines={1}>
-          {model.name}
-        </Text>
-        {installed ? (
-          <Badge
-            alignSelf={"flex-start"}
-            colorScheme={"green"}
-            variant={"subtle"}
-            borderRadius={"full"}
-            display={"flex"}
-            alignItems={"center"}
-            gap={1}
-            px={2}
-          >
-            <IconCheck size={12} /> {t("install.installedBadge")}
-          </Badge>
-        ) : (
-          <Tooltip
-            label={
-              targetFolder
-                ? `${t("install.targetFolder")}: ${targetFolder}`
-                : undefined
-            }
-            isDisabled={!targetFolder}
-          >
-            <Button
-              alignSelf={"flex-start"}
-              size={"xs"}
-              colorScheme={"blue"}
-              leftIcon={<IconDownload size={14} />}
-              isDisabled={downloading}
-              opacity={0}
-              _groupHover={{ opacity: 1 }}
-              transition={"opacity 0.12s"}
+        {!installed && !downloading && (
+          <div className="dl">
+            <button
+              type="button"
+              className="lib-btn"
+              title={
+                targetFolder
+                  ? `${t("install.targetFolder")}: ${targetFolder}`
+                  : undefined
+              }
               onClick={(e) => {
                 e.stopPropagation();
                 onQuickInstall(model);
               }}
             >
+              <IconDownload size={14} />
               {t("install.installButton")}
-            </Button>
-          </Tooltip>
+            </button>
+          </div>
         )}
-      </Flex>
-
+        {downloading && progress == null && (
+          <div className="ph">
+            <Spinner size="sm" />
+          </div>
+        )}
+      </div>
+      <div className={"lib-meta" + (downloading || installed ? " hot" : "")}>
+        {downloading
+          ? rateLine
+          : installed
+            ? `✓ ${t("install.installedBadge")}`
+            : statsLine}
+      </div>
       {/* Download-Fortschritt auf der Karte */}
-      {downloading && (
-        <Flex
-          position={"absolute"}
-          inset={0}
-          bg={"blackAlpha.700"}
-          direction={"column"}
-          align={"center"}
-          justify={"center"}
-          gap={2}
-        >
-          {progress != null ? (
-            <>
-              <CircularProgress
-                value={progress}
-                color={"blue.400"}
-                size={"48px"}
-              />
-              <Text color={"white"} fontSize={"sm"}>
-                {progress.toFixed(0)}%
-              </Text>
-              {(stat?.speed || stat?.eta != null) && (
-                <Text color={"whiteAlpha.800"} fontSize={"xs"}>
-                  {[formatSpeed(stat?.speed), formatEta(stat?.eta)]
-                    .filter(Boolean)
-                    .join(" · ")}
-                </Text>
-              )}
-            </>
-          ) : (
-            <Spinner color={"blue.400"} />
-          )}
-        </Flex>
+      {downloading && progress != null && (
+        <div
+          className="lib-bar"
+          style={{ width: `${Math.max(0, Math.min(100, progress))}%` }}
+        />
       )}
-    </Box>
+    </div>
   );
 }

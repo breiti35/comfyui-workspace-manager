@@ -1,6 +1,5 @@
 import {
   Box,
-  HStack,
   Input,
   Popover,
   PopoverBody,
@@ -73,7 +72,7 @@ export default function BaseModelPicker({ value, onChange }: Props) {
         fontSize={"sm"}
         borderRadius={"md"}
         fontWeight={active ? 600 : 400}
-        color={active ? "blue.300" : undefined}
+        color={active ? "var(--lib-amber-text)" : undefined}
         _hover={{ bg: "rowHoverBg" }}
         onClick={() => pick(key)}
       >
@@ -95,23 +94,14 @@ export default function BaseModelPicker({ value, onChange }: Props) {
       isLazy
     >
       <PopoverTrigger>
-        <Box
-          as={"button"}
-          px={3}
-          py={1}
-          borderRadius={"md"}
-          border={"1px solid"}
-          borderColor={value ? "blue.400" : "rowBorderColor"}
-          color={value ? "blue.300" : undefined}
-          _hover={{ bg: "rowHoverBg" }}
+        <button
+          type="button"
+          className="lib-btn"
+          aria-pressed={!!value}
         >
-          <HStack gap={1}>
-            <Text fontSize={"sm"}>
-              {value ? baseModelLabel(value) : t("install.baseModel.all")}
-            </Text>
-            <IconChevronDown size={14} />
-          </HStack>
-        </Box>
+          {value ? baseModelLabel(value) : t("install.baseModel.all")}
+          <IconChevronDown size={14} />
+        </button>
       </PopoverTrigger>
       <PopoverContent w={"280px"}>
         <PopoverBody p={2}>

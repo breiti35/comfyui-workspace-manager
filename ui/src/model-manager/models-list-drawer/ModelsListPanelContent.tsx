@@ -1,7 +1,9 @@
-import { Box, Button, Flex, Spinner, Text } from "@chakra-ui/react";
+import { Spinner } from "@chakra-ui/react";
+import { IconArrowLeft, IconDownload } from "@tabler/icons-react";
 import Fuse from "fuse.js/min-basic";
 import {
   forwardRef,
+  useContext,
   useEffect,
   useImperativeHandle,
   useMemo,
@@ -11,12 +13,18 @@ import { ModelsList } from "./ModelsList";
 import { type ModelsListRespItem } from "../types";
 import { useUpdateModels } from "../hooks/useUpdateModels";
 import ModelDetailView from "./ModelDetailView";
-import ModelsPanelToolbar from "./ModelsPanelToolbar";
+import ModelsPanelToolbar, { prettyCategory } from "./ModelsPanelToolbar";
+import type { ModelsView } from "../components/LibToolbarParts";
+import {
+  LibraryFooter,
+  LibraryHeader,
+  LibrarySelectionBar,
+} from "../../library/primitives";
+import { WorkspaceContext } from "../../WorkspaceContext";
 import { isModelFavorite } from "./modelFavorites";
 import { indexdb } from "../../db-tables/indexdb";
 import { type Model } from "../../types/dbTypes";
 import ModelDropEventListener from "../topbar/ModelDropEventListener";
-import { hideScrollbarSx } from "../utils";
 import { MODELS_DB_SYNCED_EVENT, modelDbId } from "../syncModelsToDb";
 import { useT } from "../../i18n/LanguageContext";
 
@@ -48,6 +56,9 @@ const SORT_CMP: Record<
 const ModelsListPanelContent = forwardRef<ModelsListPanelHandle, Props>(
   function ModelsListPanelContent({ onDetailOpenChange }, ref) {
     const [selectedModel, setSelectedModel] = useState("checkpoints");
+    const [baseFilter, setBaseFilter] = useState("");
+    const [view, setView] = useState<ModelsView>("grid");
+    const { openRoute } = useContext(WorkspaceContext);
     const [searchQuery, setSearchQuery] = useState("");
     const [sortBy, setSortBy] = useState("az");
     const [favoritesOnly, setFavoritesOnly] = useState(false);
@@ -113,7 +124,9 @@ const ModelsListPanelContent = forwardRef<ModelsListPanelHandle, Props>(
       let res: ModelsListRespItem[] = [];
       if (!searchQuery.length) {
         res = modelsList
-          .filter((item) => item.model_type === selectedModel)
+          .filter(
+            (item) => selectedModel === "" || item.model_type === selectedModel,
+          )
           .slice()
           .sort(SORT_CMP[sortBy] ?? SORT_CMP.az);
       } else {
@@ -121,6 +134,11 @@ const ModelsListPanelContent = forwardRef<ModelsListPanelHandle, Props>(
           keys: ["model_name", "db.modelName"],
         });
         res = fuse.search(searchQuery).map((result) => result.item);
+      }
+      if (baseFilter) {
+        res = res.filter(
+          (item) => dbModels.get(modelDbId(item))?.baseModel === baseFilter,
+        );
       }
       if (favoritesOnly) {
         res = res.filter((item) =>
@@ -134,73 +152,130 @@ const ModelsListPanelContent = forwardRef<ModelsListPanelHandle, Props>(
       searchQuery,
       sortBy,
       favoritesOnly,
+      baseFilter,
+      dbModels,
       modelsListWithDBData,
     ]);
+
+    const counts = useMemo(() => {
+      const c: Record<string, number> = {};
+      modelsList.forEach((m) => {
+        c[m.model_type] = (c[m.model_type] ?? 0) + 1;
+      });
+      return c;
+    }, [modelsList]);
+
+    const baseModels = useMemo(() => {
+      const s = new Set<string>();
+      dbModels.forEach((m) => m.baseModel && s.add(m.baseModel));
+      return Array.from(s).sort((a, b) => a.localeCompare(b));
+    }, [dbModels]);
 
     // Only these change what the user is looking at - the grid's window
     // resets on them, not on every background list refresh (websocket push,
     // hashing poll), which would otherwise yank a scrolled user back to the
     // first 48 cards.
-    const viewKey = `${selectedModel}|${searchQuery}|${sortBy}|${favoritesOnly}`;
+    const viewKey = `${selectedModel}|${searchQuery}|${sortBy}|${favoritesOnly}|${baseFilter}`;
+
+    const total = modelsList.length;
+    const detailName = detailItem
+      ? (dbModels.get(modelDbId(detailItem))?.modelName ??
+        detailItem.model_name)
+      : "";
+    const countLine = `${total} ${t("models.lib.modelsSuffix")}`;
 
     return (
       <>
         {detailItem ? (
-          <Box flex={1} minHeight={0}>
-            <ModelDetailView data={detailItem} onBack={closeDetail} />
-          </Box>
+          <>
+            <LibraryHeader
+              title={detailName}
+              back={
+                <div className="lib-crumb">
+                  <button type="button" className="lib-btn" onClick={closeDetail}>
+                    <IconArrowLeft size={14} />
+                    {t("models.lib.back")}
+                  </button>
+                  <span>
+                    {t("models.lib.breadcrumbRoot")} › {detailName}
+                  </span>
+                </div>
+              }
+            />
+            <div style={{ flex: 1, minHeight: 0 }}>
+              <ModelDetailView data={detailItem} onBack={closeDetail} />
+            </div>
+          </>
         ) : (
           <>
+            <LibraryHeader
+              title={t("models.lib.installedTitle")}
+              subtitle={countLine}
+              actions={
+                <button
+                  type="button"
+                  className="lib-btn primary"
+                  onClick={() => openRoute("installModels")}
+                >
+                  <IconDownload size={16} />
+                  {t("models.lib.installAction")}
+                </button>
+              }
+            />
             <ModelsPanelToolbar
               categories={modelTypeList}
+              counts={counts}
+              total={total}
               selectedModel={selectedModel}
               onSelectModel={setSelectedModel}
               searchQuery={searchQuery}
               setSearchQuery={setSearchQuery}
+              baseModels={baseModels}
+              baseFilter={baseFilter}
+              setBaseFilter={setBaseFilter}
               sortBy={sortBy}
               setSortBy={setSortBy}
               favoritesOnly={favoritesOnly}
               setFavoritesOnly={setFavoritesOnly}
+              view={view}
+              setView={setView}
               onRefresh={refresh}
-              resultCount={curModelList.length}
             />
-            <Box
-              flex={1}
-              minHeight={0}
-              overflowY={"auto"}
-              px={4}
-              pb={4}
-              sx={hideScrollbarSx}
-            >
+            <LibrarySelectionBar />
+            <div className="lib-scroll">
               {loading && (
-                <Flex justifyContent={"center"} alignItems={"center"} py={8}>
+                <div className="lib-state">
                   <Spinner />
-                </Flex>
+                </div>
               )}
               {!loading && error && (
-                <Flex
-                  direction={"column"}
-                  align={"center"}
-                  gap={2}
-                  py={8}
-                >
-                  <Text color={"red.300"} fontSize={"sm"}>
+                <div className="lib-state">
+                  <span style={{ color: "var(--lib-text)" }}>
                     {t("models.list.loadError")}
-                  </Text>
-                  <Text color={"gray.500"} fontSize={"xs"}>
-                    {error}
-                  </Text>
-                  <Button size={"xs"} variant={"outline"} onClick={refresh}>
+                  </span>
+                  <span>{error}</span>
+                  <button type="button" className="lib-btn" onClick={refresh}>
                     {t("models.list.retry")}
-                  </Button>
-                </Flex>
+                  </button>
+                </div>
               )}
               <ModelsList
                 list={curModelList}
                 resetKey={viewKey}
                 onOpenDetail={setDetailItem}
+                compact={view === "compact"}
               />
-            </Box>
+            </div>
+            <LibraryFooter
+              left={
+                curModelList.length === total
+                  ? countLine
+                  : `${curModelList.length} ${t("models.lib.of")} ${countLine}`
+              }
+              right={
+                selectedModel === "" ? undefined : prettyCategory(selectedModel)
+              }
+            />
           </>
         )}
         <ModelDropEventListener />

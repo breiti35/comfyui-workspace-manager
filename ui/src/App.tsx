@@ -1,4 +1,4 @@
-import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Box, Portal, useToast } from "@chakra-ui/react";
 import {
   loadDBs,
@@ -19,11 +19,7 @@ import {
 import { Topbar } from "./topbar/Topbar";
 import { Workflow, WorkflowVersion } from "./types/dbTypes";
 import { useDialog } from "./components/AlertDialogProvider";
-import React from "react";
-const RecentFilesDrawer = React.lazy(
-  () => import("./RecentFilesDrawer/RecentFilesDrawer"),
-);
-const GalleryModal = React.lazy(() => import("./gallery/GalleryModal"));
+import LibraryHost from "./library/LibraryHost";
 import { IconExternalLink } from "@tabler/icons-react";
 import { DRAWER_Z_INDEX, UPGRADE_TO_2WAY_SYNC_KEY } from "./const";
 import { WorkspaceRoute } from "./types/types";
@@ -381,10 +377,6 @@ export default function App() {
       .catch((e) => console.error("Error creating media record:", e));
   }, []);
 
-  const onCloseDrawer = useCallback(() => {
-    closeRoute();
-  }, [closeRoute]);
-
   useEffect(() => {
     /**
      * because we have turned on strict mode, useEffect will be executed twice in strict mode in the development environment.
@@ -474,23 +466,15 @@ export default function App() {
             zIndex={DRAWER_Z_INDEX}
             draggable={false}
           >
-            <Topbar curFlowName={curFlowName} setCurFlowName={setCurFlowName} />
-            {loadChild && route === "recentFlows" && (
-              <Suspense>
-                <RecentFilesDrawer
-                  onClose={onCloseDrawer}
-                  onClickNewFlow={() => {
-                    loadNewWorkflow();
-                    closeRoute();
-                  }}
-                />
-              </Suspense>
-            )}
-            {route === "gallery" && (
-              <Suspense>
-                <GalleryModal onclose={closeRoute} />
-              </Suspense>
-            )}
+            {/* before the Topbar in DOM order, so the bar paints above the library */}
+            <LibraryHost
+              ready={loadChild}
+              onClickNewFlow={() => {
+                loadNewWorkflow();
+                closeRoute();
+              }}
+            />            <Topbar curFlowName={curFlowName} setCurFlowName={setCurFlowName} />
+
           </Box>
         </Portal>
       </div>

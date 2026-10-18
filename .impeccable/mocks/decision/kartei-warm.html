@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>Modelle Installiert</title>
+<style>
+*{box-sizing:border-box}
+html,body{width:1440px;height:900px;overflow:hidden;margin:0}
+body{font:13px Inter,ui-sans-serif,system-ui,sans-serif;color:#24211e;background:#202020;background-image:radial-gradient(#2c2c2c 1px,transparent 1px);background-size:20px 20px;position:relative;font-variant-numeric:tabular-nums}
+.abs{position:absolute}
+.menu{left:0;top:0;width:1440px;height:28px;background:#353535;border-bottom:1px solid #4e4e4e;color:#b0b0b0;padding:7px 12px;font-size:12px;word-spacing:14px}
+.node{width:220px;height:130px;background:#353535;border:1px solid #4e4e4e;border-radius:2px}
+.node i{display:block;height:22px;background:#292929;border-bottom:1px solid #4e4e4e}
+.top{left:0;top:28px;width:1440px;height:42px;background:#2a2622;border-bottom:1px solid #1d1a17;color:#f3f0eb;display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:3}
+.top .btn{background:#38332d;border-color:#4a443c;color:#f3f0eb}
+.top .btn.on{background:#c77a12;border-color:#c77a12;color:#1d1a17;font-weight:600}
+.g{display:flex;align-items:center;gap:8px}
+.btn{height:28px;padding:0 12px;display:inline-flex;align-items:center;gap:6px;background:#fbfaf8;border:1px solid #cfc9c0;border-radius:2px;color:#24211e;font-size:13px}
+.dot{width:8px;height:8px;border-radius:50%;background:#e8c27a}
+.ring{width:28px;height:28px;border:2px solid #e8c27a;border-radius:50%;text-align:center;line-height:24px;font-size:12px}
+.shade{left:0;top:70px;width:1440px;height:830px;background:rgba(20,18,16,.45)}
+.win{left:30px;top:80px;width:1380px;height:800px;background:#e9e6e1;border:1px solid #cfc9c0;border-radius:2px;display:flex}
+.side{width:240px;border-right:1px solid #cfc9c0;padding:20px 0 14px;display:flex;flex-direction:column;background:#dedad3}
+.grp{font:600 11px ui-monospace,Consolas,monospace;letter-spacing:.14em;color:#5a544c;padding:14px 20px 6px;border-bottom:1px solid #cfc9c0;margin:0 16px 4px 0}
+.row{height:34px;display:flex;align-items:center;gap:12px;color:#3a3530;font-size:14px;border-bottom:1px solid #d3cec6;margin-right:16px;position:relative}
+.row b{width:8px;height:20px;background:#cfc9c0;border-radius:0 2px 2px 0}
+.row em{margin-left:auto;font:12px ui-monospace,Consolas,monospace;color:#5a544c;font-style:normal}
+.row.act{color:#24211e;background:#f7f5f2;font-weight:600}
+.row.act b{width:16px;background:#c77a12;margin-right:-4px}
+.main{flex:1;display:flex;flex-direction:column;padding:0 24px}
+.head{display:flex;align-items:flex-end;justify-content:space-between;padding:20px 0 14px;border-bottom:1px solid #cfc9c0}
+.head small{font-size:14px;color:#6b655d}
+h1{margin:0 0 4px;font-size:40px;line-height:1.1;font-weight:700;letter-spacing:-.015em;color:#24211e}
+.pri{background:#c77a12;border-color:#c77a12;color:#1d1a17;height:34px;font-weight:600}
+.tools{display:flex;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid #ddd8d0}
+.inp{width:230px;height:30px;background:#fbfaf8;border:1px solid #cfc9c0;border-radius:2px;color:#6b655d;padding:6px 10px}
+.chips{display:flex;gap:4px}
+.chip{height:28px;padding:0 9px;display:flex;align-items:center;background:#e8c27a;border:1px solid #d3ab5c;border-radius:2px;color:#24211e;font-size:12px}
+.chip.on{background:#c77a12;border-color:#c77a12;color:#1d1a17;font-weight:600}
+.grid{flex:1;display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:1fr;gap:14px 16px;padding:14px 0}
+.card{background:#f7f5f2;border:1px solid #cfc9c0;border-radius:2px;display:flex;flex-direction:column;min-height:0;position:relative}
+.sig{font:600 11px ui-monospace,Consolas,monospace;letter-spacing:.08em;color:#6b655d;padding:6px 10px;border-bottom:1px solid #ddd8d0;white-space:nowrap;overflow:hidden}
+.nm{font-size:14px;font-weight:600;padding:5px 10px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pv{flex:1;margin:0 10px;border:1px solid #ddd8d0;border-radius:2px;position:relative;overflow:hidden}
+.mt{font-size:12px;color:#6b655d;padding:4px 10px 6px;white-space:nowrap;overflow:hidden}
+.ov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;background:rgba(247,245,242,.6);color:#24211e}
+.blur{filter:blur(14px)}
+.bar{position:absolute;left:0;bottom:0;height:5px;width:64%;background:#c77a12}
+.foot{height:36px;border-top:1px solid #cfc9c0;display:flex;align-items:center;justify-content:space-between;color:#6b655d;font:12px ui-monospace,Consolas,monospace}
+.sb{margin-top:auto;padding:0 16px;color:#5a544c;display:flex;gap:10px}
+</style></head><body>
+<div class="abs menu">Workflow Bearbeiten Ansicht Queue Hilfe</div>
+<div class="abs node" style="left:90px;top:210px"><i></i></div>
+<div class="abs node" style="left:420px;top:330px"><i></i></div>
+<div class="abs node" style="left:1100px;top:250px"><i></i></div>
+<div class="abs top">
+ <div class="g"><span style="font-weight:600;font-size:14px">Porträt-Studie v3</span><span class="dot"></span><span class="btn">Speichern</span><span class="btn">v12</span><span class="btn">Menü ▾</span><span class="btn">▣ Galerie</span></div>
+ <div class="g"><span class="btn on">Bibliothek</span><span class="ring">2</span><span class="btn">⇥</span><span class="btn">⚙</span></div>
+</div>
+<div class="abs shade"></div>
+<div class="abs win">
+ <div class="side">
+  <div class="grp">ARBEIT</div>
+  <div class="row"><b></b>Workflows<em>64</em></div>
+  <div class="row"><b></b>Galerie<em>128</em></div>
+  <div class="row"><b></b>Prompts<em>23</em></div>
+  <div class="grp">MODELLE</div>
+  <div class="row act"><b></b>Installiert<em style="color:#24211e">412</em></div>
+  <div class="row"><b></b>Entdecken</div>
+  <div class="grp">SYSTEM</div>
+  <div class="row"><b></b>Downloads<em>2</em></div>
+  <div class="row"><b></b>Einstellungen</div>
+  <div class="sb"><span>Andocken</span><span>Esc zurück</span></div>
+ </div>
+ <div class="main">
+  <div class="head"><div><h1>Installiert</h1><small>412 Modelle · 1,9 TB</small></div><div class="g"><span class="btn pri">Modell installieren</span><span class="btn" style="width:34px;height:34px;justify-content:center">✕</span></div></div>
+  <div class="tools"><div class="inp">Modelle durchsuchen…</div>
+   <div class="chips"><span class="chip on">Alle 412</span><span class="chip">Checkpoints 38</span><span class="chip">LoRA 296</span><span class="chip">VAE 6</span><span class="chip">Text-Encoder 9</span><span class="chip">Upscaler 12</span><span class="chip">Diffusion 21</span></div>
+   <span class="btn" style="margin-left:auto">Alle Basismodelle ▾</span><span class="btn">Zuletzt hinzugefügt ▾</span><span class="chips"><span class="chip on">▦</span><span class="chip">☰</span></span></div>
+  <div class="grid">
+   <div class="card"><div class="sig">CKPT · FLUX.1 D · 11,9 GB</div><div class="nm">flux1-dev-fp8</div><div class="pv" style="background:linear-gradient(135deg,#9fb0c2,#6f8398)"></div><div class="mt">Checkpoint · Flux.1 D</div></div>
+   <div class="card"><div class="sig">CKPT · SDXL 1.0 · 6,6 GB</div><div class="nm">juggernautXL_v9</div><div class="pv" style="background:linear-gradient(160deg,#c9a98a,#8f6e56)"></div><div class="mt">Checkpoint · SDXL 1.0</div></div>
+   <div class="card"><div class="sig">DIFF · WAN 2.1 · 14,3 GB</div><div class="nm">wan2.1_t2v_14B_fp8</div><div class="pv" style="background:linear-gradient(120deg,#8fb0a6,#5f857a)"></div><div class="mt">Diffusion · Wan 2.1</div></div>
+   <div class="card"><div class="sig">LORA · SDXL 1.0 · 163 MB</div><div class="nm">pixel-art-xl</div><div class="pv" style="background:linear-gradient(145deg,#b3a2c9,#7d6a9a)"></div><div class="mt">Trigger: pixel art</div></div>
+   <div class="card"><div class="sig">LORA · SDXL 1.0 · 228 MB</div><div class="nm">add-detail-xl</div><div class="pv" style="background:linear-gradient(170deg,#c4bfae,#8f8a7a)"></div><div class="mt">LoRA · SDXL 1.0</div></div>
+   <div class="card"><div class="sig">LORA · FLUX.1 D · 72 MB</div><div class="nm">Lustige Katze LoRA</div><div class="pv"><div class="blur" style="position:absolute;inset:-20px;background:linear-gradient(120deg,#d49a7f,#9a82b0)"></div><div class="ov">NSFW · anzeigen</div></div><div class="mt">LoRA · Flux.1 D</div></div>
+   <div class="card"><div class="sig">CKPT · KREA 2 · 9,8 GB</div><div class="nm">krea2_turbo</div><div class="pv" style="background:linear-gradient(135deg,#9aa3c4,#656f99)"><div class="bar"></div></div><div class="mt" style="color:#8a4f00;font-weight:600">64 % · 38,2 MB/s · noch 1:42</div></div>
+   <div class="card"><div class="sig">VAE · FLUX.1 D · 335 MB</div><div class="nm">ae</div><div class="pv" style="background:linear-gradient(150deg,#adc09a,#76905f)"></div><div class="mt">VAE · Flux.1 D</div></div>
+   <div class="card"><div class="sig">TEXT-ENC · 4,9 GB</div><div class="nm">t5xxl_fp8_e4m3fn</div><div class="pv" style="background:linear-gradient(125deg,#c8b08f,#95784f)"></div><div class="mt">Text-Encoder</div></div>
+   <div class="card"><div class="sig">UPSC · 67 MB</div><div class="nm">4x-UltraSharp</div><div class="pv" style="background:linear-gradient(165deg,#93b8c0,#5f8c97)"></div><div class="mt">Upscaler</div></div>
+   <div class="card"><div class="sig">LORA · SD 1.5 · 144 MB</div><div class="nm">old_style_lora</div><div class="pv" style="background:linear-gradient(140deg,#bdb7ae,#8a847a)"></div><div class="mt" style="display:flex;justify-content:space-between"><span style="color:#8a4f00">Nicht auf Civitai</span><span style="color:#8a4f00;font-weight:600">Auf CivArchive suchen</span></div></div>
+   <div class="card"><div class="sig">DIFF · MINIMAX H3 · 18,1 GB</div><div class="nm">minimax_h3_video</div><div class="pv" style="background:linear-gradient(130deg,#b8a6c2,#85708f)"></div><div class="mt">Diffusion · MiniMax H3</div></div>
+  </div>
+  <div class="foot"><span>412 Modelle</span><span>Hash-Prüfung: 2 ausstehend</span></div>
+ </div>
+</div>
+</body></html>

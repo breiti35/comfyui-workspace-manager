@@ -1,23 +1,12 @@
-import {
-  Box,
-  Button,
-  Flex,
-  HStack,
-  IconButton,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuList,
-  Text,
-} from "@chakra-ui/react";
-import {
-  IconChevronDown,
-  IconDotsVertical,
-  IconLink,
-} from "@tabler/icons-react";
-import SearchInput from "../../components/SearchInput";
-import CategoryTabs from "../components/CategoryTabs";
+import { IconDotsVertical } from "@tabler/icons-react";
+import { Menu, MenuButton, MenuList, Box } from "@chakra-ui/react";
+import { LibraryToolbar } from "../../library/primitives";
 import NsfwToggleButton from "../models-list-drawer/NsfwToggleButton";
+import {
+  LibSearch,
+  ViewToggle,
+  type ModelsView,
+} from "../components/LibToolbarParts";
 import AddApiKeyPopover from "./AddApiKeyPopover";
 import BaseModelPicker from "./BaseModelPicker";
 import { ALL_MODEL_TYPES, type MODEL_TYPE } from "./util/modelTypes";
@@ -33,7 +22,6 @@ export const SORT_OPTIONS: { key: string; labelKey: TransKey }[] = [
 // Civitai `limit` accepts up to 100; we offer a small, sensible set. Standard 25.
 export const PAGE_SIZE_OPTIONS = [10, 15, 25, 50];
 
-
 interface InstallToolbarProps {
   searchQuery: string;
   setSearchQuery: (v: string) => void;
@@ -46,11 +34,11 @@ interface InstallToolbarProps {
   setBaseModel: (v: string) => void;
   pageSize: number;
   setPageSize: (v: number) => void;
-  onCustomUrlInstall: () => void;
-  resultCount: number;
-  loading: boolean;
+  view: ModelsView;
+  setView: (v: ModelsView) => void;
 }
 
+/** Werkzeugzeile: Suche, Typ-Chips, Basismodell, Sortierung, Ansicht. */
 export default function InstallToolbar({
   searchQuery,
   setSearchQuery,
@@ -63,157 +51,87 @@ export default function InstallToolbar({
   setBaseModel,
   pageSize,
   setPageSize,
-  onCustomUrlInstall,
-  resultCount,
-  loading,
+  view,
+  setView,
 }: InstallToolbarProps) {
   const { t } = useT();
-  const sortLabel = t(
-    SORT_OPTIONS.find((o) => o.key === sortBy)?.labelKey ??
-      SORT_OPTIONS[0].labelKey,
-  );
 
   return (
-    <Box flexShrink={0}>
-      {/* Zeile 1: Titel + Suche + Custom URL + NSFW + ⋯ */}
-      <Flex
-        align={"center"}
-        gap={3}
-        px={4}
-        py={3}
-        pr={14}
-        bg={"galleryPanelBg"}
-        borderBottom={"1px solid"}
-        borderColor={"rowBorderColor"}
+    <LibraryToolbar>
+      <LibSearch
+        value={searchQuery}
+        onChange={setSearchQuery}
+        onEnter={onSearch}
+        placeholder={t("install.search.placeholder")}
+      />
+      <div className="lib-chips">
+        {[
+          { key: "", label: t("install.categoryAll") },
+          ...ALL_MODEL_TYPES.map((mt) => ({ key: mt as string, label: mt })),
+        ].map((c) => {
+          const on = (modelType ?? "") === c.key;
+          return (
+            <button
+              type="button"
+              key={c.key || "__all"}
+              className={"lib-chip" + (on ? " on" : "")}
+              aria-pressed={on}
+              onClick={() =>
+                onSelectModelType(
+                  c.key === "" ? undefined : (c.key as MODEL_TYPE),
+                )
+              }
+            >
+              {c.label}
+            </button>
+          );
+        })}
+      </div>
+      <span className="grow" />
+      <BaseModelPicker value={baseModel} onChange={setBaseModel} />
+      <select
+        className="lib-input"
+        aria-label={t("models.lib.sort")}
+        value={sortBy}
+        onChange={(e) => setSortBy(e.target.value)}
       >
-        <Text fontWeight={700} fontSize={"lg"} flexShrink={0}>
-          {t("install.title")}
-        </Text>
-        <Box flex={1} maxW={"640px"}>
-          <SearchInput
-            searchValue={searchQuery}
-            onUpdateSearchValue={setSearchQuery}
-            onEnter={onSearch}
-            placeholder={t("install.search.placeholder")}
-            variant={"filled"}
-            borderRadius={"full"}
-            mb={0}
-          />
-        </Box>
-        <Button
-          size={"sm"}
-          variant={"outline"}
-          flexShrink={0}
-          leftIcon={<IconLink size={16} />}
-          onClick={onCustomUrlInstall}
+        {SORT_OPTIONS.map((o) => (
+          <option key={o.key} value={o.key}>
+            {t("install.sort.label")} {t(o.labelKey)}
+          </option>
+        ))}
+      </select>
+      <select
+        className="lib-input"
+        aria-label={t("install.pageSize.label")}
+        value={pageSize}
+        onChange={(e) => setPageSize(Number(e.target.value))}
+      >
+        {PAGE_SIZE_OPTIONS.map((n) => (
+          <option key={n} value={n}>
+            {t("install.pageSize.label")} {n}
+          </option>
+        ))}
+      </select>
+      <NsfwToggleButton />
+      {/* Mehr: vorerst nur der API-Key - der zieht später in die (dann
+          umgestalteten) Einstellungen um. */}
+      <Menu>
+        <MenuButton
+          as="button"
+          className="lib-btn icon"
+          style={{ width: 30, height: 28 }}
+          aria-label={"more install options"}
         >
-          {t("install.customUrl.button")}
-        </Button>
-        <NsfwToggleButton />
-        {/* ⋯: vorerst nur der API-Key - der zieht später in die (dann
-            umgestalteten) Einstellungen um. */}
-        <Menu>
-          <MenuButton
-            as={IconButton}
-            aria-label={"more install options"}
-            icon={<IconDotsVertical size={18} />}
-            size={"sm"}
-            variant={"ghost"}
-          />
-          <MenuList>
-            <Box px={3} py={1}>
-              <AddApiKeyPopover />
-            </Box>
-          </MenuList>
-        </Menu>
-      </Flex>
-
-      {/* Zeile 2: Kategorie-Tabs */}
-      <Box bg={"galleryActiveBg"} px={2}>
-        <CategoryTabs
-          items={[
-            { key: "", label: t("install.categoryAll") },
-            ...ALL_MODEL_TYPES.map((mt) => ({ key: mt, label: mt })),
-          ]}
-          value={modelType ?? ""}
-          onChange={(key) =>
-            onSelectModelType(key === "" ? undefined : (key as MODEL_TYPE))
-          }
-        />
-      </Box>
-
-      {/* Zeile 3: Sort + Basismodell + Trefferzahl */}
-      <Flex
-        align={"center"}
-        gap={2}
-        px={4}
-        py={2}
-        borderBottom={"1px solid"}
-        borderColor={"rowBorderColor"}
-      >
-        <Menu>
-          <MenuButton
-            as={Box}
-            cursor={"pointer"}
-            px={3}
-            py={1}
-            borderRadius={"md"}
-            border={"1px solid"}
-            borderColor={"rowBorderColor"}
-            _hover={{ bg: "rowHoverBg" }}
-          >
-            <HStack gap={1}>
-              <Text fontSize={"sm"}>
-                {t("install.sort.label")} {sortLabel}
-              </Text>
-              <IconChevronDown size={14} />
-            </HStack>
-          </MenuButton>
-          <MenuList>
-            {SORT_OPTIONS.map((o) => (
-              <MenuItem key={o.key} onClick={() => setSortBy(o.key)}>
-                {t(o.labelKey)}
-              </MenuItem>
-            ))}
-          </MenuList>
-        </Menu>
-
-        <BaseModelPicker value={baseModel} onChange={setBaseModel} />
-
-        <Menu>
-          <MenuButton
-            as={Box}
-            cursor={"pointer"}
-            px={3}
-            py={1}
-            borderRadius={"md"}
-            border={"1px solid"}
-            borderColor={"rowBorderColor"}
-            _hover={{ bg: "rowHoverBg" }}
-          >
-            <HStack gap={1}>
-              <Text fontSize={"sm"}>
-                {t("install.pageSize.label")} {pageSize}
-              </Text>
-              <IconChevronDown size={14} />
-            </HStack>
-          </MenuButton>
-          <MenuList>
-            {PAGE_SIZE_OPTIONS.map((n) => (
-              <MenuItem key={n} onClick={() => setPageSize(n)}>
-                {n} {t("install.pageSize.perPage")}
-              </MenuItem>
-            ))}
-          </MenuList>
-        </Menu>
-
-        <Box flex={1} />
-        <Text fontSize={"sm"} color={"gray.500"}>
-          {loading
-            ? t("install.loading")
-            : `${resultCount} ${t("install.results.onThisPage")}`}
-        </Text>
-      </Flex>
-    </Box>
+          <IconDotsVertical size={16} />
+        </MenuButton>
+        <MenuList>
+          <Box px={3} py={1}>
+            <AddApiKeyPopover />
+          </Box>
+        </MenuList>
+      </Menu>
+      <ViewToggle value={view} onChange={setView} />
+    </LibraryToolbar>
   );
 }

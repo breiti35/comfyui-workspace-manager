@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>Modelle Installiert</title>
+<style>
+*{box-sizing:border-box}
+html,body{width:1440px;height:900px;overflow:hidden;margin:0}
+body{font:13px Inter,ui-sans-serif,system-ui,sans-serif;color:#fff;background:#202020;background-image:radial-gradient(#2c2c2c 1px,transparent 1px);background-size:20px 20px;position:relative;font-variant-numeric:tabular-nums}
+.abs{position:absolute}
+.menu{left:0;top:0;width:1440px;height:28px;background:#353535;border-bottom:1px solid #4e4e4e;color:#b0b0b0;padding:7px 12px;font-size:12px;word-spacing:14px}
+.node{width:220px;height:130px;background:#353535;border:1px solid #4e4e4e;border-radius:4px}
+.node i{display:block;height:22px;background:#292929;border-bottom:1px solid #4e4e4e}
+.top{left:0;top:28px;width:1440px;height:42px;background:#171718;border-bottom:1px solid #3a3a3a;display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:3}
+.g{display:flex;align-items:center;gap:8px}
+.btn{height:28px;padding:0 12px;display:inline-flex;align-items:center;gap:6px;background:#292929;border:1px solid #4e4e4e;border-radius:6px;color:#fff;font-size:13px}
+.btn.on{background:#0b8ce9;border-color:#0b8ce9}
+.dot{width:8px;height:8px;border-radius:50%;background:#e0a030}
+.ring{width:28px;height:28px;border:2px solid #0b8ce9;border-radius:50%;text-align:center;line-height:24px;font-size:12px}
+.shade{left:0;top:70px;width:1440px;height:830px;background:rgba(0,0,0,.55)}
+.win{left:30px;top:80px;width:1380px;height:800px;background:#171718;border:1px solid #4e4e4e;border-radius:8px;display:flex;flex-direction:column;padding:0 16px}
+.head{display:flex;align-items:center;gap:28px;padding:14px 0 12px}
+.plan{width:264px;height:76px;border:1px solid #4e4e4e;border-radius:6px;background:#222;padding:6px 10px;display:flex;flex-direction:column;gap:4px}
+.plan small{font-size:10px;letter-spacing:.14em;color:#8a8a8a}
+.hall{display:flex;gap:4px;align-items:center}
+.hall span{width:26px;height:26px;border:1px solid #4e4e4e;background:#292929;border-radius:3px;text-align:center;line-height:24px;font-size:12px;color:#b0b0b0}
+.hall span.m{background:#0b8ce9;border-color:#0b8ce9;color:#fff;font-weight:700}
+.hall hr{width:1px;height:26px;margin:0 5px;border:0;background:#4e4e4e}
+.lab{display:flex;gap:4px;font-size:9px;color:#8a8a8a;letter-spacing:.1em}
+h1{margin:0 0 2px;font-size:40px;font-weight:700;letter-spacing:-.02em}
+.sub{color:#b0b0b0;font-size:13px}
+.pri{background:#0b8ce9;border-color:#0b8ce9;height:34px;font-weight:600}
+.tools{display:flex;gap:10px;align-items:center;padding:10px 0;border-top:1px solid #3a3a3a;border-bottom:1px solid #3a3a3a}
+.inp{width:230px;height:30px;background:#222;border:1px solid #4e4e4e;border-radius:6px;color:#8a8a8a;padding:6px 10px}
+.chips{display:flex;gap:6px}
+.chip{height:28px;padding:0 10px;display:flex;align-items:center;border:1px solid #4e4e4e;border-radius:14px;color:#b0b0b0;font-size:12px;background:#292929}
+.chip.on{border-color:#0b8ce9;color:#fff;background:#0b8ce933}
+.grid{display:grid;grid-template-columns:repeat(12,112px);padding:12px 0;flex:1;align-content:start}
+.c{display:block;position:relative;height:144px;min-width:0;background:#171718}
+.c p{margin:0;width:112px;height:112px;position:relative;overflow:hidden;background:linear-gradient(var(--a,135deg),var(--c1,#3b4a5a),var(--c2,#1f2a35))}
+.c i{position:absolute;left:4px;top:3px;font:600 9px ui-monospace,Consolas,monospace;color:#fff;background:#171718cc;padding:1px 3px}
+.c b{display:block;font-size:11px;font-weight:600;padding:3px 4px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.c u{display:block;font-size:10px;text-decoration:none;color:#8a8a8a;padding:0 4px;white-space:nowrap;overflow:hidden}
+.c:nth-child(8n+1){--c1:#3b4a5a;--c2:#1f2a35}.c:nth-child(8n+2){--c1:#5a4636;--c2:#2a2220}
+.c:nth-child(8n+3){--c1:#2f4a44;--c2:#1a2826}.c:nth-child(8n+4){--c1:#4a3b5c;--c2:#241d2e}
+.c:nth-child(8n+5){--c1:#55524a;--c2:#2b2a27}.c:nth-child(8n+6){--c1:#3a3f55;--c2:#1e2030}
+.c:nth-child(8n+7){--c1:#4a5a3e;--c2:#232a1f}.c:nth-child(8n){--c1:#5a4a3a;--c2:#2a2420}
+.c:nth-child(3n){--a:160deg}.c:nth-child(5n){--a:110deg}.c:nth-child(7n){--a:200deg}
+.sel{z-index:2}
+.sel::after{content:"";position:absolute;left:-7px;top:-5px;width:128px;height:128px;border:2px solid #0b8ce9;border-radius:52% 48% 55% 45% / 47% 56% 44% 53%;transform:rotate(-5deg);pointer-events:none}
+.sel::before{content:"";position:absolute;left:-3px;top:-8px;width:122px;height:124px;border:1px solid #0b8ce9;border-radius:46% 54% 48% 52% / 55% 45% 52% 48%;transform:rotate(4deg);opacity:.6;pointer-events:none}
+.blur::before{content:"NSFW";position:absolute;inset:0;backdrop-filter:blur(10px);background:#17171899;display:flex;align-items:center;justify-content:center;font-size:11px;z-index:1}
+.bar::after{content:"64 %";position:absolute;left:0;bottom:0;width:64%;height:14px;background:#0b8ce9;font-size:10px;padding:1px 4px}
+.warn p::after{content:"!";position:absolute;right:4px;top:3px;width:14px;height:14px;border-radius:50%;background:#e0a030;color:#171718;font-size:10px;font-weight:700;text-align:center;line-height:14px}
+.foot{height:34px;border-top:1px solid #3a3a3a;display:flex;align-items:center;justify-content:space-between;color:#8a8a8a;font-size:12px}
+</style></head><body>
+<div class="abs menu">Workflow Bearbeiten Ansicht Queue Hilfe</div>
+<div class="abs node" style="left:90px;top:210px"><i></i></div>
+<div class="abs node" style="left:420px;top:330px"><i></i></div>
+<div class="abs node" style="left:1100px;top:250px"><i></i></div>
+<div class="abs top">
+ <div class="g"><span style="font-weight:600;font-size:14px">Porträt-Studie v3</span><span class="dot"></span><span class="btn">Speichern</span><span class="btn">v12</span><span class="btn">Menü ▾</span><span class="btn">▣ Galerie</span></div>
+ <div class="g"><span class="btn on">Bibliothek</span><span class="ring">2</span><span class="btn">⇥</span><span class="btn">⚙</span></div>
+</div>
+<div class="abs shade"></div>
+<div class="abs win">
+ <div class="head">
+  <div class="plan"><small>HALLENPLAN</small>
+   <div class="hall"><span>W</span><span>G</span><span>P</span><hr><span class="m">M</span><span>E</span><hr><span>D</span><span>S</span></div>
+   <div class="lab"><span style="width:86px">ARBEIT</span><span style="width:62px">MODELLE</span><span>SYSTEM</span></div></div>
+  <div style="flex:1"><h1>Installiert</h1><div class="sub">Modelle › Installiert · 412 Modelle · 1,9 TB</div></div>
+  <div class="g"><span class="btn pri">Modell installieren</span><span class="btn" style="width:34px;height:34px;justify-content:center">✕</span></div>
+ </div>
+ <div class="tools"><div class="inp">Modelle durchsuchen…</div>
+  <div class="chips"><span class="chip on">Alle 412</span><span class="chip">Checkpoints 38</span><span class="chip">LoRA 296</span><span class="chip">VAE 6</span><span class="chip">Text-Encoder 9</span><span class="chip">Upscaler 12</span><span class="chip">Diffusion 21</span></div>
+  <span class="btn" style="margin-left:auto">Alle Basismodelle ▾</span><span class="btn">Zuletzt hinzugefügt ▾</span><span class="chips"><span class="chip on">▦</span><span class="chip">☰</span></span></div>
+ <div class="grid">
+  <a class="c"><p><i>M-001</i></p><b>flux1-dev-fp8</b><u>CKPT · 11,9 GB</u></a>
+  <a class="c sel"><p><i>M-002</i></p><b>juggernautXL_v9</b><u>CKPT · 6,6 GB</u></a>
+  <a class="c"><p><i>M-003</i></p><b>wan2.1_t2v_14B_fp8</b><u>DIFF · 14,3 GB</u></a>
+  <a class="c"><p><i>M-004</i></p><b>pixel-art-xl</b><u>LoRA · 163 MB · pixel art</u></a>
+  <a class="c"><p><i>M-005</i></p><b>add-detail-xl</b><u>LoRA · 228 MB</u></a>
+  <a class="c blur"><p><i>M-006</i></p><b>Lustige Katze LoRA</b><u>LoRA · 72 MB · anzeigen</u></a>
+  <a class="c bar"><p><i>M-007</i></p><b>krea2_turbo</b><u>38,2 MB/s · noch 1:42</u></a>
+  <a class="c"><p><i>M-008</i></p><b>ae</b><u>VAE · 335 MB</u></a>
+  <a class="c"><p><i>M-009</i></p><b>t5xxl_fp8_e4m3fn</b><u>TEXT · 4,9 GB</u></a>
+  <a class="c"><p><i>M-010</i></p><b>4x-UltraSharp</b><u>UPSC · 67 MB</u></a>
+  <a class="c warn"><p><i>M-011</i></p><b>old_style_lora</b><u>Nicht auf Civitai</u></a>
+  <a class="c"><p><i>M-012</i></p><b>minimax_h3_video</b><u>DIFF · 18,1 GB</u></a>
+  <a class="c"><p><i>M-013</i></p><b>dreamshaperXL_v2</b><u>CKPT · 6,5 GB</u></a>
+  <a class="c"><p><i>M-014</i></p><b>realisticVisionV60</b><u>CKPT · 2,1 GB</u></a>
+  <a class="c"><p><i>M-015</i></p><b>sd_xl_base_1.0</b><u>CKPT · 6,9 GB</u></a>
+  <a class="c"><p><i>M-016</i></p><b>sd_xl_refiner_1.0</b><u>CKPT · 6,1 GB</u></a>
+  <a class="c"><p><i>M-017</i></p><b>cyberrealisticPony_v8</b><u>CKPT · 6,5 GB</u></a>
+  <a class="c"><p><i>M-018</i></p><b>illustriousXL_v1</b><u>CKPT · 6,9 GB</u></a>
+  <a class="c"><p><i>M-019</i></p><b>ponyDiffusionV6XL</b><u>CKPT · 6,5 GB</u></a>
+  <a class="c"><p><i>M-020</i></p><b>flux1-schnell-fp8</b><u>CKPT · 11,9 GB</u></a>
+  <a class="c"><p><i>M-021</i></p><b>sd3.5_large_fp8</b><u>CKPT · 8,3 GB</u></a>
+  <a class="c"><p><i>M-022</i></p><b>hunyuan_video_t2v</b><u>DIFF · 13,2 GB</u></a>
+  <a class="c"><p><i>M-023</i></p><b>detail-tweaker-xl</b><u>LoRA · 228 MB</u></a>
+  <a class="c"><p><i>M-024</i></p><b>Hands-XL</b><u>LoRA · 144 MB</u></a>
+  <a class="c"><p><i>M-025</i></p><b>film-grain-flux</b><u>LoRA · 76 MB</u></a>
+  <a class="c"><p><i>M-026</i></p><b>anime-lineart-v2</b><u>LoRA · 144 MB</u></a>
+  <a class="c"><p><i>M-027</i></p><b>cinematic-color-flux</b><u>LoRA · 164 MB</u></a>
+  <a class="c"><p><i>M-028</i></p><b>realism-slider-xl</b><u>LoRA · 56 MB</u></a>
+  <a class="c"><p><i>M-029</i></p><b>lcm-lora-sdxl</b><u>LoRA · 394 MB</u></a>
+  <a class="c"><p><i>M-030</i></p><b>watercolor-style-sd15</b><u>LoRA · 36 MB</u></a>
+  <a class="c"><p><i>M-031</i></p><b>ink-sketch-flux</b><u>LoRA · 89 MB</u></a>
+  <a class="c"><p><i>M-032</i></p><b>portrait-skin-xl</b><u>LoRA · 171 MB</u></a>
+  <a class="c"><p><i>M-033</i></p><b>epiNoiseoffset_v2</b><u>LoRA · 18 MB</u></a>
+  <a class="c"><p><i>M-034</i></p><b>vintage-photo-flux</b><u>LoRA · 102 MB</u></a>
+  <a class="c"><p><i>M-035</i></p><b>cyberpunk-neon-xl</b><u>LoRA · 218 MB</u></a>
+  <a class="c"><p><i>M-036</i></p><b>claymation-lora</b><u>LoRA · 144 MB</u></a>
+  <a class="c"><p><i>M-037</i></p><b>mecha-design-xl</b><u>LoRA · 163 MB</u></a>
+  <a class="c"><p><i>M-038</i></p><b>bokeh-pro-flux</b><u>LoRA · 72 MB</u></a>
+  <a class="c"><p><i>M-039</i></p><b>moody-lighting-sd15</b><u>LoRA · 37 MB</u></a>
+  <a class="c"><p><i>M-040</i></p><b>line-art-xl</b><u>LoRA · 112 MB</u></a>
+  <a class="c"><p><i>M-041</i></p><b>cel-shade-flux</b><u>LoRA · 95 MB</u></a>
+  <a class="c"><p><i>M-042</i></p><b>sdxl_vae</b><u>VAE · 335 MB</u></a>
+  <a class="c"><p><i>M-043</i></p><b>vae-ft-mse-840000</b><u>VAE · 335 MB</u></a>
+  <a class="c"><p><i>M-044</i></p><b>clip_l</b><u>TEXT · 246 MB</u></a>
+  <a class="c"><p><i>M-045</i></p><b>umt5_xxl_fp8</b><u>TEXT · 6,7 GB</u></a>
+  <a class="c"><p><i>M-046</i></p><b>RealESRGAN_x4plus</b><u>UPSC · 64 MB</u></a>
+  <a class="c"><p><i>M-047</i></p><b>4x_NMKD-Siax_200k</b><u>UPSC · 67 MB</u></a>
+  <a class="c"><p><i>M-048</i></p><b>controlnet-union-xl</b><u>CTRL · 2,4 GB</u></a>
+ </div>
+ <div class="foot"><span>412 Modelle</span><span>Andocken · Esc zurück</span><span>Hash-Prüfung: 2 ausstehend</span></div>
+</div>
+</body></html>

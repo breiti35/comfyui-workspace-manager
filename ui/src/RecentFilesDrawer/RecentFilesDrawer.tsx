@@ -7,12 +7,9 @@ import {
   MenuList,
   MenuItemOption,
   MenuOptionGroup,
-  Card,
   Box,
   Flex,
-  Heading,
   Tooltip,
-  Divider,
 } from "@chakra-ui/react";
 import { useEffect, useState, useRef, useCallback, useContext } from "react";
 import {
@@ -38,16 +35,16 @@ import { Folder, Workflow } from "../types/dbTypes";
 import MyTagsRow from "./MyTagsRow";
 import ImportFlowsFileInput from "./ImportFlowsFileInput";
 import ItemsList from "./ItemsList";
-import { DRAWER_Z_INDEX } from "../const";
+import { LibraryHeader } from "../library/primitives";
 import { app } from "../utils/comfyapp";
 import { useT } from "../i18n/LanguageContext";
 
 type Props = {
-  onClose: () => void;
+  onClose?: () => void;
   onClickNewFlow: () => void;
 };
 
-export default function RecentFilesDrawer({ onClose, onClickNewFlow }: Props) {
+export default function RecentFilesDrawer({ onClickNewFlow }: Props) {
   const { t } = useT();
   const [currentRenderingData, setCurrentRenderingData] = useState<
     Array<Folder | Workflow>
@@ -149,12 +146,10 @@ export default function RecentFilesDrawer({ onClose, onClickNewFlow }: Props) {
     };
 
     app.canvasEl.addEventListener("drop", handleDrop);
-    app.canvasEl.addEventListener("click", onClose);
     // Cleanup function to remove event listeners
     return () => {
       app.canvasEl.removeEventListener("drop", handleDrop);
-      app.canvasEl.removeEventListener("click", onClose);
-    };
+      };
   }, []);
 
   const onSelect = useCallback((flowId: string, selected: boolean) => {
@@ -201,7 +196,6 @@ export default function RecentFilesDrawer({ onClose, onClickNewFlow }: Props) {
     setSearchValue(newValue);
   };
 
-  const DRAWER_WIDTH = 340;
   return (
     <RecentFilesContext.Provider
       value={{
@@ -216,64 +210,48 @@ export default function RecentFilesDrawer({ onClose, onClickNewFlow }: Props) {
         setRefreshFolderStamp: setRefreshFolderStamp,
       }}
     >
-      <Box style={{ width: DRAWER_WIDTH }}>
-        <Card
-          width={DRAWER_WIDTH}
-          height={"100vh"}
-          p={0}
-          gap={0}
-          position={"absolute"}
-          top={0}
-          left={0}
-          shadow={"xl"}
-          zIndex={DRAWER_Z_INDEX}
+      <div className="lib-section">
+        <Box
+          display={"flex"}
+          flexDirection={"column"}
+          flex={1}
+          minH={0}
+          sx={{
+            "--chakra-colors-rowBorderColor": "var(--lib-line-soft)",
+            "--chakra-colors-galleryPanelBg": "var(--lib-card)",
+          }}
         >
-          {/* Zone 1 - Header: title + primary actions, set off by a divider. */}
-          <Flex
-            alignItems={"center"}
-            justifyContent={"space-between"}
-            px={3}
-            pt={3}
-            pb={2}
-            gap={2}
-          >
-            <Heading
-              size={"sm"}
-              display={"flex"}
-              alignItems={"center"}
-              gap={1.5}
-              noOfLines={1}
-            >
-              <span>🦄</span> {t("drawer.title")}
-            </Heading>
-            <HStack gap={1} flexShrink={0}>
-              <ImportFlowsFileInput />
-              <Tooltip label={t("drawer.openSaveDir")}>
-                <IconButton
-                  aria-label={t("drawer.openSaveDir")}
-                  size={"sm"}
-                  icon={<IconFolder size={18} />}
-                  variant={"ghost"}
-                  onClick={() => openWorkflowsFolder()}
-                />
-              </Tooltip>
-              <Tooltip label={t("drawer.newWorkflow")}>
-                <IconButton
-                  aria-label={t("drawer.newWorkflow")}
-                  size={"sm"}
-                  icon={<IconPlus size={18} />}
-                  variant={"ghost"}
+          <LibraryHeader
+            title={t("drawer.title")}
+            subtitle={String(currentRenderingData.length)}
+            actions={
+              <>
+                <ImportFlowsFileInput />
+                <Tooltip label={t("drawer.openSaveDir")}>
+                  <IconButton
+                    aria-label={t("drawer.openSaveDir")}
+                    size={"sm"}
+                    icon={<IconFolder size={18} />}
+                    variant={"ghost"}
+                    onClick={() => openWorkflowsFolder()}
+                  />
+                </Tooltip>
+                <RecentFilesDrawerMenu />
+                <button
+                  type="button"
+                  className="lib-btn primary"
                   onClick={onClickNewFlow}
-                />
-              </Tooltip>
-              <RecentFilesDrawerMenu />
-            </HStack>
-          </Flex>
-          <Divider borderColor={"rowBorderColor"} />
+                >
+                  <IconPlus size={16} />
+                  {t("drawer.newWorkflow")}
+                </button>
+              </>
+            }
+          />
 
           {/* Zone 2 - Toolbar: tag filter + list actions (select / new folder /
               sort), visually grouped and kept subtle. */}
-          <Box px={3} pt={2}>
+          <Box px={6} pt={2}>
             <MyTagsRow
               selectedTag={selectedTag}
               setSelectedTag={setSelectedTag}
@@ -347,7 +325,7 @@ export default function RecentFilesDrawer({ onClose, onClickNewFlow }: Props) {
           </Box>
 
           {/* Zone 3 - Search. */}
-          <Box px={3} pt={2}>
+          <Box px={6} pt={2}>
             <SearchInput
               searchValue={searchValue}
               onUpdateSearchValue={onUpdateSearchValue}
@@ -358,7 +336,7 @@ export default function RecentFilesDrawer({ onClose, onClickNewFlow }: Props) {
           <Flex
             flex={1}
             minH={0}
-            px={2}
+            px={5}
             pb={2}
             overflowY={"auto"}
             overflowX={"hidden"}
@@ -370,8 +348,8 @@ export default function RecentFilesDrawer({ onClose, onClickNewFlow }: Props) {
           >
             <ItemsList items={currentRenderingData} />
           </Flex>
-        </Card>
-      </Box>
+        </Box>
+      </div>
     </RecentFilesContext.Provider>
   );
 }

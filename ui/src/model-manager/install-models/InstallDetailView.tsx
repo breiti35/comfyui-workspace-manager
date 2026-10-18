@@ -4,9 +4,7 @@ import {
   Button,
   CircularProgress,
   Flex,
-  Heading,
   HStack,
-  IconButton,
   Image,
   Spinner,
   Stack,
@@ -19,7 +17,6 @@ import {
 } from "@chakra-ui/react";
 import { useEffect, useMemo, useState } from "react";
 import {
-  IconArrowLeft,
   IconCopy,
   IconDownload,
   IconExternalLink,
@@ -65,7 +62,6 @@ export default function InstallDetailView({
   installingNames,
   statForName,
   onInstallVersion,
-  onBack,
   targetFolder,
 }: InstallDetailViewProps) {
   const { t } = useT();
@@ -164,24 +160,11 @@ export default function InstallDetailView({
         gap={2}
         px={4}
         py={2}
-        pr={12}
         flexShrink={0}
         bg={"galleryPanelBg"}
         borderBottom={"1px solid"}
         borderColor={"rowBorderColor"}
       >
-        <Tooltip label={t("install.detail.backTooltip")}>
-          <IconButton
-            size={"sm"}
-            variant={"ghost"}
-            icon={<IconArrowLeft size={19} />}
-            aria-label={"back to install list"}
-            onClick={onBack}
-          />
-        </Tooltip>
-        <Heading size={"sm"} noOfLines={1}>
-          {model.name}
-        </Heading>
         <Button
           size={"xs"}
           variant={"ghost"}

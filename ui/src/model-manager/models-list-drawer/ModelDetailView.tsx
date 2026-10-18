@@ -3,22 +3,18 @@ import {
   Box,
   Button,
   Flex,
-  Heading,
   HStack,
-  IconButton,
   Image,
   Spinner,
   Stack,
   Tag,
   Text,
-  Tooltip,
   useToast,
   Wrap,
   WrapItem,
 } from "@chakra-ui/react";
 import { useEffect, useMemo, useState } from "react";
 import {
-  IconArrowLeft,
   IconCopy,
   IconExternalLink,
 } from "@tabler/icons-react";
@@ -52,7 +48,7 @@ interface Props {
   onBack: () => void;
 }
 
-export default function ModelDetailView({ data, onBack }: Props) {
+export default function ModelDetailView({ data }: Props) {
   const { t } = useT();
   const [loading, setLoading] = useState(true);
   const [dbModel, setDbModel] = useState<Model>();
@@ -189,24 +185,11 @@ export default function ModelDetailView({ data, onBack }: Props) {
         gap={2}
         px={4}
         py={2}
-        pr={12}
         flexShrink={0}
         bg={"galleryPanelBg"}
         borderBottom={"1px solid"}
         borderColor={"rowBorderColor"}
       >
-        <Tooltip label={t("models.detail.backTooltip")}>
-          <IconButton
-            size={"sm"}
-            variant={"ghost"}
-            icon={<IconArrowLeft size={19} />}
-            aria-label={t("models.detail.backAria")}
-            onClick={onBack}
-          />
-        </Tooltip>
-        <Heading size={"sm"} noOfLines={1}>
-          {detail?.name ?? data.model_name}
-        </Heading>
         {dbModel?.civitModelID && (
           <Button
             size={"xs"}

@@ -21,7 +21,16 @@ export function currentRoute(stack: WorkspaceRoute[]): WorkspaceRoute {
  * closing once leaves the panel open on the other tab.
  */
 const SIBLING_ROUTES: readonly (readonly WorkspaceRoute[])[] = [
-  ["modelList", "installModels"],
+  // All sections of the library window: switching in its sidebar replaces.
+  [
+    "recentFlows",
+    "gallery",
+    "promptLibrary",
+    "modelList",
+    "installModels",
+    "downloads",
+    "settings",
+  ],
 ];
 
 // Every route is, at minimum, its own sibling (a singleton group) - that's

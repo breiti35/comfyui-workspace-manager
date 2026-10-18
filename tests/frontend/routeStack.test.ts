@@ -62,11 +62,11 @@ test("currentRoute bei leerem Stack faellt defensiv auf root zurueck statt zu we
 
 // --- Der eigentliche Regressionsfall ---------------------------------------
 
-test("popRoute auf einer tieferen Ebene kehrt genau eine Ebene zurueck, nicht bis root (Canvas -> Galerie -> Einstellungen -> Einstellungen schliessen)", () => {
+test("popRoute auf einer tieferen Ebene kehrt genau eine Ebene zurueck, nicht bis root (Canvas -> Galerie -> Teilen -> Teilen schliessen)", () => {
   let stack = initialRouteStack();
   stack = pushRoute(stack, "gallery");
-  stack = pushRoute(stack, "settings");
-  assert.deepEqual(stack, ["root", "gallery", "settings"]);
+  stack = pushRoute(stack, "share");
+  assert.deepEqual(stack, ["root", "gallery", "share"]);
 
   // Nutzer schliesst die oberste Ebene (z.B. per Zurueck-Button).
   const nachSchliessen = popRoute(stack);
@@ -74,7 +74,7 @@ test("popRoute auf einer tieferen Ebene kehrt genau eine Ebene zurueck, nicht bi
   assert.equal(
     currentRoute(nachSchliessen),
     "gallery",
-    "nach dem Schliessen von 'settings' muss 'gallery' wieder obenauf liegen, nicht 'root'",
+    "nach dem Schliessen von 'share' muss 'gallery' wieder obenauf liegen, nicht 'root'",
   );
   assert.deepEqual(nachSchliessen, ["root", "gallery"]);
 });
@@ -156,10 +156,10 @@ test("zweimal dieselbe Route oeffnen laesst den Stack nicht wachsen (z.B. versio
 });
 
 test("pushRoute haengt eine neue, noch nicht enthaltene Route an", () => {
-  const stack: WorkspaceRoute[] = ["root", "recentFlows"];
-  const result = pushRoute(stack, "gallery");
+  const stack: WorkspaceRoute[] = ["root", "gallery"];
+  const result = pushRoute(stack, "versionHistory");
 
-  assert.deepEqual(result, ["root", "recentFlows", "gallery"]);
+  assert.deepEqual(result, ["root", "gallery", "versionHistory"]);
   assert.notStrictEqual(result, stack);
 });
 
@@ -221,11 +221,11 @@ test("routeStackSignature fuer [root] liefert schlicht 'root'", () => {
 test("eine tiefe Kette vorwaerts und wieder vollstaendig zurueck endet exakt bei [root]", () => {
   let stack = initialRouteStack();
   stack = pushRoute(stack, "gallery");
-  stack = pushRoute(stack, "recentFlows");
+  stack = pushRoute(stack, "versionHistory");
   stack = popRoute(stack); // recentFlows schliessen
-  stack = pushRoute(stack, "settings");
-  stack = pushRoute(stack, "promptLibrary");
-  assert.deepEqual(stack, ["root", "gallery", "settings", "promptLibrary"]);
+  stack = pushRoute(stack, "share");
+  stack = pushRoute(stack, "saveAsModal");
+  assert.deepEqual(stack, ["root", "gallery", "share", "saveAsModal"]);
 
   stack = popRoute(stack);
   stack = popRoute(stack);
@@ -286,10 +286,10 @@ test("liegt das Geschwister tiefer im Stack (z.B. unter gallery), wird auf desse
 
 test("die Geschwister-Regel greift nicht bei fremden Routen - diese stapeln weiterhin normal", () => {
   const stack: WorkspaceRoute[] = ["root", "gallery"];
-  const result = pushRoute(stack, "settings");
+  const result = pushRoute(stack, "share");
 
-  assert.deepEqual(result, ["root", "gallery", "settings"]);
-  assert.equal(result.length, 3, "settings ist kein Geschwister von gallery und muss sich stapeln");
+  assert.deepEqual(result, ["root", "gallery", "share"]);
+  assert.equal(result.length, 3, "share ist kein Geschwister von gallery und muss sich stapeln");
 });
 
 test("pushRoute derselben Route wie oben liefert weiterhin die unveraenderte Eingabe-Referenz, auch fuer Geschwister-Routen (eine Route ist ihr eigenes Geschwister)", () => {
@@ -316,4 +316,16 @@ test('pushRoute(stack, "root") bleibt ein voller Reset, auch wenn ein Geschwiste
 
   assert.deepEqual(result, ["root"]);
   assert.equal(result.length, 1);
+});
+
+
+test("alle Bibliotheks-Bereiche sind Geschwister: Wechsel ersetzt, stapelt nicht", () => {
+  let stack = initialRouteStack();
+  for (const r of ["recentFlows", "gallery", "promptLibrary", "modelList", "installModels", "downloads", "settings"] as WorkspaceRoute[]) {
+    stack = pushRoute(stack, r);
+    assert.deepEqual(stack, ["root", r]);
+  }
+  // ein Dialog darueber stapelt weiterhin
+  stack = pushRoute(stack, "versionHistory");
+  assert.deepEqual(stack, ["root", "settings", "versionHistory"]);
 });

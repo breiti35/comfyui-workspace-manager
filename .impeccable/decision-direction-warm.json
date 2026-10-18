@@ -1,0 +1,57 @@
+{
+  "title": "Gestaltungsrichtung – helle, warme Varianten",
+  "question": "Leitsystem und Karteikatalog in hell und warm, dazu eine Mischung aus beiden. Wähle eine Karte oder lenke weiter.",
+  "options": [
+    {
+      "id": "mix-warm",
+      "kind": "assigned",
+      "label": "Leitsystem × Kartei, hell-warm",
+      "kicker": "MISCHUNG",
+      "lineage": "Leitsystem-Kennzeichen und Kopfband, Karteikarten mit Signaturzeile",
+      "thesis": "Orientierung wie im Leitsystem, Bestände wie im Zettelkatalog: Kennzeichen zeigen, wo du bist, Signaturzeilen sagen, was du vor dir hast.",
+      "palette": ["#2a2622", "#e9e6e1", "#f7f5f2", "#c77a12", "#6f7a3a"],
+      "materials": ["Kennzeichen-Scheiben", "dunkles Kopfband", "Karten mit Signaturzeile", "Reiter-Seitenleiste"],
+      "viewport": "Reiter-Seitenleiste mit Kennzeichen, warm-dunkles Kopfband, helle Karten mit Signaturzeile in Tabellenziffern.",
+      "risk": "Zwei Erkennungsmerkmale gleichzeitig; sie müssen sich die Aufgabe teilen (Kennzeichen = Ort, Signatur = Ding), sonst wird es unruhig.",
+      "html": ".impeccable/mocks/decision/mix-warm.html"
+    },
+    {
+      "id": "leitsystem-warm",
+      "kind": "grounded",
+      "label": "Leitsystem, hell-warm",
+      "lineage": "Verkehrs-Leitsysteme der 1960er/70er",
+      "thesis": "Jeder Bereich hat ein festes Kennzeichen; das warm-dunkle Kopfband sagt dir immer, wo du bist.",
+      "palette": ["#2a2622", "#e9e6e1", "#f7f5f2", "#c77a12"],
+      "materials": ["Kennzeichen-Scheiben", "dunkles Kopfband", "1-px-Linien, ein Radius"],
+      "viewport": "Helles Fenster, warm-dunkles Kopfband „M Modelle · Installiert“, Kennzeichen in Seitenleiste und Topbar.",
+      "risk": "Helles Fenster neben dem dunklen Editor ist ein starker Helligkeitssprung.",
+      "html": ".impeccable/mocks/decision/leitsystem-warm.html"
+    },
+    {
+      "id": "kartei-warm",
+      "kind": "grounded",
+      "label": "Karteikatalog, hell-warm",
+      "lineage": "Bibliotheks-Zettelkataloge und Findbücher",
+      "thesis": "Jedes Ding eine Karteikarte mit Signatur; die Seitenleiste ist der Schubladenschrank mit Reitern.",
+      "palette": ["#dedad3", "#f7f5f2", "#24211e", "#e8c27a", "#c77a12"],
+      "materials": ["Reiter-Trennkarten", "Signaturzeile", "linierte Kopfzone"],
+      "viewport": "Schubladen-Seitenleiste mit Ocker-Reitern, Findbuch-Kopf, Karten mit Signaturzeile oben.",
+      "risk": "Wörtlichste Lesart von „Bibliothek“; warm und hell rückt sie nah an den Papier-Look.",
+      "html": ".impeccable/mocks/decision/kartei-warm.html"
+    }
+  ],
+  "reroll": {"registers": ["safer", "bolder"]},
+  "buildPath": {"value": "code", "toggle": false},
+  "canon": true,
+  "canonCard": {
+    "kind": "canon",
+    "label": "Wie ComfyUIs eigene Panels",
+    "thesis": "Die Optik von ComfyUIs Seitenleisten, sauber durchgezogen.",
+    "palette": ["#171718", "#262729", "#ffffff", "#0b8ce9"],
+    "materials": ["abgerundete Karten", "Reiter oben"],
+    "viewport": "Reiter oben, Suchfeld, Kartenraster mit runden Ecken.",
+    "risk": "Fügt sich nahtlos ein, wirkt aber wie ein weiteres ComfyUI-Panel ohne eigene Ordnung.",
+    "html": ".impeccable/mocks/decision/canon.html"
+  },
+  "steer": true
+}

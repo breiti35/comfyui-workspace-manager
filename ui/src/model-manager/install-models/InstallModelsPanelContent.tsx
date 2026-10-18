@@ -1,13 +1,10 @@
+import { useDisclosure, useToast } from "@chakra-ui/react";
 import {
-  Box,
-  Button,
-  Flex,
-  Grid,
-  Text,
-  useDisclosure,
-  useToast,
-} from "@chakra-ui/react";
-import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
+  IconArrowLeft,
+  IconChevronLeft,
+  IconChevronRight,
+  IconLink,
+} from "@tabler/icons-react";
 import {
   forwardRef,
   useCallback,
@@ -36,11 +33,16 @@ import {
 import { getModelFromCivitAPi } from "./util/getModelFromCivitAPI";
 import { userSettingsTable } from "../../db-tables/WorkspaceDB";
 import { indexdb } from "../../db-tables/indexdb";
-import { hideScrollbarSx } from "../utils";
 import { useDownloads } from "./useDownloads";
 import { markDownloadStarted } from "./downloadStore";
 import type { CivitiModel, CivitiModelVersion } from "../types";
 import { useT } from "../../i18n/LanguageContext";
+import type { ModelsView } from "../components/LibToolbarParts";
+import {
+  LibraryFooter,
+  LibraryHeader,
+  LibrarySelectionBar,
+} from "../../library/primitives";
 import { createSequenceGuard } from "../../utils/requestSequence";
 import { resolveModelFolder } from "../../Api";
 import { MODELS_DB_SYNCED_EVENT } from "../syncModelsToDb";
@@ -74,6 +76,7 @@ const InstallModelsPanelContent = forwardRef<
     modelTypeProp,
   );
   const [searchQuery, setSearchQuery] = useState(searchQueryProp);
+  const [view, setView] = useState<ModelsView>("grid");
   const [sortBy, setSortBy] = useState(SORT_OPTIONS[0].key);
   const [baseModel, setBaseModel] = useState("");
   const [pageSize, setPageSize] = useState(25);
@@ -373,19 +376,56 @@ const InstallModelsPanelContent = forwardRef<
   return (
     <>
       {detailItem ? (
-        <Box flex={1} minHeight={0}>
-          <InstallDetailView
-            model={detailItem}
-            installedVersionIds={installedVersionIds}
-            installingNames={pending}
-            statForName={statFor}
-            onInstallVersion={installVersion}
-            onBack={closeDetail}
-            targetFolder={targetFolderFor(detailItem)}
+        <>
+          <LibraryHeader
+            title={detailItem.name ?? ""}
+            back={
+              <div className="lib-crumb">
+                <button type="button" className="lib-btn" onClick={closeDetail}>
+                  <IconArrowLeft size={14} />
+                  {t("models.lib.back")}
+                </button>
+                <span>
+                  {t("models.lib.breadcrumbRoot")} › {detailItem.name}
+                </span>
+              </div>
+            }
           />
-        </Box>
+          <div style={{ flex: 1, minHeight: 0 }}>
+            <InstallDetailView
+              model={detailItem}
+              installedVersionIds={installedVersionIds}
+              installingNames={pending}
+              statForName={statFor}
+              onInstallVersion={installVersion}
+              onBack={closeDetail}
+              targetFolder={targetFolderFor(detailItem)}
+            />
+          </div>
+        </>
       ) : (
         <>
+          <LibraryHeader
+            title={t("models.lib.discoverTitle")}
+            subtitle={
+              loading
+                ? t("install.loading")
+                : `${models.length} ${t("install.results.onThisPage")}`
+            }
+            actions={
+              <button
+                type="button"
+                className="lib-btn primary"
+                onClick={() => {
+                  setPendingInstallCategory(undefined);
+                  onOpen();
+                }}
+              >
+                <IconLink size={16} />
+                {t("install.customUrl.button")}
+              </button>
+            }
+          />
           <InstallToolbar
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
@@ -398,26 +438,12 @@ const InstallModelsPanelContent = forwardRef<
             setBaseModel={setBaseModel}
             pageSize={pageSize}
             setPageSize={setPageSize}
-            onCustomUrlInstall={() => {
-              setPendingInstallCategory(undefined);
-              onOpen();
-            }}
-            resultCount={models.length}
-            loading={loading}
+            view={view}
+            setView={setView}
           />
-          <Box
-            ref={gridScrollRef}
-            flex={1}
-            minHeight={0}
-            overflowY={"auto"}
-            px={4}
-            py={4}
-            sx={hideScrollbarSx}
-          >
-            <Grid
-              templateColumns={"repeat(auto-fill, minmax(190px, 1fr))"}
-              gap={4}
-            >
+          <LibrarySelectionBar />
+          <div ref={gridScrollRef} className="lib-scroll">
+            <div className={"lib-grid" + (view === "compact" ? " compact" : "")}>
               {models.map((model) => {
                 const latestFile = getFileEssential(
                   model.modelVersions?.[0],
@@ -440,49 +466,45 @@ const InstallModelsPanelContent = forwardRef<
                   />
                 );
               })}
-            </Grid>
-          </Box>
+            </div>
+          </div>
 
-          {/* Blätter-Leiste: cursor-basiert, daher nur Vor/Zurück +
+          {/* Blätter-Leiste im Fuß: cursor-basiert, daher nur Vor/Zurück +
               laufender Seitenzähler (keine Gesamtzahl von der API). */}
-          <Flex
-            flexShrink={0}
-            align={"center"}
-            justify={"center"}
-            gap={4}
-            px={4}
-            py={2}
-            borderTop={"1px solid"}
-            borderColor={"rowBorderColor"}
-            bg={"galleryPanelBg"}
-          >
-            <Button
-              size={"sm"}
-              variant={"ghost"}
-              leftIcon={<IconChevronLeft size={16} />}
-              isDisabled={pageNumber <= 1 || loading}
-              onClick={goPrev}
-            >
-              {t("install.pagination.prev")}
-            </Button>
-            <Text
-              fontSize={"sm"}
-              color={"gray.400"}
-              minW={"64px"}
-              textAlign={"center"}
-            >
-              {t("install.pagination.page")} {pageNumber}
-            </Text>
-            <Button
-              size={"sm"}
-              variant={"ghost"}
-              rightIcon={<IconChevronRight size={16} />}
-              isDisabled={!nextCursor || loading}
-              onClick={goNext}
-            >
-              {t("install.pagination.next")}
-            </Button>
-          </Flex>
+          <LibraryFooter
+            left={
+              loading
+                ? t("install.loading")
+                : `${models.length} ${t("install.results.onThisPage")}`
+            }
+            right={
+              <span
+                style={{ display: "inline-flex", alignItems: "center", gap: 8 }}
+              >
+                <button
+                  type="button"
+                  className="lib-btn sm"
+                  disabled={pageNumber <= 1 || loading}
+                  onClick={goPrev}
+                >
+                  <IconChevronLeft size={14} />
+                  {t("install.pagination.prev")}
+                </button>
+                <span>
+                  {t("install.pagination.page")} {pageNumber}
+                </span>
+                <button
+                  type="button"
+                  className="lib-btn sm"
+                  disabled={!nextCursor || loading}
+                  onClick={goNext}
+                >
+                  {t("install.pagination.next")}
+                  <IconChevronRight size={14} />
+                </button>
+              </span>
+            }
+          />
         </>
       )}
       <ChooseFolder
