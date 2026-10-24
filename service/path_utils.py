@@ -183,6 +183,21 @@ def atomic_write_text(path, text):
         raise
 
 
+def other_file_exists(src, dst):
+    """True if `dst` exists and is a different file than `src`.
+
+    os.rename silently replaces an existing target on POSIX, so callers check
+    first. samefile() keeps case-only renames ("a.json" -> "A.json") working
+    on case-insensitive filesystems, where dst "exists" but is src itself.
+    """
+    if not os.path.lexists(dst):
+        return False
+    try:
+        return not os.path.samefile(src, dst)
+    except OSError:
+        return True
+
+
 def bad_path_response(error):
     """HTTP 400 in the JSON shape the frontend already understands: every
     caller checks `result.error` and alerts/logs it."""

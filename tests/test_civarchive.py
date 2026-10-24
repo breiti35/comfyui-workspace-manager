@@ -237,3 +237,35 @@ def test_fehlanzeige_laeuft_frueher_ab_als_ein_treffer():
     """Unbekannte Hashes sollen es gelegentlich erneut versuchen,
     Treffer nicht."""
     assert civarchive._FAILURE_TTL < civarchive._SUCCESS_TTL
+
+
+def _hash_route(hash_wert):
+    from aiohttp import web
+    from aiohttp.test_utils import TestClient, TestServer
+
+    async def run():
+        app = web.Application()
+        app.router.add_get("/h", civarchive.civarchive_by_hash)
+        async with TestClient(TestServer(app)) as client:
+            resp = await client.get("/h", params={"hash": hash_wert})
+            return resp.status
+
+    return asyncio.run(run())
+
+
+def test_hash_route_lehnt_ungueltigen_hash_mit_400_ab(monkeypatch):
+    gerufen = []
+    monkeypatch.setattr(civarchive, "_lookup_civarchive", lambda h: gerufen.append(h))
+    for schlecht in ["../x", "abc", "g" * 64, HASH + "0", "a/b" + "0" * 61]:
+        assert _hash_route(schlecht) == 400, schlecht
+    assert gerufen == []
+
+
+def test_hash_route_cache_ist_begrenzt(monkeypatch):
+    monkeypatch.setattr(civarchive, "_cache", {})
+    monkeypatch.setattr(civarchive, "_MAX_CACHE_ENTRIES", 3)
+    monkeypatch.setattr(civarchive, "_lookup_civarchive", lambda h: None)
+    hashes = [f"{i:064x}" for i in range(5)]
+    for h in hashes:
+        assert _hash_route(h) == 200
+    assert list(civarchive._cache) == hashes[-3:]

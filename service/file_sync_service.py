@@ -10,7 +10,7 @@ from pathlib import Path
 from .twoway_sync_folder_service import *
 import shutil
 from .scan_my_workflows_folder import *
-from .path_utils import safe_join, safe_name, is_within, check_browse_allowed, UnsafePathError, bad_path_response
+from .path_utils import safe_join, safe_name, is_within, check_browse_allowed, UnsafePathError, bad_path_response, other_file_exists
 
 
 def _wf_path(user_path):
@@ -73,6 +73,8 @@ def rename_file_sync(reqJson):
     # turn the rename into a move anywhere on disk.
     new_name = safe_name(reqJson.get('newName'))
     new_path = Path(_wf_path(str(current_path.parent / new_name)))
+    if other_file_exists(current_path, new_path):
+        return {"success": False, "error": f"Target already exists: {new_name}"}
     try:
         Path(current_path).rename(new_path)
         return {"success": True}
@@ -402,6 +404,7 @@ async def save_images(request):
         safe_dir.mkdir(parents=True, exist_ok=True)
 
     files_saved = []
+    saved_names = []
     errors = []
     async for part in reader:
         if not part.name or not part.name.startswith('images'):
@@ -421,6 +424,21 @@ async def save_images(request):
         except UnsafePathError as e:
             errors.append(str(e))
             continue
+        # Never overwrite another workflow's cover: pick a free name
+        # (name-1.png, name-2.png, ...). Reserve it with an exclusive create
+        # so two concurrent uploads cannot pick the same one.
+        base, ext = os.path.splitext(filename)
+        counter = 0
+        while True:
+            candidate = filename if counter == 0 else f"{base}-{counter}{ext}"
+            file_path = safe_join(safe_dir, candidate, allow_absolute=False)
+            try:
+                with open(file_path, 'xb'):
+                    pass
+                break
+            except FileExistsError:
+                counter += 1
+        saved_name = os.path.basename(file_path)
 
         data = bytearray()
         too_big = False
@@ -434,12 +452,18 @@ async def save_images(request):
                 break
         if too_big:
             errors.append(f"{filename}: larger than {MAX_IMAGE_UPLOAD_BYTES // (1024 * 1024)} MB")
+            try:
+                os.remove(file_path)  # drop the reserved empty file
+            except OSError:
+                pass
             continue
         # One thread hop for the whole file instead of one per 8 KB chunk.
         await asyncio.to_thread(_write_bytes, file_path, bytes(data))
         files_saved.append(str(file_path))
+        saved_names.append(saved_name)
 
-    result = {"imgPaths": files_saved}
+    # imgPaths keeps its format; savedNames holds the names actually used.
+    result = {"imgPaths": files_saved, "savedNames": saved_names}
     if errors:
         result["errors"] = errors
     status = 400 if errors and not files_saved else 200

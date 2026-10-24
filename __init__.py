@@ -34,7 +34,7 @@ from .service.file_sync_service import *
 from .service.node_service import *
 from .service.setting_service import *
 from .service.model_manager.model_installer import *
-from .service.path_utils import safe_join, UnsafePathError, bad_path_response, browse_roots, check_browse_allowed
+from .service.path_utils import safe_join, UnsafePathError, bad_path_response, browse_roots, check_browse_allowed, other_file_exists
 try:
     from send2trash import send2trash
 except ImportError:
@@ -171,6 +171,9 @@ async def rename_file(request):
     def sync_rename():
         if not os.path.exists(file_path):
             return False
+        # os.rename would silently replace an existing target on Linux.
+        if other_file_exists(file_path, new_name):
+            return None
         os.rename(file_path, new_name)
         return True
 
@@ -178,6 +181,8 @@ async def rename_file(request):
         renamed = await asyncio.to_thread(sync_rename)
     except OSError as e:
         return web.Response(text=f"Rename failed: {e}", status=500)
+    if renamed is None:
+        return bad_path_response("Target already exists")
     if renamed:
         return web.Response(text="File renamed successfully")
     return web.Response(text="File not found", status=404)

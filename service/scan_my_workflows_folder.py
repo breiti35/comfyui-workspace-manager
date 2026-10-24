@@ -9,7 +9,7 @@ from threading import Lock
 import server
 import uuid
 from .setting_service import get_my_workflows_dir
-from .path_utils import safe_join, is_within, UnsafePathError, bad_path_response
+from .path_utils import safe_join, is_within, UnsafePathError, bad_path_response, atomic_write_text
 
 @server.PromptServer.instance.routes.get('/workspace/get_os')
 async def scan_my_workflows_files(request):
@@ -87,8 +87,7 @@ def file_handle(name, fileList, file_path, metaInfoOnly):
         if 'workspace_info' not in json_data['extra']:
             json_data['extra']['workspace_info'] = {}
         json_data['extra']['workspace_info']['id'] = workflow_id
-        with open(file_path, 'w', encoding='utf-8') as f:
-            json.dump(json_data, f, ensure_ascii=False, indent=4)
+        atomic_write_text(file_path, json.dumps(json_data, ensure_ascii=False, indent=4))
     
     fileInfo = {
             'name': name,

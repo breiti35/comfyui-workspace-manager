@@ -36,6 +36,9 @@ _cache_lock = threading.Lock()
 _SUCCESS_TTL = 7 * 24 * 60 * 60  # 7 days
 _FAILURE_TTL = 6 * 60 * 60       # 6 hours
 
+_MAX_CACHE_ENTRIES = 512
+_SHA256_RE = re.compile(r"[0-9a-f]{64}")
+
 _USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
@@ -101,6 +104,9 @@ async def civarchive_by_hash(request):
     if not file_hash:
         return web.json_response({})
     file_hash = file_hash.strip().lower()
+    # The hash goes into the upstream URL path - only a real SHA256 is allowed.
+    if not _SHA256_RE.fullmatch(file_hash):
+        return web.json_response({"error": "hash must be 64 hex characters"}, status=400)
 
     now = time.time()
     with _cache_lock:
@@ -118,4 +124,7 @@ async def civarchive_by_hash(request):
 
     with _cache_lock:
         _cache[file_hash] = (now, result if result else None)
+        while len(_cache) > _MAX_CACHE_ENTRIES:
+            # dicts keep insertion order: first key = oldest entry
+            _cache.pop(next(iter(_cache)))
     return web.json_response(result or {})

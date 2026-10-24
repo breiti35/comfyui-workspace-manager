@@ -546,3 +546,63 @@ def test_workflows_dir_wurzel_und_systemordner_verboten(tmp_path):
     assert not is_forbidden_workflows_dir(str(tmp_path))
     if os.path.exists("/etc"):
         assert is_forbidden_workflows_dir("/etc")
+
+
+# ---------------------------------------------------------------------------
+# Ueberschreib-Schutz (rename, Cover-Upload) und atomares Zurueckschreiben
+# ---------------------------------------------------------------------------
+
+def test_file_rename_ueberschreibt_vorhandenes_ziel_nicht(workflows):
+    (workflows["wf"] / "ziel.json").write_text('{"alt": 1}', encoding="utf-8")
+    status, text = _call(
+        [("POST", "/r", file_sync_service.rename_file)], "POST", "/r",
+        json={"path": "flow.json", "newName": "ziel.json"},
+    )
+    assert json.loads(text)["success"] is False
+    assert (workflows["wf"] / "flow.json").exists()
+    assert (workflows["wf"] / "ziel.json").read_text(encoding="utf-8") == '{"alt": 1}'
+
+
+def test_rename_file_route_ueberschreibt_vorhandenes_ziel_nicht(root_wf, workflows):
+    (workflows["wf"] / "ziel.json").write_text('{"alt": 1}', encoding="utf-8")
+    status, text = _call(
+        [("POST", "/rn", root_wf.rename_file)], "POST", "/rn",
+        json={"file_path": "flow.json", "new_file_path": "ziel.json"},
+    )
+    assert status == 400 and json.loads(text)["success"] is False
+    assert (workflows["wf"] / "flow.json").exists()
+    assert (workflows["wf"] / "ziel.json").read_text(encoding="utf-8") == '{"alt": 1}'
+
+
+def test_other_file_exists_gleiche_datei_ist_kein_konflikt(tmp_path):
+    a = tmp_path / "a.json"
+    a.write_text("x", encoding="utf-8")
+    assert not path_utils.other_file_exists(str(a), str(a))
+    assert not path_utils.other_file_exists(str(a), str(tmp_path / "frei.json"))
+    (tmp_path / "b.json").write_text("y", encoding="utf-8")
+    assert path_utils.other_file_exists(str(a), str(tmp_path / "b.json"))
+
+
+def test_scan_schreibt_id_atomar_und_utf8_zurueck(tmp_path, monkeypatch):
+    aufrufe = []
+    echtes = scan_my_workflows_folder.atomic_write_text
+    monkeypatch.setattr(
+        scan_my_workflows_folder, "atomic_write_text",
+        lambda p, t: (aufrufe.append(p), echtes(p, t))[1],
+    )
+    datei = tmp_path / "ü.json"
+    datei.write_text(json.dumps({"extra": {"workspace_info": {}}, "n": "ä"}), encoding="utf-8")
+    scan_my_workflows_folder.file_handle("ü.json", [], str(datei), False)
+    assert aufrufe == [str(datei)]
+    geladen = json.loads(datei.read_text(encoding="utf-8"))
+    assert "id" in geladen["extra"]["workspace_info"] and geladen["n"] == "ä"
+
+
+def test_bild_upload_ueberschreibt_gleichnamiges_bild_nicht(output_dir):
+    _upload([("cover.png", b"erstes")])
+    status, text = _upload([("cover.png", b"zweites")])
+    assert status == 200
+    ziel = output_dir / "workspace_manager"
+    assert (ziel / "cover.png").read_bytes() == b"erstes"
+    assert (ziel / "cover-1.png").read_bytes() == b"zweites"
+    assert json.loads(text)["savedNames"] == ["cover-1.png"]
