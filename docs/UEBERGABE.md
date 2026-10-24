@@ -1,19 +1,18 @@
 # Übergabe – Workspace-Manager
 
-## Hier weitermachen (Stand 2026-10-24 abends)
+## Hier weitermachen (Stand 2026-10-24 spät)
 
-**Gepusht:** `v2.1.2` (= `60def60`): Modell löschen, Medien-URLs kodiert, `myWorkflowsDir` kein Systemordner,
-Frontend-Fixes. Runpod-Auftrag für v2.1.2 an den User übergeben (Images `v14`/`v7` vorgeschlagen).
+**Release `v2.2.0` gepusht** (`073fd81` + Doku). Enthält v2.1.3 (SSRF-Schutz, Umbenennen ohne Überschreiben, atomarer
+Scan, eindeutige Cover-Namen, civarchive-Prüfung, UI-Restpunkte) und neu: Modell-Notizen (Fahrplan 6, serverseitig
+`model_notes.json` neben dem Hash-Cache), Galerie-Suche über Prompt/Modell/LoRA + Favoriten (4), Mehrfachauswahl mit
+Entfernen/Herunterladen/Favorit (7). Bilder speichern jetzt den Prompt-Graph (`Media.workflowJSON`, aus `/queue`);
+ältere Bilder nur per Dateiname suchbar.
+Rauchtest Routen ok; NICHT im Browser durchgeklickt: Modell löschen, Notiz-Feld, Galerie-Suche/Favoriten/Auswahl.
+Runpod: Auftrag für `WORKSPACE_MANAGER_REF=v2.2.0` an den User übergeben.
 
-**Lokal committet, NICHT gepusht (wartet auf OK des Users → dann Tag `v2.1.3`):**
-`2a32889` SSRF-Schutz Downloads (abschaltbar: `WORKSPACE_MANAGER_ALLOW_PRIVATE_DOWNLOADS=1`), `eeb5860` Umbenennen ohne
-Überschreiben / atomarer Scan / eindeutige Cover-Namen (`savedNames`) / civarchive-Hash geprüft, `ba7c79e` + `78a6f86`
-UI-Restpunkte (Galerie-Detail, Download-Fehler schließbar, Clipboard, Listener, aria-label, toter Code) + dist.
-Nicht in ComfyUI durchgeklickt: Modell löschen, Cover-Upload mit gleichem Namen.
-
-**Bewusst offen (mit User klären):** Hash-Cache ohne mtime/Größe (Umstellung würde auf Runpod alles neu hashen);
-Client-Hash beim Install ungeprüft gecacht; `/workspace/get_settings` liefert den Civitai-Key; `.zip`-Downloads.
-Fahrplan: Nr. 4 Galerie-Suche/Favoriten, 6 Modell-Notizen, 7 Galerie-Mehrfachauswahl, 13 Recipe-System.
+**Offen (mit User klären):** Hash-Cache ohne mtime/Größe (Umstellung hasht auf Runpod alles neu); Client-Hash beim
+Install ungeprüft; `/workspace/get_settings` liefert den Civitai-Key; `.zip`-Downloads; Notiz-Symbol auf Modellkarte.
+Fahrplan: nur noch Nr. 13 Recipe-System (groß, erst Plan vorlegen).
 
 ## Vorheriger Stand (2026-10-24, gepusht)
 

@@ -26,7 +26,7 @@ dann Mittelgroßes, zuletzt der große Brocken. Nummerierung = geplante Reihenfo
      mit Ein-Klick-Kopieren (`IconCopy` + Toast) angezeigt. War bereits beim
      Bau der Panels miterledigt. Killer-Feature des LoRA Managers ✓.
 
-4. **Galerie-Suche über echte Metadaten + Favoriten/Bewertung**
+4. **Galerie-Suche über echte Metadaten + Favoriten/Bewertung** ✅ **fertig** *(2026-10-24, v2.2.0; Suche greift für Bilder ab v2.2.0, ältere nur per Dateiname)*
    - Suche nach Prompt / Modell / LoRA (statt nur Dateiname + rohes JSON).
    - Favorit/Stern bzw. Bewertung je Bild, plus Filter darauf.
 
@@ -41,10 +41,10 @@ dann Mittelgroßes, zuletzt der große Brocken. Nummerierung = geplante Reihenfo
      Video landet komplett im RAM. Dabei eine Lücke in der Pfadprüfung
      geschlossen (`os.path.isabs` statt nur führendes `/`).
 
-6. **Editierbare Modell-Notizen**
+6. **Editierbare Modell-Notizen** ✅ **fertig** *(2026-10-24, v2.2.0; serverseitig `model_notes.json` neben dem Hash-Cache)*
    - Freitext-Notiz je Modell (persistiert), im Detail sichtbar/bearbeitbar.
 
-7. **Galerie: Mehrfachauswahl + Bulk-Aktionen**
+7. **Galerie: Mehrfachauswahl + Bulk-Aktionen** ✅ **fertig** *(2026-10-24, v2.2.0; ohne Drag auf Canvas)*
    - Mehrere Bilder wählen → gemeinsam herunterladen/entfernen; evtl. Drag auf Canvas.
 
 8. **Virtualisiertes Galerie-Grid** *(Performance)* ✅ **fertig** *(2026-07-30, Commit 870b2d4)*
