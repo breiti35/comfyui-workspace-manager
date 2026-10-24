@@ -1,5 +1,6 @@
 import { viewMediaUrl } from "../../utils";
 import { useContext } from "react";
+import { GalleryContext } from "../GalleryContext";
 import {
   Box,
   Button,
@@ -11,6 +12,7 @@ import {
   Tooltip,
 } from "@chakra-ui/react";
 import {
+  IconCheck,
   IconDownload,
   IconStar,
   IconStarFilled,
@@ -45,6 +47,8 @@ export default function GalleryMediaItem({
   const { curFlowID, loadFilePath } = useContext(WorkspaceContext);
   const { showDialog } = useDialog();
   const isFav = useGalleryFavorites().has(media.id);
+  const { selectMode, selectedIds, toggleSelect } = useContext(GalleryContext);
+  const isSelected = selectMode && selectedIds.has(media.id);
   if (media.localPath == null || curFlowID == null) {
     return null;
   }
@@ -85,7 +89,12 @@ export default function GalleryMediaItem({
       sx={{ aspectRatio: "1 / 1" }}
       className={"lib-gal-tile"}
       cursor={"pointer"}
-      onClick={() => onClickMedia(media)}
+      outline={isSelected ? "3px solid var(--lib-amber)" : undefined}
+      outlineOffset={"-3px"}
+      aria-pressed={selectMode ? isSelected : undefined}
+      onClick={() =>
+        selectMode ? toggleSelect(media.id) : onClickMedia(media)
+      }
     >
       <MediaPreview
         mediaLocalPath={localPath}
@@ -99,8 +108,28 @@ export default function GalleryMediaItem({
         }}
       />
 
+      {selectMode && (
+        <Flex
+          position={"absolute"}
+          top={2}
+          left={2}
+          w={"22px"}
+          h={"22px"}
+          align={"center"}
+          justify={"center"}
+          borderRadius={"full"}
+          border={"2px solid white"}
+          bg={isSelected ? "var(--lib-amber)" : "blackAlpha.500"}
+          color={"var(--lib-on-amber)"}
+          pointerEvents={"none"}
+        >
+          {isSelected && <IconCheck size={14} stroke={3} />}
+        </Flex>
+      )}
+
       {/* Aktionen oben rechts, erscheinen beim Hover */}
       <HStack
+        display={selectMode ? "none" : undefined}
         position={"absolute"}
         top={2}
         right={2}
@@ -152,6 +181,7 @@ export default function GalleryMediaItem({
 
       {/* Dateiname + „Laden" unten, auf Hover */}
       <Flex
+        display={selectMode ? "none" : undefined}
         position={"absolute"}
         bottom={0}
         left={0}

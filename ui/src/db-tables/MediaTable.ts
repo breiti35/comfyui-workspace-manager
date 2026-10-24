@@ -21,6 +21,7 @@ export class MediaTable extends TableBase<Media> {
   public async create(input: {
     localPath: string;
     workflowID: string;
+    workflowJSON?: string;
   }): Promise<Media | null> {
     const format = input.localPath.split(".").pop();
     if (format == null) return null;
@@ -30,6 +31,7 @@ export class MediaTable extends TableBase<Media> {
       localPath: input.localPath,
       workflowID: input.workflowID,
       createTime: Date.now(),
+      ...(input.workflowJSON ? { workflowJSON: input.workflowJSON } : {}),
     };
     await workflowsTable?.updateMetaInfo(input.workflowID, {
       latestImage: md.localPath,

@@ -34,6 +34,11 @@ import { useStateRef } from "./customHooks/useStateRef";
 import { indexdb } from "./db-tables/indexdb";
 import EnableTwowaySyncConfirm from "./settings/EnableTwowaySyncConfirm";
 import { api, app } from "./utils/comfyapp";
+import {
+  cachePrompt,
+  findPromptInQueue,
+  getCachedPrompt,
+} from "./gallery/promptCapture";
 import { loadCivitApiKey } from "./utils/civitUtils";
 import { fetchApi } from "./Api";
 import { serverInfo } from "./utils/OsPathUtils";
@@ -373,16 +378,53 @@ export default function App() {
     flow && (await loadWorkflowID(flow.id));
   };
 
-  const onExecutedCreateMedia = useCallback((image: any) => {
-    if (curFlowID.current == null) return;
+  /** API-format prompt (JSON string) of a run; never throws. */
+  const resolvePromptJSON = async (
+    promptId?: string,
+  ): Promise<string | undefined> => {
+    try {
+      if (promptId) {
+        const hit = getCachedPrompt(promptId);
+        if (hit) return hit;
+        const res = await api.fetchApi("/queue");
+        const p = findPromptInQueue(await res.json(), promptId);
+        if (p) {
+          const json = JSON.stringify(p);
+          cachePrompt(promptId, json);
+          return json;
+        }
+      }
+    } catch (e) {
+      console.warn("Could not fetch prompt from queue:", e);
+    }
+    try {
+      const out = (await app?.graphToPrompt(app.graph))?.output;
+      if (out) {
+        const json = JSON.stringify(out);
+        if (promptId) cachePrompt(promptId, json);
+        return json;
+      }
+    } catch (e) {
+      console.warn("Could not build prompt from graph:", e);
+    }
+    return undefined;
+  };
+
+  const onExecutedCreateMedia = useCallback(async (image: any, promptId?: string) => {
+    // Take the workflow id before awaiting: switching workflows while the
+    // prompt is fetched must not file the image under the new one.
+    const workflowID = curFlowID.current;
+    if (workflowID == null) return;
+    const workflowJSON = await resolvePromptJSON(promptId);
     let path = image.filename;
     if (image.subfolder != null && image.subfolder !== "") {
       path = image.subfolder + "/" + path;
     }
     mediaTable
       ?.create({
-        workflowID: curFlowID.current,
+        workflowID,
         localPath: path,
+        workflowJSON,
       })
       .then((media) => {
         // Only now is the record in indexdb - tell the gallery to refresh.
@@ -421,14 +463,14 @@ export default function App() {
       e.detail?.output?.images?.forEach(
         (im: { filename: string; subfolder: string; type: string }) => {
           if (im.type === "output") {
-            onExecutedCreateMedia(im);
+            onExecutedCreateMedia(im, e.detail?.prompt_id);
           }
         },
       );
       e.detail?.output?.gifs?.forEach(
         (im: { filename: string; subfolder: string; type: string }) => {
           if (im.type === "output") {
-            onExecutedCreateMedia(im);
+            onExecutedCreateMedia(im, e.detail?.prompt_id);
           }
         },
       );

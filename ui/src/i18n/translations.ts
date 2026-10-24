@@ -70,6 +70,14 @@ const en = {
   "gallery.removeMediaDialog.text":
     "Remove this image from the gallery? (The file on disk is kept.)",
   "gallery.removeMediaDialog.confirm": "Remove",
+  "gallery.bulk.select": "Select",
+  "gallery.bulk.selectTooltip": "Select several images for bulk actions",
+  "gallery.bulk.selected": "selected",
+  "gallery.bulk.selectAll": "Select all (filtered)",
+  "gallery.bulk.clear": "Clear selection",
+  "gallery.bulk.favorite": "Set favorite",
+  "gallery.bulk.removeText":
+    "Remove {n} images from the gallery? (The files on disk are kept.)",
   "gallery.download": "Download",
   "gallery.removeFromGallery": "Remove from gallery",
   "gallery.load": "Load",
@@ -548,6 +556,14 @@ const de: Record<TransKey, string> = {
   "gallery.removeMediaDialog.text":
     "Dieses Bild aus der Galerie entfernen? (Die Datei auf der Festplatte bleibt erhalten.)",
   "gallery.removeMediaDialog.confirm": "Entfernen",
+  "gallery.bulk.select": "Auswählen",
+  "gallery.bulk.selectTooltip": "Mehrere Bilder für Sammelaktionen auswählen",
+  "gallery.bulk.selected": "ausgewählt",
+  "gallery.bulk.selectAll": "Alle (gefilterten) wählen",
+  "gallery.bulk.clear": "Auswahl aufheben",
+  "gallery.bulk.favorite": "Als Favorit setzen",
+  "gallery.bulk.removeText":
+    "{n} Bilder aus der Galerie entfernen? (Die Dateien auf der Festplatte bleiben erhalten.)",
   "gallery.download": "Herunterladen",
   "gallery.removeFromGallery": "Aus Galerie entfernen",
   "gallery.load": "Laden",

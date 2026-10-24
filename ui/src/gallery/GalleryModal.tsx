@@ -6,8 +6,22 @@ import {
 } from "@chakra-ui/react";
 import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { mediaTable, workflowsTable } from "../db-tables/WorkspaceDB";
-import { IconArrowLeft, IconStar, IconStarFilled } from "@tabler/icons-react";
-import { useGalleryFavorites } from "./galleryFavorites";
+import {
+  IconArrowLeft,
+  IconCheckbox,
+  IconDownload,
+  IconStar,
+  IconStarFilled,
+  IconTrash,
+} from "@tabler/icons-react";
+import { setGalleryFavorites, useGalleryFavorites } from "./galleryFavorites";
+import {
+  allSelected,
+  selectedVisibleIds,
+  toggleSelection,
+} from "./gallerySelection";
+import { useDialog } from "../components/AlertDialogProvider";
+import { viewMediaUrl } from "../utils";
 import { buildSearchIndex, matchesQuery } from "./gallerySearch";
 import { WorkspaceContext } from "../WorkspaceContext";
 import { Media } from "../types/dbTypes";
@@ -50,8 +64,26 @@ export default function GalleryModal(_props: {
   );
   // setDetailOpen is a stable state setter, so this never changes identity.
   const closeDetail = useCallback(() => setDetailOpen(false), []);
-  // Esc backs out of the detail view first, then closes the library.
-  useLibrarySubLevel("gallery", detailOpen, closeDetail);
+  const { showDialog } = useDialog();
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
+  const exitSelect = useCallback(() => {
+    setSelectMode(false);
+    setSelectedIds(new Set());
+  }, []);
+  const toggleSelect = useCallback(
+    (id: string) => setSelectedIds((prev) => toggleSelection(prev, id)),
+    [],
+  );
+  // Esc backs out of the detail view first, then of select mode, then closes
+  // the library.
+  const closeSubLevel = useCallback(() => {
+    if (detailOpen) closeDetail();
+    else exitSelect();
+  }, [detailOpen, closeDetail, exitSelect]);
+  useLibrarySubLevel("gallery", detailOpen || selectMode, closeSubLevel);
   // Deleting the shown medium leaves no current media: leave the detail view.
   useEffect(() => {
     if (detailOpen && !curMedia) setDetailOpen(false);
@@ -142,6 +174,7 @@ export default function GalleryModal(_props: {
   const selectSection = (next: GallerySection) => {
     setSection(next);
     closeDetail();
+    exitSelect();
   };
 
   const baseList = section === "all" ? allMedia : workflowMedia;
@@ -151,6 +184,47 @@ export default function GalleryModal(_props: {
       (!favOnly || favorites.has(m.id)) &&
       (!query || matchesQuery(searchIndex, m.id, query)),
   );
+
+  const visibleIds = filteredList.map((m) => m.id);
+  const chosenIds = selectedVisibleIds(selectedIds, visibleIds);
+
+  const bulkRemove = () =>
+    showDialog(
+      t("gallery.bulk.removeText").replace("{n}", String(chosenIds.length)),
+      [
+        {
+          label: t("gallery.removeMediaDialog.confirm"),
+          colorScheme: "red",
+          onClick: async () => {
+            for (const id of chosenIds) {
+              try {
+                await mediaTable?.delete(id);
+                removeMedia(id);
+              } catch (e) {
+                console.error("Error removing media record:", e);
+              }
+            }
+            exitSelect();
+          },
+        },
+      ],
+    );
+
+  const bulkDownload = async () => {
+    const byId = new Map(filteredList.map((m) => [m.id, m]));
+    for (const id of chosenIds) {
+      const path = byId.get(id)?.localPath;
+      if (!path) continue;
+      const a = document.createElement("a");
+      a.href = viewMediaUrl(path);
+      a.download = path.split("/").pop() || path;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      // Small gap so the browser does not drop consecutive downloads.
+      await new Promise((r) => setTimeout(r, 300));
+    }
+  };
 
   const sectionTitle =
     section === "workflow"
@@ -167,6 +241,9 @@ export default function GalleryModal(_props: {
         openDetail,
         closeDetail,
         removeMedia,
+        selectMode,
+        selectedIds,
+        toggleSelect,
       }}
     >
       <div className="lib-section">
@@ -212,6 +289,17 @@ export default function GalleryModal(_props: {
               {favOnly ? <IconStarFilled size={13} /> : <IconStar size={13} />}
               {t("gallery.favOnly")}
             </button>
+            <button
+              type="button"
+              className={"lib-btn" + (selectMode ? " fav" : "")}
+              aria-pressed={selectMode}
+              title={t("gallery.bulk.selectTooltip")}
+              disabled={section === "preview"}
+              onClick={() => (selectMode ? exitSelect() : setSelectMode(true))}
+            >
+              <IconCheckbox size={13} />
+              {t("gallery.bulk.select")}
+            </button>
             <div className="lib-seg" role="tablist">
               {(
                 [
@@ -235,7 +323,60 @@ export default function GalleryModal(_props: {
             </div>
           </LibraryToolbar>
         )}
-        <LibrarySelectionBar />
+        <LibrarySelectionBar>
+          {selectMode && !detailOpen && section !== "preview" && (
+            <div className="lib-tools">
+              <span>
+                {chosenIds.length} {t("gallery.bulk.selected")}
+              </span>
+              <button
+                type="button"
+                className="lib-btn"
+                disabled={
+                  visibleIds.length === 0 || allSelected(selectedIds, visibleIds)
+                }
+                onClick={() => setSelectedIds(new Set(visibleIds))}
+              >
+                {t("gallery.bulk.selectAll")}
+              </button>
+              <button
+                type="button"
+                className="lib-btn"
+                disabled={chosenIds.length === 0}
+                onClick={() => setSelectedIds(new Set())}
+              >
+                {t("gallery.bulk.clear")}
+              </button>
+              <button
+                type="button"
+                className="lib-btn"
+                disabled={chosenIds.length === 0}
+                onClick={() => setGalleryFavorites(chosenIds, true)}
+              >
+                <IconStar size={13} />
+                {t("gallery.bulk.favorite")}
+              </button>
+              <button
+                type="button"
+                className="lib-btn"
+                disabled={chosenIds.length === 0}
+                onClick={bulkDownload}
+              >
+                <IconDownload size={13} />
+                {t("gallery.download")}
+              </button>
+              <button
+                type="button"
+                className="lib-btn"
+                disabled={chosenIds.length === 0}
+                onClick={bulkRemove}
+              >
+                <IconTrash size={13} />
+                {t("gallery.removeMediaDialog.confirm")}
+              </button>
+            </div>
+          )}
+        </LibrarySelectionBar>
         <Box flex={1} minH={0} overflowY={"auto"} p={"16px 24px"}>
           {section === "preview" ? (
             <GalleryPreviewImage

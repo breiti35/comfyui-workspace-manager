@@ -39,6 +39,19 @@ export function toggleGalleryFavorite(id: string): boolean {
   return s.has(id);
 }
 
+/** Set or clear the favorite flag for many ids at once (one store update). */
+export function setGalleryFavorites(ids: string[], value: boolean) {
+  const s = new Set(snapshot());
+  ids.forEach((id) => (value ? s.add(id) : s.delete(id)));
+  try {
+    localStorage.setItem(KEY, JSON.stringify([...s]));
+  } catch {
+    // storage unavailable: keep in-memory state only
+  }
+  current = s;
+  listeners.forEach((l) => l());
+}
+
 function subscribe(cb: () => void) {
   listeners.add(cb);
   return () => {

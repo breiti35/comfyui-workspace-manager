@@ -25,6 +25,10 @@ interface GalleryContextProps {
   closeDetail: () => void;
   /** Drop a media item from the in-memory lists after it's deleted. */
   removeMedia: (id: string) => void;
+  /** Multi-select mode: tiles toggle selection instead of opening detail. */
+  selectMode: boolean;
+  selectedIds: ReadonlySet<string>;
+  toggleSelect: (id: string) => void;
 }
 
 export const GalleryContext = createContext<GalleryContextProps>({
@@ -33,4 +37,7 @@ export const GalleryContext = createContext<GalleryContextProps>({
   openDetail(): void {},
   closeDetail(): void {},
   removeMedia(): void {},
+  selectMode: false,
+  selectedIds: new Set<string>(),
+  toggleSelect(): void {},
 });
