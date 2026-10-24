@@ -23,6 +23,7 @@ import EditFlowName from "../components/EditFlowName";
 import { WorkspaceContext } from "../WorkspaceContext";
 import { PanelPosition } from "../types/dbTypes";
 import "./Topbar.css";
+import { app } from "../utils/comfyapp";
 import VersionNameTopbar from "./VersionNameTopbar";
 import { userSettingsTable, workflowsTable } from "../db-tables/WorkspaceDB";
 import TopbarNewWorkflowButton from "./TopbarNewWorkflowButton";
@@ -68,21 +69,35 @@ export function Topbar({ curFlowName, setCurFlowName }: Props) {
     routeStack,
   } = useContext(WorkspaceContext);
   const docked = useLibraryDocked();
-  // Embedded mode: live inside ComfyUI's own action bar (the row with the Run
-  // button), where other add-ons (e.g. resource monitors) dock too, so none
-  // of them can cover another. Falls back to the saved, draggable floating
-  // bar when that container can't be found (other ComfyUI frontend versions).
+  // Embedded mode: live in ComfyUI's top menu next to other add-ons. First
+  // choice is the public extension hook app.menu.settingsGroup (the way
+  // Crystools and ComfyUI-Manager dock, kept stable across frontend
+  // releases); second the action-bar row of older frontends; last the saved,
+  // draggable floating bar.
   const [host, setHost] = useState<HTMLElement | null>(null);
   useEffect(() => {
+    const makeHost = () => {
+      const el = document.createElement("div");
+      el.className = "workspaceManagerHost";
+      el.style.display = "flex";
+      el.style.alignItems = "center";
+      return el;
+    };
     const ensure = () => {
       setHost((cur) => {
         if (cur && cur.isConnected) return cur;
+        const settingsGroup: HTMLElement | undefined =
+          app?.menu?.settingsGroup?.element;
+        if (settingsGroup?.isConnected && settingsGroup.parentElement) {
+          const el = makeHost();
+          settingsGroup.before(el);
+          return el;
+        }
         const row = document.querySelector(
           ".actionbar .p-panel-content > div",
         );
         if (!row) return cur ? null : cur;
-        const el = document.createElement("div");
-        el.className = "workspaceManagerHost";
+        const el = makeHost();
         el.style.display = "contents";
         row.insertBefore(el, row.firstChild);
         return el;
