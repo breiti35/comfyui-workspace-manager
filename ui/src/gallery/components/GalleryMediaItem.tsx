@@ -10,7 +10,16 @@ import {
   Text,
   Tooltip,
 } from "@chakra-ui/react";
-import { IconDownload, IconTrash } from "@tabler/icons-react";
+import {
+  IconDownload,
+  IconStar,
+  IconStarFilled,
+  IconTrash,
+} from "@tabler/icons-react";
+import {
+  toggleGalleryFavorite,
+  useGalleryFavorites,
+} from "../galleryFavorites";
 import { Media } from "../../types/dbTypes";
 import { mediaTable } from "../../db-tables/WorkspaceDB";
 import { WorkspaceContext } from "../../WorkspaceContext";
@@ -35,6 +44,7 @@ export default function GalleryMediaItem({
   const { t } = useT();
   const { curFlowID, loadFilePath } = useContext(WorkspaceContext);
   const { showDialog } = useDialog();
+  const isFav = useGalleryFavorites().has(media.id);
   if (media.localPath == null || curFlowID == null) {
     return null;
   }
@@ -100,6 +110,18 @@ export default function GalleryMediaItem({
         transition={"opacity 0.12s"}
         onClick={(e) => e.stopPropagation()}
       >
+        <Tooltip label={isFav ? t("gallery.favRemove") : t("gallery.favAdd")}>
+          <IconButton
+            aria-label={t("gallery.favAria")}
+            aria-pressed={isFav}
+            size={"sm"}
+            icon={isFav ? <IconStarFilled size={16} /> : <IconStar size={16} />}
+            bg={"blackAlpha.600"}
+            color={isFav ? "var(--lib-amber)" : "whiteAlpha.900"}
+            _hover={{ bg: "blackAlpha.800", color: "white" }}
+            onClick={() => toggleGalleryFavorite(media.id)}
+          />
+        </Tooltip>
         <Tooltip label={t("gallery.download")}>
           <Link
             href={viewMediaUrl(localPath)}

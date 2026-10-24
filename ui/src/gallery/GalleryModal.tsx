@@ -4,9 +4,11 @@ import {
   IconButton,
   Tooltip,
 } from "@chakra-ui/react";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { mediaTable, workflowsTable } from "../db-tables/WorkspaceDB";
-import { IconArrowLeft } from "@tabler/icons-react";
+import { IconArrowLeft, IconStar, IconStarFilled } from "@tabler/icons-react";
+import { useGalleryFavorites } from "./galleryFavorites";
+import { buildSearchIndex, matchesQuery } from "./gallerySearch";
 import { WorkspaceContext } from "../WorkspaceContext";
 import { Media } from "../types/dbTypes";
 import { GalleryCarouselImageViewer } from "./components/GalleryCarouselImageViewer.tsx";
@@ -38,6 +40,14 @@ export default function GalleryModal(_props: {
   const [allMedia, setAllMedia] = useState<Media[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const debounceSearchValue = useDebounce(searchValue, 300);
+  const [favOnly, setFavOnly] = useState(false);
+  const favorites = useGalleryFavorites();
+  // Search text per medium (file name + prompts/checkpoint/LoRAs); computed
+  // once per list change, not per keystroke.
+  const searchIndex = useMemo(
+    () => buildSearchIndex([...allMedia, ...workflowMedia]),
+    [allMedia, workflowMedia],
+  );
   // setDetailOpen is a stable state setter, so this never changes identity.
   const closeDetail = useCallback(() => setDetailOpen(false), []);
   // Esc backs out of the detail view first, then closes the library.
@@ -136,13 +146,11 @@ export default function GalleryModal(_props: {
 
   const baseList = section === "all" ? allMedia : workflowMedia;
   const query = debounceSearchValue.trim().toLowerCase();
-  const filteredList = query
-    ? baseList.filter(
-        (m) =>
-          (m.localPath?.toLowerCase().includes(query) ?? false) ||
-          (m.workflowJSON?.toLowerCase().includes(query) ?? false),
-      )
-    : baseList;
+  const filteredList = baseList.filter(
+    (m) =>
+      (!favOnly || favorites.has(m.id)) &&
+      (!query || matchesQuery(searchIndex, m.id, query)),
+  );
 
   const sectionTitle =
     section === "workflow"
@@ -192,6 +200,18 @@ export default function GalleryModal(_props: {
               aria-label={t("gallery.searchPlaceholder")}
               disabled={section === "preview"}
             />
+            <button
+              type="button"
+              className={"lib-btn" + (favOnly ? " fav" : "")}
+              aria-pressed={favOnly}
+              title={t("gallery.favOnlyTooltip")}
+              aria-label={t("gallery.favOnlyAria")}
+              disabled={section === "preview"}
+              onClick={() => setFavOnly((v) => !v)}
+            >
+              {favOnly ? <IconStarFilled size={13} /> : <IconStar size={13} />}
+              {t("gallery.favOnly")}
+            </button>
             <div className="lib-seg" role="tablist">
               {(
                 [

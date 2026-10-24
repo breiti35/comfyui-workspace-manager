@@ -12,8 +12,14 @@ import {
   IconDownload,
   IconPin,
   IconPinFilled,
+  IconStar,
+  IconStarFilled,
   IconTrash,
 } from "@tabler/icons-react";
+import {
+  toggleGalleryFavorite,
+  useGalleryFavorites,
+} from "../galleryFavorites";
 import { formatTimestamp, viewMediaUrl } from "../../utils.ts";
 import { mediaTable, workflowsTable } from "../../db-tables/WorkspaceDB.ts";
 import { useContext, useEffect, useState } from "react";
@@ -35,6 +41,7 @@ export const GalleryRightColHeaderButtons = ({
   const { removeMedia } = useContext(GalleryContext);
   const { loadFilePath } = useContext(WorkspaceContext);
   const { showDialog } = useDialog();
+  const favorites = useGalleryFavorites();
 
   useEffect(() => {
     setIsCover(
@@ -70,6 +77,27 @@ export const GalleryRightColHeaderButtons = ({
         )}
       </Flex>
 
+      <Tooltip
+        label={
+          favorites.has(media.id) ? t("gallery.favRemove") : t("gallery.favAdd")
+        }
+      >
+        <IconButton
+          size={"sm"}
+          variant={"ghost"}
+          icon={
+            favorites.has(media.id) ? (
+              <IconStarFilled size={19} />
+            ) : (
+              <IconStar size={19} />
+            )
+          }
+          aria-label={t("gallery.favAria")}
+          aria-pressed={favorites.has(media.id)}
+          color={favorites.has(media.id) ? "var(--lib-amber)" : undefined}
+          onClick={() => toggleGalleryFavorite(media.id)}
+        />
+      </Tooltip>
       <Tooltip label={t("gallery.removeFromGallery")}>
         <IconButton
           size={"sm"}
