@@ -1,3 +1,4 @@
+import { copyText } from "../../utils/copyToClipboard";
 import { ReactNode, useMemo, useState } from "react";
 import {
   Accordion,
@@ -40,14 +41,16 @@ function CopyButton({ value }: { value: string }) {
   return (
     <Tooltip label={done ? t("gallery.copied") : t("gallery.copy")}>
       <IconButton
-        aria-label={"Kopieren"}
+        aria-label={t("gallery.copy")}
         size={"xs"}
         variant={"ghost"}
         icon={done ? <IconCheck size={13} /> : <IconCopy size={13} />}
         onClick={() => {
-          navigator.clipboard?.writeText(value);
-          setDone(true);
-          setTimeout(() => setDone(false), 1200);
+          void copyText(value).then((ok) => {
+            if (!ok) return;
+            setDone(true);
+            setTimeout(() => setDone(false), 1200);
+          });
         }}
       />
     </Tooltip>

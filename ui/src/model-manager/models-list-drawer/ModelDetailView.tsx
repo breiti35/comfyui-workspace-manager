@@ -1,3 +1,4 @@
+import { copyWithToast } from "../../utils/copyToClipboard";
 import {
   Badge,
   Box,
@@ -151,12 +152,12 @@ export default function ModelDetailView({ data, onBack }: Props) {
   const isBlur = (lvl?: number | string) => nsfwLevelNum(lvl) >= 4 && !showNsfw;
 
   const copy = (text: string, label: string) => {
-    navigator.clipboard?.writeText(text);
-    toast({
-      title: `${label} ${t("models.copiedSuffix")}`,
-      status: "success",
-      duration: 1400,
-    });
+    void copyWithToast(
+      toast,
+      text,
+      `${label} ${t("models.copiedSuffix")}`,
+      t("common.copyFailed"),
+    );
   };
 
   const openCivit = async () => {

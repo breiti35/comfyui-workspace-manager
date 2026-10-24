@@ -3,7 +3,6 @@ import { indexdb } from "../db-tables/indexdb";
 import {
   getCivitModelDownloadUrl,
   getCivitModelPageUrl,
-  getHgModelInfoUrlFromDownloadUrl,
 } from "../utils/civitUtils";
 import { app } from "../utils/comfyapp";
 

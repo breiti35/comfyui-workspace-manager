@@ -1,3 +1,4 @@
+import { copyWithToast } from "../../utils/copyToClipboard";
 import {
   Badge,
   Box,
@@ -124,12 +125,12 @@ export default function InstallDetailView({
     nsfwLevelNum(lvl) >= 4 && !showNsfw;
 
   const copy = (text: string, label: string) => {
-    navigator.clipboard?.writeText(text);
-    toast({
-      title: `${label} ${t("install.detail.copiedSuffix")}`,
-      status: "success",
-      duration: 1400,
-    });
+    void copyWithToast(
+      toast,
+      text,
+      `${label} ${t("install.detail.copiedSuffix")}`,
+      t("common.copyFailed"),
+    );
   };
 
   const openCivit = async () => {

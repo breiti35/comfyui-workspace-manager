@@ -42,6 +42,10 @@ export default function GalleryModal(_props: {
   const closeDetail = useCallback(() => setDetailOpen(false), []);
   // Esc backs out of the detail view first, then closes the library.
   useLibrarySubLevel("gallery", detailOpen, closeDetail);
+  // Deleting the shown medium leaves no current media: leave the detail view.
+  useEffect(() => {
+    if (detailOpen && !curMedia) setDetailOpen(false);
+  }, [detailOpen, curMedia]);
 
   const refreshLists = async () => {
     if (curFlowID == null) return;

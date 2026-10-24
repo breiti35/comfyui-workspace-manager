@@ -106,7 +106,7 @@ export default function GalleryMediaItem({
             download={localPath}
           >
             <IconButton
-              aria-label={"Bild herunterladen"}
+              aria-label={t("gallery.download")}
               size={"sm"}
               icon={<IconDownload size={16} />}
               bg={"blackAlpha.600"}

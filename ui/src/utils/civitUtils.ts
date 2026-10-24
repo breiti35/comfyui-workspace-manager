@@ -88,12 +88,6 @@ export async function getCivitModelPageUrl(
   return `${baseUrl}/models/${modelID}?modelVersionId=${modelVersionID}`;
 }
 
-export function getHgModelInfoUrlFromDownloadUrl(downloadUrl: string) {
-  if (!downloadUrl.includes("huggingface")) return;
-  const infoPageUrl = downloadUrl.replace("/resolve/", "/blob/");
-  return infoPageUrl;
-}
-
 interface ResponsePartial {
   id: number;
   modelId: number;

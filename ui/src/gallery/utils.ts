@@ -39,12 +39,6 @@ export function getMetadataFromUrl(url: string) {
     });
 }
 
-export const ifString = (t: any) => {
-  if (typeof t === "string") {
-    return t;
-  }
-};
-
 export function clipboard(text: string) {
   navigator.clipboard
     .writeText(text)

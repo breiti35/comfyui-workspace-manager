@@ -57,7 +57,7 @@ export const GalleryRightColHeaderButtons = ({
                 <IconButton
                   size={"sm"}
                   icon={<IconDownload size={19} />}
-                  aria-label="Bild herunterladen"
+                  aria-label={t("gallery.download")}
                 />
               </Link>
             </Tooltip>

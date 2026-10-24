@@ -1,3 +1,4 @@
+import { copyWithToast } from "../../utils/copyToClipboard";
 import { Spinner, useToast } from "@chakra-ui/react";
 import { ModelsListRespItem } from "../types";
 import { useEffect, useRef, useState } from "react";
@@ -198,12 +199,12 @@ export function ModelItem({ data, onOpenDetail }: Props) {
 
   const copyName = (e: ReactMouseEvent) => {
     e.stopPropagation();
-    navigator.clipboard?.writeText(data.model_name + data.model_extension);
-    toast({
-      title: `${t("models.item.filenameLabel")} ${t("models.copiedSuffix")}`,
-      status: "success",
-      duration: 1400,
-    });
+    void copyWithToast(
+      toast,
+      data.model_name + data.model_extension,
+      `${t("models.item.filenameLabel")} ${t("models.copiedSuffix")}`,
+      t("common.copyFailed"),
+    );
   };
 
   const toggleFav = (e: ReactMouseEvent) => {

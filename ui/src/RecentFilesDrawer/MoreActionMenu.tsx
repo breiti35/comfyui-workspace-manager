@@ -64,12 +64,19 @@ export default function MoreActionMenu({ workflow }: Props) {
       body.append(`images[${index}]`, file, file.name);
     });
     body.append("subfolder", "workspace_manager");
-    await fetchApi("/workspace/images/save", {
+    const response = await fetchApi("/workspace/images/save", {
       method: "POST",
       body,
     });
-    Array.from(files).forEach(async (file) => {
-      const localPath = `workspace_manager/${file.name}`;
+    if (!response.ok) {
+      console.error("Cover-Upload fehlgeschlagen", await response.text());
+      return;
+    }
+    // Only the files the backend actually stored (rejected ones are left out,
+    // possibly renamed to avoid overwriting another workflow's cover).
+    const { savedNames = [] }: { savedNames?: string[] } = await response.json();
+    savedNames.forEach((name) => {
+      const localPath = `workspace_manager/${name}`;
       mediaTable?.create({
         workflowID: workflow.id,
         localPath: localPath,

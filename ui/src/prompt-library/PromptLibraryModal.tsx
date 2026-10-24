@@ -1,3 +1,4 @@
+import { copyWithToast } from "../utils/copyToClipboard";
 import { useToast } from "@chakra-ui/react";
 import { IconCopy, IconPlus } from "@tabler/icons-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -181,8 +182,12 @@ export default function PromptLibraryModal(_props: Partial<Props>) {
   }, [items, query, activeTag, sort]);
 
   const copyText = (text: string) => {
-    navigator.clipboard?.writeText(text);
-    toast({ title: t("prompts.copied"), status: "success", duration: 1400 });
+    void copyWithToast(
+      toast,
+      text,
+      t("prompts.copied"),
+      t("common.copyFailed"),
+    );
   };
 
   if (editing !== undefined) {

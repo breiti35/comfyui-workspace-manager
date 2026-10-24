@@ -1,3 +1,4 @@
+import { copyText } from "../../utils/copyToClipboard";
 import {
   useCallback,
   useEffect,
@@ -23,15 +24,13 @@ export function useCopied(ms = 1400) {
   useEffect(() => () => window.clearTimeout(timer.current), []);
   const copy = useCallback(
     (text: string, id: string) => {
-      try {
-        navigator.clipboard?.writeText(text).catch(() => {});
-      } catch {
-        /* clipboard unavailable: still show nothing misleading */
-        return;
-      }
-      setCopied(id);
-      window.clearTimeout(timer.current);
-      timer.current = window.setTimeout(() => setCopied(null), ms);
+      void copyText(text).then((ok) => {
+        // clipboard unavailable or rejected: show nothing misleading
+        if (!ok) return;
+        setCopied(id);
+        window.clearTimeout(timer.current);
+        timer.current = window.setTimeout(() => setCopied(null), ms);
+      });
     },
     [ms],
   );

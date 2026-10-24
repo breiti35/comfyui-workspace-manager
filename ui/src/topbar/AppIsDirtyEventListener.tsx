@@ -93,7 +93,7 @@ export default function AppIsDirtyEventListener() {
       }, 500);
     };
 
-    document.addEventListener("click", (e) => {
+    const clickListener = () => {
       if (!Object.keys(app.canvas.selected_nodes ?? {}).length) return;
       if (
         app.canvas.node_over != null ||
@@ -102,12 +102,14 @@ export default function AppIsDirtyEventListener() {
       ) {
         debounceOnIsDirty();
       }
-    });
+    };
+    document.addEventListener("click", clickListener);
     document.addEventListener("keydown", keydownListener);
 
     restoreCurWorkflow();
     return () => {
       document.removeEventListener("keydown", keydownListener);
+      document.removeEventListener("click", clickListener);
     };
   }, []);
 

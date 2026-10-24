@@ -33,7 +33,3 @@ export function sanitizeRelPath(path: string) {
 export function getWorkflowRelPath(workflow: Workflow) {
   return joinRelPath(workflow.parentFolderID ?? "", workflow.name + ".json");
 }
-
-export function getFolderRelPath(folder: { id: string }) {
-  return folder.id;
-}

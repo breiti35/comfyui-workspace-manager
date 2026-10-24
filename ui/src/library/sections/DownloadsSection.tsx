@@ -38,6 +38,8 @@ export default function DownloadsSection(_props: { onClose?: () => void }) {
   const { t } = useT();
   const { active, pending, lastError } = useDownloads();
   // Cancel is fire-and-forget; show a status word until the entry vanishes.
+  // Dismissed error is remembered by its tick, so a new error shows again.
+  const [dismissedTick, setDismissedTick] = useState<number | null>(null);
   const [cancelling, setCancelling] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -62,7 +64,7 @@ export default function DownloadsSection(_props: { onClose?: () => void }) {
         subtitle={count > 0 ? String(count) : undefined}
       />
       <div style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
-        {lastError && (
+        {lastError && lastError.tick !== dismissedTick && (
           <div
             role="alert"
             style={{
@@ -72,7 +74,16 @@ export default function DownloadsSection(_props: { onClose?: () => void }) {
               fontSize: 13,
             }}
           >
-            {lastError.message}
+            <span style={{ flex: 1, minWidth: 0 }}>{lastError.message}</span>
+            <button
+              type="button"
+              className="lib-btn icon"
+              title={t("drawer.tags.closeFilterAria")}
+              aria-label={t("drawer.tags.closeFilterAria")}
+              onClick={() => setDismissedTick(lastError.tick)}
+            >
+              <IconX size={16} />
+            </button>
           </div>
         )}
         {count === 0 && (
