@@ -240,6 +240,9 @@ export default function WorkflowsSection({
   // Drag ends anywhere (also outside the drop strip) -> hide the strip.
   useEffect(() => {
     const end = () => {
+      // The canvas drop handler (earlier in the bubble chain) has already read
+      // the id; without this reset a later model/file drop re-inserts it.
+      draggingId.current = null;
       setDraggingFile(null);
       setDropTarget(null);
     };

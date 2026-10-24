@@ -1,4 +1,5 @@
 import { getMetadataFromUrl } from "../../utils.ts";
+import { viewMediaUrl } from "../../../utils.ts";
 import { Media } from "../../../types/dbTypes.ts";
 import { useEffect, useState } from "react";
 import {
@@ -18,7 +19,7 @@ export default function MetadataForm({ media }: { media: Media | null }) {
   useEffect(() => {
     if (media) {
       getMetadataFromUrl(
-        `/workspace/view_media?filename=${media.localPath}`,
+        viewMediaUrl(media.localPath),
       ).then((data) => {
         setImagePrompt(data.prompt);
       });

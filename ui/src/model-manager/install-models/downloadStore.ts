@@ -171,6 +171,12 @@ export function markDownloadStarted(fileName: string): void {
   setState({ pending: [...state.pending, fileName] });
 }
 
+/** Undo markDownloadStarted when the request never reached the backend. */
+export function clearDownloadPending(fileName: string): void {
+  if (!state.pending.includes(fileName)) return;
+  setState({ pending: state.pending.filter((n) => n !== fileName) });
+}
+
 /** Ask the backend to abort a running download. */
 export function requestCancel(savePath: string): void {
   cancelDownload(savePath);

@@ -1,3 +1,4 @@
+import { viewMediaUrl } from "../../utils";
 import { useContext } from "react";
 import {
   Box,
@@ -101,7 +102,7 @@ export default function GalleryMediaItem({
       >
         <Tooltip label={t("gallery.download")}>
           <Link
-            href={`/workspace/view_media?filename=${localPath}`}
+            href={viewMediaUrl(localPath)}
             download={localPath}
           >
             <IconButton

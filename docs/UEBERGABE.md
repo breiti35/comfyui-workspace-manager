@@ -1,6 +1,21 @@
 # Übergabe – Workspace-Manager
 
-## Hier weitermachen (Stand 2026-10-24, alles gepusht)
+## Hier weitermachen (Stand 2026-10-24, Fehlersuche + Modell-Löschen, noch NICHT committet)
+
+**Neu (ungeprüft in ComfyUI, Port 8189):** Modell löschen (`POST /model_manager/delete_model`, Papierkorb in der
+Modell-Detailansicht; nur Dateien, die ComfyUI für den Ordner listet; Vorschau + Hash-Eintrag mit). Fehlerbehebungen aus
+der Fehlersuche: Medien-URLs kodiert + Galerie löscht nur bei bestätigtem 404 (`viewMediaUrl` in `ui/src/utils.ts`);
+`myWorkflowsDir` darf kein Root/Systemordner sein (`is_forbidden_workflows_dir`); Drag-ID zurückgesetzt;
+Install-Marker bei abgelehntem Request weg (`clearDownloadPending`); Ordnerdialog-Abbruch vergisst Modell;
+`loadFilePath` prüft die Antwort. Danach: Source-Commit + `chore(dist)`, Tag `v2.1.2`, Runpod-Auftrag.
+
+**Noch offen aus der Fehlersuche:** SSRF-Schutz Downloads (`model_installer.py:203`), `rename` überschreibt unter Linux
+(`file_sync_service.py:77`), Scan schreibt nicht atomar (`scan_my_workflows_folder.py:185`), Hash-Cache ohne mtime,
+Cover-Upload überschreibt, `civarchive`-Hash ungeprüft; niedrig im Frontend: `GalleryModal.tsx:221` (detailOpen),
+`DownloadsSection.tsx:63` (lastError), Clipboard-Prüfung, Listener `AppIsDirtyEventListener.tsx:96`, feste `aria-label`.
+Toter Code: `Overlay.tsx`, `formatTimestamp`, `ifString`, `isValidFileName`, `toFileNameFriendly` u. a.
+
+## Vorheriger Stand (2026-10-24, gepusht)
 
 **UI-Redesign Schritte 1–7 fertig** (Brief `docs/superpowers/specs/2026-10-18-navigation-redesign-brief.md`,
 Richtung `.impeccable/surfaces/ui-src.md`, `DESIGN.md`): Bibliotheksfenster mit Schrank-Seitenleiste, alle Bereiche im

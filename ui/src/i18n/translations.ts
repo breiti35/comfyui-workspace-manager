@@ -161,6 +161,11 @@ const en = {
   "models.detail.backTooltip": "Back to overview",
   "models.detail.backAria": "back to models",
   "models.openOnCivitai": "Open on Civitai",
+  "models.delete": "Delete model",
+  "models.deleteConfirm":
+    "Delete this model file from disk? Its preview images are removed too.",
+  "models.deleted": "Model deleted",
+  "models.deleteFailed": "Could not delete model",
   "models.detail.triggerWords": "Trigger words",
   "models.detail.triggerWordSingular": "Trigger word",
   "models.detail.versions": "Versions",
@@ -622,6 +627,11 @@ const de: Record<TransKey, string> = {
   "models.detail.backTooltip": "Zurück zur Übersicht",
   "models.detail.backAria": "Zurück zu Modellen",
   "models.openOnCivitai": "Auf Civitai öffnen",
+  "models.delete": "Modell löschen",
+  "models.deleteConfirm":
+    "Diese Modelldatei von der Festplatte löschen? Die Vorschaubilder werden mitgelöscht.",
+  "models.deleted": "Modell gelöscht",
+  "models.deleteFailed": "Modell konnte nicht gelöscht werden",
   "models.detail.triggerWords": "Trigger-Wörter",
   "models.detail.triggerWordSingular": "Trigger-Wort",
   "models.detail.versions": "Versionen",

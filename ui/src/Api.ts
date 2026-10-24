@@ -222,6 +222,33 @@ export async function deleteLocalDiskFolder(folderPath: string) {
   }
 }
 
+// Deletes an installed model (file, preview images, hash entry). Throws with
+// the backend's message on failure; the refreshed list follows as model_list.
+export async function deleteModel(item: {
+  model_type: string;
+  model_name: string;
+  model_extension: string;
+}): Promise<void> {
+  const response = await fetchApi("/model_manager/delete_model", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model_type: item.model_type,
+      model_name: item.model_name,
+      model_extension: item.model_extension,
+    }),
+  });
+  if (!response.ok) {
+    let msg = `HTTP ${response.status}`;
+    try {
+      msg = (await response.json()).error ?? msg;
+    } catch {
+      // keep the status text
+    }
+    throw new Error(msg);
+  }
+}
+
 export async function cancelDownload(savePath: string) {
   try {
     const response = await fetchApi("/model_manager/cancel_installation", {

@@ -288,7 +288,7 @@ export function isVideoFormat(fileName: string) {
 }
 
 export function getFileUrl(relativePath: string) {
-  return `/workspace/view_media?filename=${relativePath}`;
+  return viewMediaUrl(relativePath);
 }
 
 export function getWorkflowIdInUrlHash() {
@@ -318,3 +318,9 @@ export const openWorkflowInNewTab = (workflowID: string) => {
   const newHash = generateUrlHashWithFlowId(workflowID);
   window.open(`${window.location.origin}/#${newHash}`);
 };
+
+// Media paths can contain '#', '&', '+' or '%' - without encoding the server
+// receives a different (or truncated) filename and answers 404.
+export function viewMediaUrl(path: string): string {
+  return `/workspace/view_media?filename=${encodeURIComponent(path)}`;
+}

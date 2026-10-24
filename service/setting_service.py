@@ -5,7 +5,13 @@ import json
 import asyncio
 from aiohttp import web
 from .db_service import DEFAULT_USER, read_table, db_dir_path
-from .path_utils import atomic_write_text, browse_roots, is_within
+from .path_utils import (
+    atomic_write_text,
+    bad_path_response,
+    browse_roots,
+    is_forbidden_workflows_dir,
+    is_within,
+)
 
 comfy_path = os.path.dirname(folder_paths.__file__)
 
@@ -39,6 +45,11 @@ def get_settings():
 async def save_settings(request):
     data = await request.json()
     json_data = data
+    new_dir = data.get('myWorkflowsDir') if isinstance(data, dict) else None
+    if isinstance(new_dir, dict):
+        new_dir = new_dir.get('path')
+    if isinstance(new_dir, str) and new_dir and is_forbidden_workflows_dir(new_dir):
+        return bad_path_response("Operation not permitted: this folder cannot be used as workflows folder")
     file_name = os.path.join(db_dir_path, 'settings.json')
     # Offload file writing to a separate thread. Atomic + UTF-8: a truncated
     # settings.json would lose the configured workflows dir and API keys.
@@ -55,7 +66,9 @@ def get_my_workflows_dir():
         if curDir is not None and not isinstance(curDir, str):
             curDir = curDir.get('path', None)
 
-        if curDir and os.path.exists(curDir):
+        if curDir and os.path.exists(curDir) and is_forbidden_workflows_dir(curDir):
+            print(f"[workspace] myWorkflowsDir {curDir} is a system folder, using the default")
+        elif curDir and os.path.exists(curDir):
             # The workflows dir is the base every path check confines to. If
             # the operator restricted browsing (WORKSPACE_MANAGER_BROWSE_ROOTS),
             # a dir outside those roots - e.g. "/" set via save_settings -

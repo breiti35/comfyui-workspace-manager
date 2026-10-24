@@ -1,5 +1,5 @@
 import { Box, Image } from "@chakra-ui/react";
-import { isImageFormat, isVideoFormat } from "../utils";
+import { isImageFormat, isVideoFormat, viewMediaUrl } from "../utils";
 import { useRef, useState } from "react";
 import { IconPlayerPlayFilled } from "@tabler/icons-react";
 
@@ -25,10 +25,16 @@ export default function MediaPreview({
   const [isVisible, setIsVisible] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // A missing/renamed file surfaces through the media element's own onError -
-  // no need for a separate existence-check fetch beforehand, that would just
-  // double every request (one to check, one more for the element to load).
-  const handleBrokenLink = () => {
+  // A missing/renamed file surfaces through the media element's own onError.
+  // onError also fires for network blips and server errors, and onBrokenLink
+  // removes the DB entry - so only a confirmed 404 counts as "gone".
+  const handleBrokenLink = async () => {
+    try {
+      const res = await fetch(viewMediaUrl(mediaLocalPath), { method: "HEAD" });
+      if (res.status !== 404) return;
+    } catch {
+      return;
+    }
     setIsVisible(false);
     onBrokenLink?.();
   };
@@ -58,7 +64,7 @@ export default function MediaPreview({
         {...(fill ? { w: "100%", h: "100%" } : { boxSize: `${size}px` })}
         objectFit={objectFit ?? "cover"}
         loading={"lazy"}
-        src={`/workspace/view_media?filename=${mediaLocalPath}`}
+        src={viewMediaUrl(mediaLocalPath)}
         onError={hideBrokenImage ? handleBrokenLink : undefined}
         alt="workflow image renamed or moved from output folder"
       />
@@ -81,7 +87,7 @@ export default function MediaPreview({
             display: "block",
             objectFit: objectFit ?? "cover",
           }}
-          src={`/workspace/view_media?filename=${mediaLocalPath}`}
+          src={viewMediaUrl(mediaLocalPath)}
           aria-label="workflow video renamed or moved from output folder"
           preload={"metadata"}
           muted

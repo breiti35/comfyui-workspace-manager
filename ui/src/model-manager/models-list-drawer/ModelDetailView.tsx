@@ -42,13 +42,15 @@ import {
   SectionLabel,
 } from "../components/CivitDetailShared";
 import { useT } from "../../i18n/LanguageContext";
+import DeleteConfirm from "../../components/DeleteConfirm";
+import { deleteModel } from "../../Api";
 
 interface Props {
   data: ModelsListRespItem;
   onBack: () => void;
 }
 
-export default function ModelDetailView({ data }: Props) {
+export default function ModelDetailView({ data, onBack }: Props) {
   const { t } = useT();
   const [loading, setLoading] = useState(true);
   const [dbModel, setDbModel] = useState<Model>();
@@ -168,6 +170,20 @@ export default function ModelDetailView({ data }: Props) {
     }
   };
 
+  const removeModel = async () => {
+    try {
+      await deleteModel(data);
+      toast({ title: t("models.deleted"), status: "success", duration: 3000 });
+      onBack();
+    } catch (e) {
+      toast({
+        title: t("models.deleteFailed"),
+        description: e instanceof Error ? e.message : String(e),
+        status: "error",
+      });
+    }
+  };
+
   const versionSize = (v: (typeof versions)[number]) => {
     const file = v.files?.find((f) => f.primary) ?? v.files?.[0];
     return file?.sizeKB ? KBtoGB(file.sizeKB) : undefined;
@@ -201,6 +217,13 @@ export default function ModelDetailView({ data }: Props) {
             {t("models.openOnCivitai")}
           </Button>
         )}
+        <Box ml={"auto"}>
+          <DeleteConfirm
+            promptMessage={t("models.deleteConfirm")}
+            tooltipText={t("models.delete")}
+            onDelete={removeModel}
+          />
+        </Box>
       </Flex>
 
       {loading ? (

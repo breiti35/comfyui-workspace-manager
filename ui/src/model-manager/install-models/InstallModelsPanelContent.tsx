@@ -34,7 +34,7 @@ import { getModelFromCivitAPi } from "./util/getModelFromCivitAPI";
 import { userSettingsTable } from "../../db-tables/WorkspaceDB";
 import { indexdb } from "../../db-tables/indexdb";
 import { useDownloads } from "./useDownloads";
-import { markDownloadStarted } from "./downloadStore";
+import { clearDownloadPending, markDownloadStarted } from "./downloadStore";
 import type { CivitiModel, CivitiModelVersion } from "../types";
 import { useT } from "../../i18n/LanguageContext";
 import type { ModelsView } from "../components/LibToolbarParts";
@@ -334,6 +334,7 @@ const InstallModelsPanelContent = forwardRef<
   // reported right away - late failures come via download_error instead.
   const requestInstall = (input: Parameters<typeof installModelsApi>[0]) => {
     installModelsApi(input).catch((e) => {
+      clearDownloadPending(input.filename);
       toast({
         title: t("install.toast.downloadError.title"),
         description: e instanceof Error ? e.message : String(e),
@@ -511,7 +512,12 @@ const InstallModelsPanelContent = forwardRef<
         fileSelected={!!fileState}
         preferredCategory={pendingInstallCategory}
         isOpen={isOpen}
-        onClose={onCloseChooseFolderModal}
+        onClose={() => {
+          // Cancelled dialog: forget the model it was opened for, otherwise a
+          // later "Custom URL" install would download that old model instead.
+          setFile(undefined);
+          onCloseChooseFolderModal();
+        }}
         selectFolder={(folderPath: string, customUrl?: string) => {
           if (file.current) {
             doDownload(file.current, folderPath);
@@ -526,6 +532,7 @@ const InstallModelsPanelContent = forwardRef<
             }
             requestInstall({ filename: version, save_path: folderPath, url });
           }
+          setFile(undefined);
           onCloseChooseFolderModal();
         }}
       />

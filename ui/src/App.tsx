@@ -329,12 +329,26 @@ export default function App() {
     overwriteCurrent: boolean = false,
   ) => {
     const fileName = relativePath.split("/").pop() ?? relativePath;
+    // Fetch first: a deleted/moved file must not leave an empty new workflow.
+    let res: Response;
+    try {
+      res = await fetch(getFileUrl(relativePath));
+    } catch {
+      res = new Response(null, { status: 0 });
+    }
+    if (!res.ok) {
+      toast({
+        title: `Could not open ${fileName}`,
+        status: "error",
+        duration: 4000,
+      });
+      return;
+    }
     if (!overwriteCurrent) {
       loadNewWorkflow({ name: fileName });
     } else {
       saveCurWorkflow();
     }
-    const res = await fetch(getFileUrl(relativePath));
     const blob = await res.blob();
     const fileObj = new File([blob], fileName, {
       type: res.headers.get("Content-Type") || "",
@@ -473,7 +487,8 @@ export default function App() {
                 loadNewWorkflow();
                 closeRoute();
               }}
-            />            <Topbar curFlowName={curFlowName} setCurFlowName={setCurFlowName} />
+            />
+            <Topbar curFlowName={curFlowName} setCurFlowName={setCurFlowName} />
 
           </Box>
         </Portal>

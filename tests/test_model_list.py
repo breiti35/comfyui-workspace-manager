@@ -141,3 +141,29 @@ def test_rescan_waehrend_laufendem_scan_geht_nicht_verloren(ml, monkeypatch):
     ml.start_populate_file_hash_dict()  # kommt waehrend des ersten Scans
     assert _wait(lambda: not ml._scan_running)
     assert len(calls) == 2
+
+
+def test_delete_model_entfernt_datei_und_vorschau(ml, monkeypatch):
+    import folder_paths
+
+    monkeypatch.setattr(
+        folder_paths, "get_folder_paths", lambda n: [str(ml._test_models[n])], raising=False
+    )
+    lora_dir = ml._test_models["loras"]
+    (lora_dir / "a.png").write_bytes(b"x")
+    ml.delete_model_files("loras", "a", ".safetensors")
+    assert not (lora_dir / "a.safetensors").exists()
+    assert not (lora_dir / "a.png").exists()
+
+
+def test_delete_model_lehnt_fremde_pfade_ab(ml, monkeypatch, tmp_path):
+    import folder_paths
+
+    monkeypatch.setattr(
+        folder_paths, "get_folder_paths", lambda n: [str(ml._test_models[n])], raising=False
+    )
+    outside = tmp_path / "geheim.txt"
+    outside.write_text("x")
+    with pytest.raises(ValueError):
+        ml.delete_model_files("loras", "../geheim", ".txt")
+    assert outside.exists()

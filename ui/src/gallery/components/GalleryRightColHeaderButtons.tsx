@@ -14,7 +14,7 @@ import {
   IconPinFilled,
   IconTrash,
 } from "@tabler/icons-react";
-import { formatTimestamp } from "../../utils.ts";
+import { formatTimestamp, viewMediaUrl } from "../../utils.ts";
 import { mediaTable, workflowsTable } from "../../db-tables/WorkspaceDB.ts";
 import { useContext, useEffect, useState } from "react";
 import { GalleryContext } from "../GalleryContext.ts";
@@ -51,7 +51,7 @@ export const GalleryRightColHeaderButtons = ({
             <Text noOfLines={1}>{media?.localPath}</Text>
             <Tooltip label={t("gallery.download")}>
               <Link
-                href={`/workspace/view_media?filename=${media?.localPath}`}
+                href={viewMediaUrl(media?.localPath ?? "")}
                 download={media?.localPath}
               >
                 <IconButton

@@ -536,3 +536,13 @@ def test_isinput_false_liest_aus_output(tmp_path, monkeypatch):
         [("GET", "/v", media_service.view_file)], "GET", "/v?filename=a.mp4&isInput=false"
     )
     assert status == 200 and text == "output"
+
+
+def test_workflows_dir_wurzel_und_systemordner_verboten(tmp_path):
+    import os
+    from service.path_utils import is_forbidden_workflows_dir
+
+    assert is_forbidden_workflows_dir(os.path.abspath(os.sep))
+    assert not is_forbidden_workflows_dir(str(tmp_path))
+    if os.path.exists("/etc"):
+        assert is_forbidden_workflows_dir("/etc")

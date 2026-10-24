@@ -1,3 +1,4 @@
+import { viewMediaUrl } from "../../utils";
 import { Media } from "../../types/dbTypes.ts";
 import { useContext } from "react";
 import { Box, Flex, Grid } from "@chakra-ui/react";
@@ -25,7 +26,7 @@ export function GalleryCarouselImageViewer({ mediaList }: MetaDataInfoProps) {
           <Carousel
             media={mediaList.map((v) => ({
               id: v.id,
-              imageUrl: `/workspace/view_media?filename=${v.localPath}`,
+              imageUrl: viewMediaUrl(v.localPath),
             }))}
             currentNum={mediaList?.findIndex((p) => p.id === curMedia?.id) ?? 0}
             setMediaAct={(newMedia) =>

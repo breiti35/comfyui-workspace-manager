@@ -11,6 +11,7 @@ import threading
 import urllib.request
 import json
 from .model_preview import preview_file
+from ..path_utils import bad_path_response, is_within
 
 # The path to the file where file_hash_dict will be saved.
 #
@@ -160,7 +161,7 @@ def scan_models():
         local_file_list = []
         folder_list = list(folder_paths.folder_names_and_paths.keys())
         for folder in folder_list:
-            if folder == "configs" or folder == "custom_nodes":
+            if folder in EXCLUDED_FOLDERS:
                 continue
             # One broken folder (missing network path, permission error in a
             # custom node's registered dir, ...) must not cost the others.
@@ -318,6 +319,71 @@ async def get_model_list(request):
     else:
         start_populate_file_hash_dict()
     return web.json_response(snapshot, content_type="application/json")
+
+
+# Folders scan_models() skips; never offered for deletion either.
+EXCLUDED_FOLDERS = ("configs", "custom_nodes")
+PREVIEW_SUFFIXES = [".jpg", ".png", ".jpeg", ".gif"]
+PREVIEW_SUFFIXES += [".preview" + x for x in PREVIEW_SUFFIXES]
+
+
+def _forget_hash(file_path):
+    with _hash_dict_lock:
+        file_hash_dict = _open_hash_dict()
+        if file_hash_dict is None:
+            return
+        with file_hash_dict:
+            file_hash_dict.pop(file_path, None)
+
+
+def delete_model_files(model_type, model_name, model_extension):
+    """Delete one installed model plus its preview images and hash entry.
+    Raises ValueError if the file is unknown or outside the registered model
+    folders (the client only names the model, never a path)."""
+    if not all(isinstance(x, str) for x in (model_type, model_name, model_extension)):
+        raise ValueError("model_type, model_name and model_extension are required")
+    if model_type in EXCLUDED_FOLDERS:
+        raise ValueError("Not a model folder")
+    # Only files ComfyUI itself lists for that folder (known model extensions).
+    if (model_name + model_extension) not in folder_paths.get_filename_list(model_type):
+        raise ValueError("Model file not found")
+    full_path = folder_paths.get_full_path(model_type, model_name + model_extension)
+    if not full_path or not os.path.isfile(full_path):
+        raise ValueError("Model file not found")
+    roots = folder_paths.get_folder_paths(model_type)
+    if not any(is_within(root, full_path) for root in roots):
+        raise ValueError("Model file is outside the model folders")
+    os.remove(full_path)
+    stem = os.path.splitext(full_path)[0]
+    for suffix in PREVIEW_SUFFIXES:
+        preview = stem + suffix
+        if os.path.isfile(preview):
+            _remove_preview(preview)
+    _forget_hash(full_path)
+
+
+def _remove_preview(path):
+    try:
+        os.remove(path)
+    except OSError as e:
+        print(f"[Workspace Manager] Could not remove preview {path}: {e}")
+
+
+@server.PromptServer.instance.routes.post("/model_manager/delete_model")
+async def delete_model(request):
+    try:
+        data = await request.json()
+        await asyncio.get_running_loop().run_in_executor(
+            None,
+            delete_model_files,
+            data.get("model_type"),
+            data.get("model_name"),
+            data.get("model_extension"),
+        )
+    except (ValueError, OSError) as e:
+        return bad_path_response(e)
+    await asyncio.get_running_loop().run_in_executor(None, scan_models)
+    return web.json_response({"success": True})
 
 
 @server.PromptServer.instance.routes.get("/model_manager/get_folder_list")

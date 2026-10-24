@@ -118,6 +118,31 @@ def browse_roots():
     return [os.path.realpath(r) for r in raw.split(os.pathsep) if r.strip()]
 
 
+# The workflows dir is the base for every file delete/rename route. Even
+# without WORKSPACE_MANAGER_BROWSE_ROOTS it must never be the filesystem root
+# or a system directory - otherwise one save_settings call makes the whole
+# machine deletable.
+_SYSTEM_DIRS = (
+    "/etc", "/usr", "/bin", "/sbin", "/lib", "/lib32", "/lib64", "/boot",
+    "/proc", "/sys", "/dev", "/root", "/var", "/run",
+)
+
+
+def is_forbidden_workflows_dir(path):
+    """True for a filesystem/drive root or a system directory (or anything
+    inside one)."""
+    real = os.path.realpath(path)
+    if os.path.dirname(real) == real:
+        return True
+    windir = os.environ.get("SystemRoot") or os.environ.get("WINDIR")
+    bad = list(_SYSTEM_DIRS)
+    if windir:
+        bad.append(windir)
+        bad.append(os.path.join(os.path.splitdrive(windir)[0] + os.sep, "Program Files"))
+        bad.append(os.path.join(os.path.splitdrive(windir)[0] + os.sep, "Program Files (x86)"))
+    return any(is_within(d, real) for d in bad if os.path.exists(d))
+
+
 def check_browse_allowed(path):
     """Raise UnsafePathError if browse roots are configured and `path` is
     outside all of them."""
