@@ -14,6 +14,7 @@ import threading
 import server
 import time
 from .model_list import start_populate_file_hash_dict, save_file_hash
+from . import model_notes  # noqa: F401  (registers /model_manager/model_note[s])
 from . import civarchive  # noqa: F401  (registers /model_manager/civarchive_by_hash)
 from ..path_utils import is_within
 

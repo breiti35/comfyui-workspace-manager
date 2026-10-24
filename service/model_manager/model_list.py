@@ -360,6 +360,9 @@ def delete_model_files(model_type, model_name, model_extension):
         if os.path.isfile(preview):
             _remove_preview(preview)
     _forget_hash(full_path)
+    from .model_notes import remove_note
+
+    remove_note(model_type, model_name, model_extension)
 
 
 def _remove_preview(path):

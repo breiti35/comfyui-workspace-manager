@@ -171,6 +171,11 @@ const en = {
   "models.detail.versions": "Versions",
   "models.detail.installedBadge": "installed",
   "models.detail.description": "Description",
+  "models.note.label": "Note",
+  "models.note.placeholder": "Your own notes on this model (settings, tips, ...)",
+  "models.note.save": "Save note",
+  "models.note.saved": "Note saved",
+  "models.note.saveFailed": "Could not save note",
   "models.detail.exampleImages": "Example images – click for prompt",
   "models.detail.noExampleImages": "No example images available.",
   "models.detail.notFoundOnCivitai":
@@ -638,6 +643,11 @@ const de: Record<TransKey, string> = {
   "models.detail.versions": "Versionen",
   "models.detail.installedBadge": "installiert",
   "models.detail.description": "Beschreibung",
+  "models.note.label": "Notiz",
+  "models.note.placeholder": "Eigene Notizen zu diesem Modell (Einstellungen, Tipps, ...)",
+  "models.note.save": "Notiz speichern",
+  "models.note.saved": "Notiz gespeichert",
+  "models.note.saveFailed": "Notiz konnte nicht gespeichert werden",
   "models.detail.exampleImages": "Beispielbilder – zum Prompt anklicken",
   "models.detail.noExampleImages": "Keine Beispielbilder verfügbar.",
   "models.detail.notFoundOnCivitai":

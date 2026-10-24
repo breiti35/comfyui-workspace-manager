@@ -249,6 +249,48 @@ export async function deleteModel(item: {
   }
 }
 
+// Server-side free-text notes per installed model, keyed
+// "<model_type>/<model_name><model_extension>".
+export function modelNoteKey(item: {
+  model_type: string;
+  model_name: string;
+  model_extension: string;
+}): string {
+  return `${item.model_type}/${item.model_name}${item.model_extension}`;
+}
+
+export async function fetchModelNotes(): Promise<Record<string, string>> {
+  const response = await fetchApi("/model_manager/model_notes");
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return await response.json();
+}
+
+// An empty note deletes the entry. Throws with the backend's message.
+export async function saveModelNote(
+  item: { model_type: string; model_name: string; model_extension: string },
+  note: string,
+): Promise<void> {
+  const response = await fetchApi("/model_manager/model_note", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model_type: item.model_type,
+      model_name: item.model_name,
+      model_extension: item.model_extension,
+      note,
+    }),
+  });
+  if (!response.ok) {
+    let msg = `HTTP ${response.status}`;
+    try {
+      msg = (await response.json()).error ?? msg;
+    } catch {
+      // keep the status text
+    }
+    throw new Error(msg);
+  }
+}
+
 export async function cancelDownload(savePath: string) {
   try {
     const response = await fetchApi("/model_manager/cancel_installation", {

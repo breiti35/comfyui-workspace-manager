@@ -10,6 +10,7 @@ import {
   Stack,
   Tag,
   Text,
+  Textarea,
   useToast,
   Wrap,
   WrapItem,
@@ -44,7 +45,12 @@ import {
 } from "../components/CivitDetailShared";
 import { useT } from "../../i18n/LanguageContext";
 import DeleteConfirm from "../../components/DeleteConfirm";
-import { deleteModel } from "../../Api";
+import {
+  deleteModel,
+  fetchModelNotes,
+  modelNoteKey,
+  saveModelNote,
+} from "../../Api";
 
 interface Props {
   data: ModelsListRespItem;
@@ -351,6 +357,8 @@ export default function ModelDetailView({ data, onBack }: Props) {
             </Box>
           </Flex>
 
+          <ModelNote data={data} />
+
           {/* Description - its own contained, self-scrolling section. */}
           {descriptionText && (
             <Box mt={5}>
@@ -502,6 +510,75 @@ function FallbackLocalInfo({ data }: { data: ModelsListRespItem }) {
           )}
         </Box>
       </Flex>
+      <ModelNote data={data} />
+    </Box>
+  );
+}
+
+// Free-text note per installed model, stored server-side. Saved on blur or
+// via the button; an empty note removes the entry.
+function ModelNote({ data }: { data: ModelsListRespItem }) {
+  const { t } = useT();
+  const toast = useToast();
+  const key = modelNoteKey(data);
+  const [text, setText] = useState("");
+  const [saved, setSaved] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchModelNotes()
+      .then((all) => {
+        if (cancelled) return;
+        setText(all[key] ?? "");
+        setSaved(all[key] ?? "");
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [key]);
+
+  const save = async () => {
+    if (text === saved || saving) return;
+    setSaving(true);
+    try {
+      await saveModelNote(data, text);
+      setSaved(text);
+      toast({ title: t("models.note.saved"), status: "success", duration: 1500 });
+    } catch (e) {
+      toast({
+        title: t("models.note.saveFailed"),
+        description: e instanceof Error ? e.message : String(e),
+        status: "error",
+        duration: 4000,
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Box mt={5}>
+      <SectionLabel>{t("models.note.label")}</SectionLabel>
+      <Textarea
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        onBlur={save}
+        maxLength={10000}
+        rows={4}
+        size={"sm"}
+        placeholder={t("models.note.placeholder")}
+      />
+      <Button
+        mt={2}
+        size={"xs"}
+        onClick={save}
+        isLoading={saving}
+        isDisabled={text === saved}
+      >
+        {t("models.note.save")}
+      </Button>
     </Box>
   );
 }

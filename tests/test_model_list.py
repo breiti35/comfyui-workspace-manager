@@ -167,3 +167,55 @@ def test_delete_model_lehnt_fremde_pfade_ab(ml, monkeypatch, tmp_path):
     with pytest.raises(ValueError):
         ml.delete_model_files("loras", "../geheim", ".txt")
     assert outside.exists()
+
+
+# ---- model notes -----------------------------------------------------------
+
+
+@pytest.fixture
+def notes(ml, tmp_path, monkeypatch):
+    from service.model_manager import model_notes
+
+    monkeypatch.setattr(ml, "FILE_HASH_DICT_FOLDER_PATH", str(tmp_path / "hashdir"))
+    return model_notes
+
+
+def test_note_save_overwrite_and_clear(notes):
+    notes.set_note("loras", "a", ".safetensors", "hello\nÄ")
+    assert notes.get_notes() == {"loras/a.safetensors": "hello\nÄ"}
+    notes.set_note("loras", "a", ".safetensors", "second")
+    assert notes.get_notes() == {"loras/a.safetensors": "second"}
+    notes.set_note("loras", "a", ".safetensors", "  ")
+    assert notes.get_notes() == {}
+
+
+def test_note_validation(notes):
+    with pytest.raises(ValueError):
+        notes.set_note("loras", "a", ".safetensors", "x" * (notes.MAX_NOTE_LENGTH + 1))
+    with pytest.raises(ValueError):
+        notes.set_note("loras", "a", ".safetensors", 5)
+    with pytest.raises(ValueError):
+        notes.set_note(None, "a", ".safetensors", "x")
+    assert notes.get_notes() == {}
+
+
+def test_note_corrupt_file_reads_empty(notes):
+    import os
+
+    path = notes._notes_path()
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w") as f:
+        f.write("{broken")
+    assert notes.get_notes() == {}
+
+
+def test_delete_model_removes_note(ml, notes, monkeypatch):
+    import folder_paths
+
+    monkeypatch.setattr(
+        folder_paths, "get_folder_paths", lambda n: [str(ml._test_models[n])], raising=False
+    )
+    notes.set_note("loras", "a", ".safetensors", "keep me?")
+    notes.set_note("loras", "other", ".safetensors", "stay")
+    ml.delete_model_files("loras", "a", ".safetensors")
+    assert notes.get_notes() == {"loras/other.safetensors": "stay"}
