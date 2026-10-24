@@ -1,0 +1,1 @@
+import{j as e}from"./App-vjsBs9Rw.js";var r=e("chevron-left","IconChevronLeft",[["path",{d:"M15 6l-6 6l6 6",key:"svg-0"}]]),t=e("chevron-right","IconChevronRight",[["path",{d:"M9 6l6 6l-6 6",key:"svg-0"}]]);export{r as I,t as a};
