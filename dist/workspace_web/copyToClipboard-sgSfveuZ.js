@@ -1,0 +1,1 @@
+async function n(a){var t;try{return(t=navigator.clipboard)!=null&&t.writeText?(await navigator.clipboard.writeText(a),!0):!1}catch{return!1}}async function o(a,t,e,i){const r=await n(t);return a(r?{title:e,status:"success",duration:1400}:{title:i,status:"error",duration:2500}),r}export{o as a,n as c};
