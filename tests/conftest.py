@@ -259,8 +259,10 @@ class ServerHandle:
 
 
 @pytest.fixture
-def http_server():
+def http_server(monkeypatch):
     """Startet den Test-Server; Payload-Groesse ist pro Test einstellbar."""
+    # Der Test-Server laeuft auf 127.0.0.1 - der SSRF-Schutz wuerde ihn sperren.
+    monkeypatch.setenv("WORKSPACE_MANAGER_ALLOW_PRIVATE_DOWNLOADS", "1")
     handles = []
 
     def _start(size_bytes: int = 1024 * 64) -> ServerHandle:

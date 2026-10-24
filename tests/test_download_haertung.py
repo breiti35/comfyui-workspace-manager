@@ -370,3 +370,15 @@ def test_401_von_huggingface_erklaert_gated_repo(installer, monkeypatch):
     err = urllib.error.HTTPError("https://huggingface.co/x", 401, "Unauthorized", {}, None)
     msg = str(installer._explain_http_error(err, "https://huggingface.co/x"))
     assert "gated" in msg and "HF_TOKEN" in msg
+
+
+def test_ssrf_interne_adressen_gesperrt(installer, monkeypatch):
+    monkeypatch.delenv("WORKSPACE_MANAGER_ALLOW_PRIVATE_DOWNLOADS", raising=False)
+    for url in ["http://127.0.0.1/x", "http://169.254.169.254/latest/meta-data", "http://10.0.0.5/a", "http://[::1]/a"]:
+        with pytest.raises(ValueError):
+            installer.check_public_url(url)
+
+
+def test_ssrf_abschaltbar(installer, monkeypatch):
+    monkeypatch.setenv("WORKSPACE_MANAGER_ALLOW_PRIVATE_DOWNLOADS", "1")
+    installer.check_public_url("http://127.0.0.1/x")

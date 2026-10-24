@@ -1,7 +1,9 @@
 import asyncio
+import ipaddress
 import os
 import re
 import shutil
+import socket
 import sys
 from aiohttp import web
 import folder_paths
@@ -353,6 +355,7 @@ class _AuthAwareRedirectHandler(urllib.request.HTTPRedirectHandler):
     needs it, so it is re-added only for that case."""
 
     def redirect_request(self, req, fp, code, msg, headers, newurl):
+        check_public_url(newurl)
         new_req = super().redirect_request(req, fp, code, msg, headers, newurl)
         auth_host = getattr(req, "_wm_auth_host", None)
         if new_req is not None and auth_host:
@@ -362,12 +365,41 @@ class _AuthAwareRedirectHandler(urllib.request.HTTPRedirectHandler):
         return new_req
 
 
+def _private_downloads_allowed():
+    return os.environ.get("WORKSPACE_MANAGER_ALLOW_PRIVATE_DOWNLOADS") == "1"
+
+
+def check_public_url(url):
+    """Refuse downloads from loopback/private/link-local addresses (SSRF).
+
+    ComfyUI has no auth and often runs on a public pod: without this anyone
+    could make the server fetch http://169.254.169.254/... (cloud metadata)
+    or internal services. Checked for the first URL and every redirect.
+    WORKSPACE_MANAGER_ALLOW_PRIVATE_DOWNLOADS=1 turns it off (LAN mirrors)."""
+    if _private_downloads_allowed():
+        return
+    host = urllib.parse.urlparse(url).hostname
+    if not host:
+        raise ValueError("Download-URL ohne Host")
+    try:
+        infos = socket.getaddrinfo(host, None)
+    except socket.gaierror as e:
+        raise ValueError(f"Host nicht auflösbar: {host}") from e
+    for info in infos:
+        ip = ipaddress.ip_address(info[4][0].split("%")[0])
+        if not ip.is_global or ip.is_multicast:
+            raise ValueError(
+                f"Download von interner Adresse ({host}) ist nicht erlaubt"
+            )
+
+
 _opener = urllib.request.build_opener(_AuthAwareRedirectHandler)
 
 
 def _open(url, headers=None, auth_host=None):
     """urlopen with timeout; auth is added as an *unredirected* header so
     urllib's redirect handler does not forward it to the redirect target."""
+    check_public_url(url)
     req = urllib.request.Request(url, headers={**_DOWNLOAD_HEADERS, **(headers or {})})
     req._wm_auth_host = auth_host
     for key, value in _auth_headers_for(url, auth_host).items():
